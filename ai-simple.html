@@ -485,34 +485,38 @@
         
         .overview-title h2 {
             color: #1e293b;
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 600;
             margin: 0 0 8px 0;
             line-height: 1.2;
         }
         
         .overview-title p {
             color: #64748b;
-            font-size: 16px;
+            font-size: 14px;
             margin: 0;
             line-height: 1.5;
         }
         
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: space-between;
         }
         
         .stat-card {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 8px;
+            padding: 16px 20px;
             border: 2px solid transparent;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            flex: 1;
+            min-width: 140px;
+            max-width: 180px;
         }
         
         .stat-card::before {
@@ -552,18 +556,20 @@
         
         .stat-card {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 20px;
+            text-align: center;
+            gap: 8px;
         }
         
         .stat-icon {
-            width: 50px;
-            height: 50px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
             color: white;
             flex-shrink: 0;
         }
@@ -589,14 +595,17 @@
         }
         
         .stat-info {
-            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
         }
         
         .stat-number {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 800;
             line-height: 1;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         
         .stat-card.primary .stat-number {
@@ -636,10 +645,10 @@
         
         .stat-label {
             color: #64748b;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
         
         /* 响应式设计 */
@@ -651,33 +660,232 @@
             .overview-header {
                 flex-direction: column;
                 text-align: center;
-                margin-bottom: 24px;
+                margin-bottom: 20px;
             }
             
             .overview-icon {
-                margin: 0 0 16px 0;
+                margin: 0 0 12px 0;
             }
             
             .overview-title h2 {
-                font-size: 24px;
+                font-size: 20px;
             }
             
             .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
+                flex-direction: column;
+                gap: 10px;
             }
             
             .stat-card {
-                padding: 20px;
+                min-width: auto;
+                max-width: none;
+                padding: 12px 16px;
+                flex-direction: row;
+                gap: 12px;
+                text-align: left;
+            }
+            
+            .stat-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .stat-info {
+                align-items: flex-start;
             }
             
             .stat-number {
-                font-size: 28px;
+                font-size: 20px;
             }
             
-            .stat-status {
-                font-size: 16px;
+            .stat-label {
+                font-size: 10px;
             }
+        }
+        
+        /* 结果页面主标题样式 */
+        .results-main-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .results-main-title .fa-chart-line {
+            color: #667eea !important;
+            -webkit-text-fill-color: #667eea !important;
+        }
+        
+        .results-main-title small {
+            color: #64748b !important;
+            -webkit-text-fill-color: #64748b !important;
+            font-weight: 400;
+        }
+
+        /* 现代化进度页面样式 */
+        .analysis-progress-container {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin: 16px 0;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .analysis-progress-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .progress-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .progress-icon i {
+            font-size: 24px;
+            color: white;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-title h2 {
+            color: #1e293b;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+            line-height: 1.2;
+        }
+
+        .progress-title .timer {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .progress-subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .modern-progress-bar {
+            background: #e5e7eb;
+            border-radius: 12px;
+            height: 8px;
+            overflow: hidden;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .modern-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 12px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .modern-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .console-output {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #374151;
+        }
+
+        .console-line {
+            color: #e5e7eb;
+            margin: 2px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .console-timestamp {
+            color: #6b7280;
+            margin-right: 8px;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .console-level-info {
+            color: #3b82f6;
+        }
+
+        .console-level-success {
+            color: #10b981;
+        }
+
+        .console-level-warning {
+            color: #f59e0b;
+        }
+
+        .console-level-error {
+            color: #ef4444;
+        }
+
+        .console-icon {
+            margin-right: 6px;
+            width: 12px;
+            text-align: center;
         }
     </style>
 </head>
@@ -694,14 +902,14 @@
                             <i class="fas fa-play-circle"></i>
                             Demo 演示
                         </button>
-                        <button class="btn btn-outline-success me-2 d-none" id="reuploadBtn" onclick="location.reload()">
+                        <button class="btn btn-outline-success me-2 d-none" id="reuploadBtn" onclick="resetToUploadMode()">
                             <i class="fas fa-upload"></i> 重新上传
                         </button>
                         <button class="btn btn-outline-info me-2" id="configButton">
                             <i class="fas fa-cog"></i>
                             AI 配置
                         </button>
-                        <button class="btn btn-outline-secondary me-2" onclick="window.open('jstack-review-original/index.html', '_blank')">
+                        <button class="btn btn-outline-secondary me-2" id="traditionalAnalysisBtn" onclick="openTraditionalAnalysis()" title="上传文件后可用">
                             <i class="fas fa-chart-line"></i>
                             传统分析
                         </button>
@@ -733,123 +941,56 @@
             </div>
         </div>
 
-        <!-- 进度显示 -->
+        <!-- 现代化进度显示 -->
         <div class="row mb-4 d-none" id="progressSection">
             <div class="col-12">
-                <div class="card border-primary shadow">
-                    <div class="card-header bg-gradient-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-cogs fa-spin"></i> 
-                            AI智能分析进行中
-                            <small class="ms-2" id="analysisTimer">00:00</small>
-                        </h5>
+                <div class="analysis-progress-container">
+                    <div class="progress-header">
+                        <div class="progress-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <div class="progress-title">
+                            <h2>
+                                AI智能分析进行中
+                                <span class="timer" id="analysisTimer">00:00</span>
+                            </h2>
+                            <p class="progress-subtitle">正在使用 Claude Sonnet 4 进行深度线程转储分析...</p>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <!-- 主进度条 -->
-                        <div class="progress mb-3" style="height: 25px;">
-                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
-                                 id="progressBar" 
-                                 style="width: 0%;"
-                                 role="progressbar">
-                                <span class="fw-bold">0%</span>
-                            </div>
+
+                    <!-- 现代进度条 -->
+                    <div class="modern-progress-bar">
+                        <div class="modern-progress-fill" id="modernProgressFill" style="width: 0%"></div>
+                    </div>
+
+                    <!-- 当前状态 -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-1" id="currentStageText" style="color: #667eea; font-weight: 600;">准备分析...</h6>
+                            <small class="text-muted" id="stageDetails">初始化分析引擎</small>
                         </div>
-                        
-                        <!-- 当前阶段 -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h6 class="mb-1" id="progressText">准备分析...</h6>
-                                <small class="text-muted" id="progressDetails"></small>
-                            </div>
-                            <div class="text-end">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status" id="progressSpinner">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
+                        <div class="text-end">
+                            <span id="progressPercentage" style="color: #667eea; font-weight: 600; font-size: 14px;">0%</span>
                         </div>
-                        
-                        <!-- 阶段指示器 -->
-                        <div class="row text-center" id="stageIndicators">
-                            <div class="col-3">
-                                <div class="stage-indicator" id="stage1">
-                                    <div class="stage-circle bg-secondary">1</div>
-                                    <small class="stage-label">文件解析</small>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="stage-indicator" id="stage2">
-                                    <div class="stage-circle bg-secondary">2</div>
-                                    <small class="stage-label">结构化解析</small>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="stage-indicator" id="stage3">
-                                    <div class="stage-circle bg-secondary">3</div>
-                                    <small class="stage-label">AI智能分析</small>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="stage-indicator" id="stage4">
-                                    <div class="stage-circle bg-secondary">4</div>
-                                    <small class="stage-label">结果生成</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 实时分析信息 -->
-                        <div class="mt-4 p-3 bg-light rounded" id="analysisInfo">
-                            <h6 class="text-primary mb-2">
-                                <i class="fas fa-info-circle"></i> 分析过程说明
-                            </h6>
-                            <div id="analysisExplanation" class="small text-muted">
-                                正在准备分析您的线程转储文件...
-                            </div>
-                            
-                            <!-- 统计信息 -->
-                            <div class="row mt-3" id="analysisStats" style="display: none;">
-                                <div class="col-md-3">
-                                    <div class="stat-item text-center">
-                                        <div class="stat-value text-primary" id="threadCount">-</div>
-                                        <div class="stat-label">线程数量</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="stat-item text-center">
-                                        <div class="stat-value text-success" id="runningCount">-</div>
-                                        <div class="stat-label">运行中</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="stat-item text-center">
-                                        <div class="stat-value text-warning" id="waitingCount">-</div>
-                                        <div class="stat-label">等待中</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="stat-item text-center">
-                                        <div class="stat-value text-danger" id="blockedCount">-</div>
-                                        <div class="stat-label">阻塞</div>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
+
+                    <!-- Console输出区域 -->
+                    <div class="console-output" id="consoleOutput">
+                        <div class="console-line">
+                            <span class="console-timestamp">00:00:00</span>
+                            <span class="console-icon console-level-info">▶</span>
+                            <span class="console-level-info">系统初始化完成，准备开始分析...</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- AI 分析结果 -->
+        <!-- 分析结果展示区域 -->
         <div class="row mb-4 d-none" id="resultsSection">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-brain text-primary"></i> AI智能分析报告</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="analysisResults">
-                            <!-- 分析结果将在这里显示 -->
-                        </div>
-                    </div>
+                <div id="analysisResults">
+                    <!-- 分析结果将在这里显示 -->
                 </div>
             </div>
         </div>
@@ -1699,6 +1840,15 @@
                 })
                 .then(demoContent => {
                     console.log('📄 Demo文件读取成功，内容长度:', demoContent.length);
+                    
+                    // ✅ 立即存储demo文件内容和文件名，使传统分析按钮可用
+                    window.originalContent = demoContent;
+                    window.originalFilename = 'demo-threaddump.txt';
+                    console.log('📁 Demo文件内容已存储，传统分析按钮现在可用');
+                    
+                    // 更新传统分析按钮状态
+                    updateTraditionalAnalysisButton();
+                    
                     showAlert('演示文件加载成功，开始AI分析...', 'success');
                     
                     // 使用与手动上传完全相同的处理流程
@@ -1720,13 +1870,14 @@
             
             // 初始化增强进度管理系统
             progressManager.init();
+            progressManager.addConsoleLog(`开始分析文件: ${filename}`, 'info', '📁');
+            progressManager.addConsoleLog(`文件大小: ${Math.round(content.length/1000)}KB`, 'info', '📏');
             progressManager.updateStage(0, `正在解析文件 "${filename}"...`);
             
             // 重置分析结果变量
             window.aiAnalysisResult = null;
             window.traditionalAnalysis = null;
-            window.originalContent = content;  // 保存原始内容供后续使用
-            window.originalFilename = filename; // 保存原始文件名
+            // 注意：window.originalContent 和 window.originalFilename 已在文件上传时设置
             console.log('🔄 开始新的两阶段分析流程');
             
             // 模拟文件解析延迟
@@ -1838,17 +1989,374 @@
             }
         }
 
-        // 多阶段智能分析（新增）
+        // 多阶段智能分析（重新设计）
         function performMultiStageAIAnalysis(content, structuredData, filename, isTruncated) {
-            console.log('🎯 启动多阶段智能分析流程');
+            console.log('🎯 启动多阶段智能分析流程（传统代码分段）');
             
-            // 🧠 阶段1：AI制定智能分段策略
-            progressManager.updateStage(2, '制定智能分段策略...');
+            // 🧠 阶段1：传统代码智能分段策略
+            progressManager.updateStage(2, '基于线程状态进行智能分段...');
             
-            // 延迟一点，让用户看到阶段切换
             setTimeout(() => {
-                createSegmentationPlan(content, structuredData, filename, isTruncated);
+                createTraditionalSegmentationPlan(content, structuredData, filename, isTruncated);
             }, 500);
+        }
+
+        // 🧠 传统代码容量感知分段策略
+        function createTraditionalSegmentationPlan(content, structuredData, filename, isTruncated) {
+            console.log('🔧 开始传统代码容量感知分段');
+            progressManager.addConsoleLog('使用容量感知算法进行智能分段...', 'info', '🧮');
+            
+            const threads = structuredData.threads || [];
+            const synchronizers = structuredData.synchronizers || [];
+            const maxSegmentSize = capacityCalculator.getMaxSegmentSize();
+            
+            console.log(`🎯 分段配置: 最大容量${Math.round(maxSegmentSize/1000)}KB, 总线程${threads.length}个, 同步器${synchronizers.length}个`);
+            
+            // 🎯 新策略：结构化感知 + 容量最优化分段
+            const segmentPlan = {
+                strategy: "容量感知结构化智能分段",
+                maxCapacityKB: Math.round(maxSegmentSize / 1000),
+                totalSegments: 0,
+                segments: []
+            };
+            
+            let segmentId = 1;
+            
+            // 📊 第1步：检查数据总大小，决定分段策略  
+            const totalSize = capacityCalculator.calculateGroupSize(threads, synchronizers);
+            const totalDataSizeKB = Math.round(totalSize / 1000);
+            const maxSegmentSizeKB = Math.round(maxSegmentSize / 1000);
+            
+            console.log(`📏 数据总大小: ${totalDataSizeKB}KB`);
+            console.log(`📏 单段容量限制: ${maxSegmentSizeKB}KB`);
+            console.log(`📊 容量利用率: ${Math.round((totalSize / maxSegmentSize) * 100)}%`);
+            
+            // 🎯 明确的单段处理条件：总大小 <= 80%容量限制
+            const singleSegmentThreshold = maxSegmentSize * 0.8;
+            
+            if (totalSize <= singleSegmentThreshold) {
+                // 数据量小，绝对应该单段处理
+                console.log('🎯 数据量适中，使用单段策略');
+                console.log(`✅ ${totalDataSizeKB}KB <= ${Math.round(singleSegmentThreshold/1000)}KB (80%阈值)`);
+                
+                segmentPlan.segments.push({
+                    id: 1,
+                    name: "全量分析", 
+                    focus: "全面分析所有线程和同步器",
+                    priority: "high",
+                    threads: threads,
+                    synchronizers: synchronizers,
+                    estimatedSize: totalSize,
+                    utilization: Math.round((totalSize / maxSegmentSize) * 100)
+                });
+                segmentPlan.totalSegments = 1;
+                
+                console.log(`📦 创建单一分段: ${threads.length}线程, ${totalDataSizeKB}KB (${Math.round((totalSize/maxSegmentSize)*100)}%利用率)`);
+                
+            } else {
+                // 数据量大，需要智能分段  
+                console.log('🔥 数据量较大，使用多段策略');
+                console.log(`⚠️ ${totalDataSizeKB}KB > ${Math.round(singleSegmentThreshold/1000)}KB (80%阈值)`);
+                
+                
+                // 🔥 P0优先级：死锁相关的关键分析
+                const deadlockRelatedThreads = [];
+                const deadlockRelatedSyncs = [];
+                
+                if (structuredData.deadlockStatus && structuredData.deadlockStatus.severity > 0) {
+                    // 找出所有与死锁相关的同步器
+                    synchronizers.forEach(sync => {
+                        if (sync.deadlockStatus && sync.deadlockStatus.severity > 0) {
+                            deadlockRelatedSyncs.push(sync);
+                            // 找出相关线程
+                            if (sync.lockHolder) deadlockRelatedThreads.push(sync.lockHolder);
+                            deadlockRelatedThreads.push(...sync.lockWaiters);
+                            deadlockRelatedThreads.push(...sync.notificationWaiters);
+                        }
+                    });
+                    
+                    // 去重
+                    const uniqueDeadlockThreads = [...new Set(deadlockRelatedThreads)];
+                    const uniqueDeadlockSyncs = [...new Set(deadlockRelatedSyncs)];
+                    
+                    if (uniqueDeadlockThreads.length > 0) {
+                        const deadlockSegments = createCapacityAwareSegments(
+                            uniqueDeadlockThreads, uniqueDeadlockSyncs, segmentId, 'critical', 
+                            '死锁分析', '死锁检测和根因分析'
+                        );
+                        segmentPlan.segments.push(...deadlockSegments);
+                        segmentId += deadlockSegments.length;
+                        console.log(`🚨 创建${deadlockSegments.length}个死锁分析分段，涉及${uniqueDeadlockThreads.length}个线程`);
+                    }
+                }
+                
+                // ⚡ P1优先级：关键状态线程分组
+                const processedThreadIds = new Set();
+                segmentPlan.segments.forEach(seg => {
+                    seg.threads.forEach(t => processedThreadIds.add(t.tid));
+                });
+                
+                // 按状态分组剩余线程
+                const threadsByStatus = {
+                    blocked: threads.filter(t => !processedThreadIds.has(t.tid) && 
+                        (t.state === 'waiting for monitor entry' || 
+                         (t.threadState && t.threadState.includes('BLOCKED')) || t.wantToAcquire)),
+                    running: threads.filter(t => !processedThreadIds.has(t.tid) && 
+                        (t.state === 'runnable' || 
+                         (t.threadState && t.threadState.includes('RUNNABLE')))),
+                    waiting: threads.filter(t => !processedThreadIds.has(t.tid) && 
+                        (t.state === 'waiting on condition' || t.state === 'in Object.wait()' ||
+                         (t.threadState && (t.threadState.includes('WAITING') || t.threadState.includes('TIMED_WAITING'))) ||
+                         t.wantNotificationOn))
+                };
+                
+                // 更新已处理线程ID
+                const updateProcessedIds = () => {
+                    processedThreadIds.clear();
+                    segmentPlan.segments.forEach(seg => {
+                        seg.threads.forEach(t => processedThreadIds.add(t.tid));
+                    });
+                };
+                
+                // 处理阻塞线程 (高优先级)
+                if (threadsByStatus.blocked.length > 0) {
+                    const blockedSegments = createCapacityAwareSegments(
+                        threadsByStatus.blocked, synchronizers, segmentId, 'high', 
+                        '阻塞分析', 'BLOCKED线程和锁竞争分析'
+                    );
+                    segmentPlan.segments.push(...blockedSegments);
+                    segmentId += blockedSegments.length;
+                    updateProcessedIds();
+                    console.log(`🔴 创建${blockedSegments.length}个阻塞线程分段，涉及${threadsByStatus.blocked.length}个线程`);
+                }
+                
+                // 处理运行中线程 (中优先级)
+                if (threadsByStatus.running.length > 0) {
+                    const runningSegments = createCapacityAwareSegments(
+                        threadsByStatus.running, synchronizers, segmentId, 'medium', 
+                        '运行分析', 'CPU使用和性能热点分析'
+                    );
+                    segmentPlan.segments.push(...runningSegments);
+                    segmentId += runningSegments.length;
+                    updateProcessedIds();
+                    console.log(`🟡 创建${runningSegments.length}个运行线程分段，涉及${threadsByStatus.running.length}个线程`);
+                }
+                
+                // 处理等待线程 (低优先级)
+                if (threadsByStatus.waiting.length > 0) {
+                    const waitingSegments = createCapacityAwareSegments(
+                        threadsByStatus.waiting, synchronizers, segmentId, 'low', 
+                        '等待分析', '线程等待模式和优化建议'
+                    );
+                    segmentPlan.segments.push(...waitingSegments);
+                    segmentId += waitingSegments.length;
+                    updateProcessedIds();
+                    console.log(`🔵 创建${waitingSegments.length}个等待线程分段，涉及${threadsByStatus.waiting.length}个线程`);
+                }
+                
+                // 📊 处理剩余线程（其他状态）
+                const remainingThreads = threads.filter(t => !processedThreadIds.has(t.tid));
+                if (remainingThreads.length > 0) {
+                    console.log(`📊 处理剩余${remainingThreads.length}个其他状态线程`);
+                    const otherSegments = createCapacityAwareSegments(
+                        remainingThreads, synchronizers, segmentId, 'low', 
+                        '其他分析', '系统线程和辅助线程分析'
+                    );
+                    segmentPlan.segments.push(...otherSegments);
+                    console.log(`📊 创建${otherSegments.length}个其他线程分段`);
+                }
+                
+                segmentPlan.totalSegments = segmentPlan.segments.length;
+            }
+            
+            // 📊 输出分段统计
+            const avgUtilization = segmentPlan.segments.length > 0 ? 
+                Math.round(segmentPlan.segments.reduce((sum, seg) => sum + seg.utilization, 0) / segmentPlan.segments.length) : 0;
+            
+            console.log(`🎯 容量感知分段策略完成:`);
+            console.log(`  - 总分段数: ${segmentPlan.totalSegments}`);
+            console.log(`  - 平均利用率: ${avgUtilization}%`);
+            console.log(`  - 最大容量: ${Math.round(maxSegmentSize/1000)}KB/段`);
+            
+            segmentPlan.segments.forEach((seg, idx) => {
+                console.log(`  分段${idx + 1}: ${seg.name} - ${seg.threads.length}线程 (${seg.utilization}%利用率, ${seg.priority}优先级)`);
+            });
+            
+            // 保存分段计划并开始执行
+            window.segmentPlan = segmentPlan;
+            window.segmentResults = [];
+            
+            progressManager.addConsoleLog(`容量感知分段完成: ${segmentPlan.totalSegments}个分段，平均${avgUtilization}%利用率`, 'success', '📋');
+            
+            // 开始执行分段分析
+            setTimeout(() => {
+                executeSegmentAnalysis(content, structuredData, filename, isTruncated, 0);
+            }, 1000);
+        }
+
+        // 🧮 容量计算工具
+        const capacityCalculator = {
+            // Claude Sonnet 4 容量配置（充分利用1M token窗口）
+            MODEL_CONTEXT_TOKENS: 1000000,        // 1M tokens context window
+            TOKEN_TO_CHAR_RATIO: 4,               // 1 token ≈ 4 characters
+            SYSTEM_PROMPT_RESERVE: 15000,         // 系统提示词保留空间
+            SAFETY_MARGIN: 0.85,                  // 85%安全边界，充分利用模型容量
+            MAX_PROMPT_SIZE: 3200000,             // 3.2MB HTTP限制，接近Claude Sonnet 4真实容量
+            
+            // 计算可用的单段最大容量
+            getMaxSegmentSize() {
+                const contextBasedLimit = Math.floor((this.MODEL_CONTEXT_TOKENS * this.TOKEN_TO_CHAR_RATIO - this.SYSTEM_PROMPT_RESERVE) * this.SAFETY_MARGIN);
+                const httpBasedLimit = this.MAX_PROMPT_SIZE;
+                return Math.min(contextBasedLimit, httpBasedLimit); // 取更小值，确保不超限
+            },
+            
+            // 估算Thread对象在提示词中的实际大小（更准确的估算）
+            estimateThreadSize(thread) {
+                if (!thread) return 0;
+                
+                let size = 0;
+                // 基础属性模板大小（降低估算，更贴近实际）
+                size += 150; // 基础格式化文本（优化后的估算）
+                
+                // 线程名称（实际长度）
+                if (thread.name) size += thread.name.length + 20; // 包含少量格式化标签
+                
+                // 调用栈帧数（更精确估算）
+                if (thread.frames && Array.isArray(thread.frames)) {
+                    // 显示前2层调用栈，每层约80字符
+                    const displayFrames = Math.min(thread.frames.length, 2);
+                    size += displayFrames * 80;
+                    if (thread.frames.length > 2) size += 30; // "...(还有X层)"
+                }
+                
+                // 持有的锁（精简估算）
+                if (thread.locksHeld && Array.isArray(thread.locksHeld)) {
+                    const displayLocks = Math.min(thread.locksHeld.length, 1);
+                    size += displayLocks * 40; // 包含格式化
+                    if (thread.locksHeld.length > 1) size += 15; // "..."
+                }
+                
+                // 等待的同步器信息（精简）
+                if (thread.wantToAcquire) size += 50; // 包含标签
+                if (thread.wantNotificationOn) size += 50; // 包含标签
+                
+                return size;
+            },
+            
+            // 估算Synchronizer对象大小（优化后）
+            estimateSynchronizerSize(sync) {
+                if (!sync) return 0;
+                
+                let size = 60; // 基础属性（精简）
+                if (sync.id) size += Math.min(sync.id.length, 50); // 限制ID长度显示
+                if (sync.className) size += Math.min(sync.className.length, 30); // 限制类名长度
+                
+                // 等待者和持有者引用（精简统计）
+                if (sync.lockWaiters) size += Math.min(sync.lockWaiters.length * 10, 100);
+                if (sync.notificationWaiters) size += Math.min(sync.notificationWaiters.length * 10, 100);
+                
+                return size;
+            },
+            
+            // 计算一组数据的总大小
+            calculateGroupSize(threads = [], synchronizers = [], additionalData = '') {
+                let totalSize = 0;
+                
+                // 计算线程总大小
+                threads.forEach(thread => {
+                    totalSize += this.estimateThreadSize(thread);
+                });
+                
+                // 计算同步器总大小
+                synchronizers.forEach(sync => {
+                    totalSize += this.estimateSynchronizerSize(sync);
+                });
+                
+                // 额外数据大小
+                totalSize += additionalData.length;
+                
+                return totalSize;
+            }
+        };
+
+        // 🛠️ 智能容量感知分段创建器
+        function createCapacityAwareSegments(threads, synchronizers, startId, priority, baseName, focus) {
+            const segments = [];
+            const maxSegmentSize = capacityCalculator.getMaxSegmentSize();
+            let currentId = startId;
+            
+            console.log(`🧮 创建${baseName}分段，最大容量: ${Math.round(maxSegmentSize/1000)}KB，线程数: ${threads.length}`);
+            
+            let currentSegmentThreads = [];
+            let currentSegmentSyncs = [];
+            let currentSize = 0;
+            let segmentNumber = 1;
+            
+            for (let i = 0; i < threads.length; i++) {
+                const thread = threads[i];
+                const threadSize = capacityCalculator.estimateThreadSize(thread);
+                
+                // 查找与此线程相关的同步器
+                const relatedSyncs = synchronizers.filter(sync => 
+                    sync.lockHolder === thread || 
+                    sync.lockWaiters.includes(thread) || 
+                    sync.notificationWaiters.includes(thread)
+                );
+                const relatedSyncsSize = relatedSyncs.reduce((sum, sync) => 
+                    sum + capacityCalculator.estimateSynchronizerSize(sync), 0);
+                
+                const totalItemSize = threadSize + relatedSyncsSize;
+                
+                // 检查是否需要开始新分段
+                if (currentSize + totalItemSize > maxSegmentSize && currentSegmentThreads.length > 0) {
+                    // 创建当前分段
+                    segments.push({
+                        id: currentId++,
+                        name: `${baseName}${segmentNumber}`,
+                        focus: focus,
+                        priority: priority,
+                        threads: [...currentSegmentThreads],
+                        synchronizers: [...currentSegmentSyncs],
+                        estimatedSize: currentSize,
+                        utilization: Math.round((currentSize / maxSegmentSize) * 100)
+                    });
+                    
+                    console.log(`📦 创建分段${segmentNumber}: ${currentSegmentThreads.length}线程, ${Math.round(currentSize/1000)}KB (${Math.round((currentSize/maxSegmentSize)*100)}%利用率)`);
+                    
+                    // 重置为新分段
+                    currentSegmentThreads = [];
+                    currentSegmentSyncs = [];
+                    currentSize = 0;
+                    segmentNumber++;
+                }
+                
+                // 添加到当前分段
+                currentSegmentThreads.push(thread);
+                relatedSyncs.forEach(sync => {
+                    if (!currentSegmentSyncs.includes(sync)) {
+                        currentSegmentSyncs.push(sync);
+                    }
+                });
+                currentSize += totalItemSize;
+            }
+            
+            // 处理最后一个分段
+            if (currentSegmentThreads.length > 0) {
+                segments.push({
+                    id: currentId++,
+                    name: `${baseName}${segmentNumber}`,
+                    focus: focus,
+                    priority: priority,
+                    threads: currentSegmentThreads,
+                    synchronizers: currentSegmentSyncs,
+                    estimatedSize: currentSize,
+                    utilization: Math.round((currentSize / maxSegmentSize) * 100)
+                });
+                
+                console.log(`📦 创建最终分段${segmentNumber}: ${currentSegmentThreads.length}线程, ${Math.round(currentSize/1000)}KB (${Math.round((currentSize/maxSegmentSize)*100)}%利用率)`);
+            }
+            
+            return segments;
         }
 
         // 单阶段分析（原有逻辑）
@@ -1929,7 +2437,7 @@
                 });
                 
                 // 更新进度提示
-                $('#progressDetails').html(`<i class="fas fa-exclamation-triangle text-warning"></i> 数据量较大，正在优化处理 (${Math.round(finalSize/1000)}KB)`);
+                progressManager.addConsoleLog(`数据量较大 (${Math.round(finalSize/1000)}KB)，正在优化处理...`, 'warning', '⚠️');
                 
                 const finalContent = `${systemPrompt}\n\n详细解析数据:\n${structuredDataText}\n\n原始线程转储内容(已截断):\n${truncatedContent}`;
                 
@@ -1939,134 +2447,7 @@
             }
         }
 
-        // 🧠 阶段1：AI制定智能分段策略
-        function createSegmentationPlan(content, structuredData, filename, isTruncated) {
-            const segmentationPrompt = `您是Java线程转储分析专家。现在需要您为一个大型线程转储文件制定智能分段分析策略。
-
-## 📊 数据规模
-- 原始内容大小: ${Math.round(content.length/1000)}KB
-- 线程总数: ${structuredData.summary.totalThreads}
-- 同步器数量: ${structuredData.summary.synchronizerCount}
-- Token限制: 单次分析最多25KB内容
-
-## 🎯 分段目标
-基于jstack-review的结构化解析结果，请制定合理的分段策略：
-
-### 线程分布情况
-- 运行中线程: ${structuredData.summary.runningThreads}个
-- 等待中线程: ${structuredData.summary.waitingThreads}个  
-- 阻塞线程: ${structuredData.summary.blockedThreads}个
-- 睡眠线程: ${structuredData.summary.sleepingThreads}个
-- 非Java线程: ${structuredData.summary.nonJavaThreads}个
-
-### 同步器分析
-- 同步器总数: ${structuredData.summary.synchronizerCount}个
-- 是否存在死锁: ${structuredData.summary.hasDeadlocks ? '是' : '否'}
-
-## 📝 请提供JSON格式的分段计划
-
-请返回严格的JSON格式（不要使用markdown代码块）：
-{
-  "strategy": "分段策略说明",
-  "totalSegments": 分段总数,
-  "segments": [
-    {
-      "id": 1,
-      "name": "分段名称",
-      "focus": "分析重点",
-      "threadRange": {
-        "start": 起始线程索引,
-        "end": 结束线程索引
-      },
-      "includeSync": 是否包含同步器分析(true/false),
-      "priority": "优先级(high/medium/low)"
-    }
-  ]
-}
-
-## 🚨 分段原则
-1. 每段不超过20个线程
-2. 优先分析阻塞和死锁相关线程
-3. 按问题严重程度排序
-4. 确保同步器分析完整性`;
-
-            console.log('🧠 向AI请求分段策略');
-            
-            $.ajax({
-                url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    accessKey: aiConfig.accessKey,
-                    secretKey: aiConfig.secretKey,
-                    region: aiConfig.region,
-                    inferenceProfileArn: aiConfig.inferenceProfileArn,
-                    messages: [{
-                        role: 'user',
-                        content: segmentationPrompt
-                    }],
-                    config: {
-                        maxTokens: 2000,
-                        temperature: 0.1
-                    }
-                }),
-                success: function(response) {
-                    if (response.success) {
-                        try {
-                            console.log('✅ AI分段策略响应:', response.response);
-                            
-                            // 尝试解析JSON响应
-                            let segmentPlan;
-                            let responseContent = response.response;
-                            
-                            // 如果response有content属性，使用content
-                            if (responseContent && typeof responseContent === 'object' && responseContent.content) {
-                                responseContent = responseContent.content;
-                            }
-                            
-                            if (typeof responseContent === 'string') {
-                                // 清理可能的markdown格式
-                                const cleanedResponse = responseContent
-                                    .replace(/```json\s*\n?/g, '')
-                                    .replace(/\n?```/g, '')
-                                    .trim();
-                                segmentPlan = JSON.parse(cleanedResponse);
-                            } else {
-                                segmentPlan = responseContent;
-                            }
-                            
-                            console.log('📋 解析的分段计划:', segmentPlan);
-                            
-                            // 验证分段计划
-                            if (segmentPlan && segmentPlan.segments && Array.isArray(segmentPlan.segments)) {
-                                window.segmentPlan = segmentPlan;
-                                window.segmentResults = [];
-                                console.log(`🎯 分段计划制定成功，共${segmentPlan.totalSegments}个分段`);
-                                
-                                // 开始执行分段分析
-                                executeSegmentAnalysis(content, structuredData, filename, isTruncated, 0);
-                            } else {
-                                console.error('❌ 分段计划格式错误');
-                                fallbackToSingleStage(content, structuredData, filename, isTruncated);
-                            }
-                        } catch (error) {
-                            console.error('❌ 分段计划JSON解析失败:', error);
-                            console.log('原始响应:', response.response);
-                            fallbackToSingleStage(content, structuredData, filename, isTruncated);
-                        }
-                    } else {
-                        console.error('❌ AI分段策略失败:', response.error);
-                        fallbackToSingleStage(content, structuredData, filename, isTruncated);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('❌ 分段策略API调用失败:', error);
-                    fallbackToSingleStage(content, structuredData, filename, isTruncated);
-                }
-            });
-        }
-
-        // 🔄 执行分段分析
+        // 🔄 执行分段分析（更新版）
         function executeSegmentAnalysis(content, structuredData, filename, isTruncated, segmentIndex) {
             const segmentPlan = window.segmentPlan;
             const totalSegments = segmentPlan.totalSegments;
@@ -2084,16 +2465,15 @@
             console.log(`🔍 执行分段${segmentIndex + 1}/${totalSegments}: ${segment.name}`);
             
             // 更新进度显示
-            $('#progressText').text(`阶段2B: 分段分析 (${segmentIndex + 1}/${totalSegments})`);
-            $('#progressDetails').html(`<i class="fas fa-microscope text-success"></i> 正在分析: ${segment.name} - ${segment.focus}`);
+            $('#currentStageText').text(`分段分析 (${segmentIndex + 1}/${totalSegments})`);
+            $('#stageDetails').text(`正在分析: ${segment.name}`);
+            progressManager.addConsoleLog(`开始分段${segmentIndex + 1}: ${segment.name} - ${segment.focus}`, 'info', '🔍');
             updateProgress(progress);
             
-            // 构建分段数据
-            const segmentData = buildSegmentData(structuredData, segment);
-            const segmentContent = content; // 原始内容保持完整，AI会根据指引聚焦特定部分
+            // 🎯 构建分段分析提示词（基于分段中的线程）
+            const segmentPrompt = buildOptimizedSegmentPrompt(segment, structuredData, segmentIndex + 1, totalSegments);
             
-            // 构建分段分析提示词
-            const segmentPrompt = buildSegmentPrompt(segment, segmentData, segmentIndex + 1, totalSegments);
+            console.log(`📏 分段${segmentIndex + 1}提示词大小: ${Math.round(segmentPrompt.length/1000)}KB`);
             
             // 发送分段分析请求
             $.ajax({
@@ -2107,16 +2487,17 @@
                     inferenceProfileArn: aiConfig.inferenceProfileArn,
                     messages: [{
                         role: 'user',
-                        content: `${segmentPrompt}\n\n线程转储原始数据:\n${segmentContent}`
+                        content: segmentPrompt
                     }],
                     config: {
-                        maxTokens: 3000,
+                        maxTokens: 8000,  // 从3K提升到8K，充分利用Claude Sonnet 4
                         temperature: 0.1
                     }
                 }),
                 success: function(response) {
                     if (response.success) {
                         console.log(`✅ 分段${segmentIndex + 1}分析完成`);
+                        progressManager.addConsoleLog(`分段${segmentIndex + 1}分析完成: ${segment.name}`, 'success', '✅');
                         
                         // 存储分段结果
                         window.segmentResults.push({
@@ -2136,6 +2517,7 @@
                         
                     } else {
                         console.error(`❌ 分段${segmentIndex + 1}分析失败:`, response.error);
+                        progressManager.addConsoleLog(`分段${segmentIndex + 1}失败: ${response.error}`, 'error', '❌');
                         // 记录失败但继续下一个分段
                         window.segmentResults.push({
                             segmentIndex: segmentIndex,
@@ -2152,6 +2534,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error(`❌ 分段${segmentIndex + 1}API调用失败:`, error);
+                    progressManager.addConsoleLog(`分段${segmentIndex + 1}API失败: ${error}`, 'error', '❌');
                     
                     // 记录失败但继续下一个分段
                     window.segmentResults.push({
@@ -2169,50 +2552,162 @@
             });
         }
 
-        // 🛠️ 构建分段数据
-        function buildSegmentData(structuredData, segment) {
-            if (!structuredData || !structuredData.threads) {
-                return { summary: structuredData?.summary || {} };
+        // 📝 构建优化的分段分析提示词（重新设计 - 智能大小控制）
+        function buildOptimizedSegmentPrompt(segment, structuredData, currentSegment, totalSegments) {
+            console.log('🤖 构建容量优化分段分析提示词（智能大小控制）');
+            
+            const segmentThreads = segment.threads || [];
+            const segmentSynchronizers = segment.synchronizers || [];
+            const maxPromptSize = capacityCalculator.MAX_PROMPT_SIZE;
+            
+            console.log(`📊 分段数据: ${segmentThreads.length}线程, ${segmentSynchronizers.length}同步器, 预计${Math.round(segment.estimatedSize/1000)}KB`);
+            
+            // 🎯 智能内容控制策略
+            let threadDetails = '';
+            let synchronizerDetails = '';
+            let currentSize = 0;
+            
+            // 基础模板大小估算
+            const baseTemplateSize = 3000; // 基础提示词模板大小
+            const availableForContent = maxPromptSize - baseTemplateSize;
+            
+            console.log(`📏 可用内容空间: ${Math.round(availableForContent/1000)}KB`);
+            
+            if (segmentThreads.length > 0) {
+                // 🔥 优先级排序：阻塞 > 运行 > 等待 > 其他
+                const sortedThreads = [...segmentThreads].sort((a, b) => {
+                    const getPriority = (thread) => {
+                        if (thread.wantToAcquire || (thread.threadState && thread.threadState.includes('BLOCKED'))) return 0; // 最高优先级
+                        if (thread.threadState && thread.threadState.includes('RUNNABLE')) return 1;
+                        if (thread.threadState && (thread.threadState.includes('WAITING') || thread.threadState.includes('TIMED_WAITING'))) return 2;
+                        return 3; // 其他
+                    };
+                    return getPriority(a) - getPriority(b);
+                });
+                
+                const processedThreads = [];
+                let usedSpace = 0;
+                
+                for (let i = 0; i < sortedThreads.length && usedSpace < availableForContent * 0.8; i++) {
+                    const thread = sortedThreads[i];
+                    
+                    // 🎯 生成简化的线程信息（智能截断）
+                    let threadInfo = `**线程${i + 1}**: "${(thread.name || '未知').substring(0, 100)}"${thread.name && thread.name.length > 100 ? '...' : ''}
+- 状态: ${thread.state || '未知'} | Thread.State: ${thread.threadState || '未知'}
+- ID: ${thread.tid || 'N/A'} | 优先级: ${thread.prio || 'N/A'}`;
+
+                    // 等待信息（简化）
+                    if (thread.wantToAcquire || thread.wantNotificationOn) {
+                        threadInfo += `
+- 等待: ${thread.wantToAcquire ? '锁' : ''}${thread.wantNotificationOn ? '通知' : ''}`;
+                    }
+                    
+                    // 持有锁信息（限制显示）
+                    if (thread.locksHeld && thread.locksHeld.length > 0) {
+                        const lockCount = thread.locksHeld.length;
+                        const displayLocks = thread.locksHeld.slice(0, 1); // 只显示1个锁
+                        threadInfo += `
+- 持有锁: ${lockCount}个${displayLocks.length > 0 ? ' [' + displayLocks[0].substring(0, 20) + (lockCount > 1 ? '...' : '') + ']' : ''}`;
+                    }
+                    
+                    // 调用栈（严格限制）
+                    if (thread.frames && thread.frames.length > 0) {
+                        const frameCount = thread.frames.length;
+                        const displayFrames = thread.frames.slice(0, 2); // 只显示前2层
+                        threadInfo += `
+- 调用栈: ${frameCount}层`;
+                        displayFrames.forEach(frame => {
+                            threadInfo += `
+  └─ ${frame.substring(0, 80)}${frame.length > 80 ? '...' : ''}`;
+                        });
+                        if (frameCount > 2) {
+                            threadInfo += `
+  └─ ...(还有${frameCount - 2}层)`;
+                        }
+                    }
+                    
+                    const threadInfoSize = threadInfo.length;
+                    if (usedSpace + threadInfoSize > availableForContent * 0.8) {
+                        // 空间不足，停止添加线程
+                        console.log(`⚠️ 内容空间不足，已处理${processedThreads.length}/${segmentThreads.length}个线程`);
+                        break;
+                    }
+                    
+                    processedThreads.push(threadInfo);
+                    usedSpace += threadInfoSize;
+                }
+                
+                threadDetails = processedThreads.join('\\n\\n');
+                
+                // 如果有线程被截断，添加说明
+                if (processedThreads.length < segmentThreads.length) {
+                    threadDetails += `\\n\\n**📊 数据截断说明**: 显示${processedThreads.length}/${segmentThreads.length}个线程（按重要性排序，优先显示阻塞和关键线程）`;
+                }
             }
             
-            const start = segment.threadRange.start;
-            const end = segment.threadRange.end;
-            const segmentThreads = structuredData.threads.slice(start, end + 1);
+            // 同步器信息（简化版）
+            if (segmentSynchronizers.length > 0 && currentSize < availableForContent) {
+                const syncCount = Math.min(segmentSynchronizers.length, 5); // 最多显示5个
+                const displaySyncs = segmentSynchronizers.slice(0, syncCount);
+                
+                synchronizerDetails = `\\n\\n## 🔒 关键同步器 (${syncCount}/${segmentSynchronizers.length}个)\\n` + 
+                    displaySyncs.map((sync, index) => {
+                        return `**同步器${index + 1}**: ${sync.id.substring(0, 20)}...
+- 类型: ${sync.className ? sync.className.split('.').pop() : '未知'}  
+- 等锁: ${sync.lockWaiters ? sync.lockWaiters.length : 0}个 | 等通知: ${sync.notificationWaiters ? sync.notificationWaiters.length : 0}个
+- 持有者: ${sync.lockHolder ? (sync.lockHolder.name || 'ID:' + sync.lockHolder.tid).substring(0, 30) : '无'}`;
+                    }).join('\\n\\n');
+            }
             
-            return {
-                summary: structuredData.summary,
-                dateString: structuredData.dateString,
-                threads: segmentThreads,
-                synchronizers: segment.includeSync ? structuredData.synchronizers : [],
-                segmentInfo: {
-                    threadRange: segment.threadRange,
-                    totalThreadsInSegment: segmentThreads.length,
-                    focus: segment.focus
-                }
-            };
-        }
+            // 构建最终提示词
+            const segmentPrompt = `您是Java线程转储分段分析专家。正在进行第${currentSegment}/${totalSegments}阶段分析。
 
-        // 📝 构建分段分析提示词
-        function buildSegmentPrompt(segment, segmentData, currentSegment, totalSegments) {
-            // 使用智能模板系统 - 优先使用分段专用模板
-            console.log('🤖 使用智能提示词系统 (分段分析)');
+## 🎯 本次分段任务
+**分段名称**: ${segment.name} | **优先级**: ${segment.priority}  
+**数据规模**: ${segmentThreads.length}个线程, ${segmentSynchronizers.length}个同步器 (${segment.utilization}%容量利用)
+**分析重点**: ${segment.focus}
+
+## 📊 应用整体状态
+- 总线程: ${structuredData.summary.totalThreads} | 运行: ${structuredData.summary.runningThreads} | 等待: ${structuredData.summary.waitingThreads} | 阻塞: ${structuredData.summary.blockedThreads}
+- 同步器: ${structuredData.summary.synchronizerCount}个 | 死锁: ${structuredData.summary.hasDeadlocks ? '⚠️检测到' : '✅无'}
+
+## 🔍 本段线程分析
+${threadDetails}${synchronizerDetails}
+
+## 🎯 深度分析要求
+请基于以上数据进行专业分析：
+
+### 🔍 **问题识别** (${segment.priority}优先级)
+1. **P0问题** (立即处理): [具体线程和问题]
+2. **P1问题** (24小时内): [性能瓶颈]  
+3. **P2优化** (计划改进): [长期建议]
+
+### 💡 **解决方案**
+- 🔥 **立即行动**: [针对关键问题的具体步骤]
+- ⚡ **优先优化**: [性能改进方案]
+- 🛠️ **系统改进**: [架构优化建议]
+
+### ⚠️ **风险评估**
+- **风险等级**: [高/中/低]
+- **影响评估**: [对系统性能的具体影响]
+- **监控建议**: [关键指标]
+
+---
+**🔧 分段说明**: 第${currentSegment}/${totalSegments}阶段，${segment.utilization}%容量利用，结果将合并生成综合报告。`;
+
+            const finalSize = segmentPrompt.length;
+            console.log(`📏 最终提示词大小: ${Math.round(finalSize/1000)}KB (限制: ${Math.round(maxPromptSize/1000)}KB)`);
             
-            // 构建包含分段信息的结构化数据
-            const segmentStructuredData = {
-                ...segmentData,
-                segmentInfo: {
-                    ...segmentData.segmentInfo,
-                    currentSegment,
-                    totalSegments,
-                    segmentName: segment.name,
-                    segmentFocus: segment.focus,
-                    segmentPriority: segment.priority,
-                    segmentStart: segment.threadRange.start,
-                    segmentEnd: segment.threadRange.end
-                }
-            };
+            if (finalSize > maxPromptSize) {
+                console.error(`🚨 提示词过大: ${finalSize} > ${maxPromptSize}，需要进一步截断`);
+                // 紧急截断策略
+                const truncateSize = maxPromptSize - 1000;
+                const truncatedPrompt = segmentPrompt.substring(0, truncateSize) + '\\n\\n**⚠️ 内容已截断以适应请求大小限制**';
+                console.log(`✂️ 紧急截断到: ${Math.round(truncatedPrompt.length/1000)}KB`);
+                return truncatedPrompt;
+            }
             
-            return buildSmartPrompt(segmentStructuredData, false, 'segment');
+            return segmentPrompt;
         }
 
         // 🎭 执行综合分析（最终阶段）
@@ -2220,8 +2715,9 @@
             console.log('🎭 开始综合分析阶段');
             
             // 更新进度显示
-            $('#progressText').text('阶段2C: AI综合分析...');
-            $('#progressDetails').html('<i class="fas fa-puzzle-piece text-warning"></i> 整合所有分段分析结果，生成最终报告');
+            $('#currentStageText').text('综合分析');
+            $('#stageDetails').text('整合所有分段分析结果，生成最终报告');
+            progressManager.addConsoleLog('开始综合分析，整合所有分段结果...', 'info', '🎭');
             updateProgress(95);
             
             const segmentResults = window.segmentResults;
@@ -2229,25 +2725,107 @@
             
             if (!segmentResults || segmentResults.length === 0) {
                 console.error('❌ 没有分段结果可以综合');
+                progressManager.addConsoleLog('没有分段结果，回退到单阶段分析', 'error', '❌');
                 fallbackToSingleStage(content, structuredData, filename, isTruncated);
                 return;
             }
             
-            // 构建综合分析提示词 - 使用智能模板系统
-            console.log('🤖 使用智能提示词系统 (综合分析)');
+            // 构建综合分析提示词
+            console.log('🤖 构建综合分析提示词');
             
-            // 构建包含分段结果的结构化数据
-            const synthesisStructuredData = {
-                ...structuredData,
-                segmentResults: segmentResults,
-                segmentPlan: segmentPlan,
-                synthesisInfo: {
-                    segmentCount: segmentResults.length,
-                    analysisType: 'synthesis'
-                }
-            };
+            // 汇总所有分段结果
+            let segmentSummary = '';
+            segmentResults.forEach((segment, index) => {
+                const resultText = typeof segment.result === 'object' && segment.result.content 
+                    ? segment.result.content 
+                    : segment.result;
+                
+                const summary = resultText.length > 500 ? resultText.substring(0, 500) + '...' : resultText;
+                segmentSummary += `### 分段${index + 1}: ${segment.segmentName} (${segment.priority}优先级)
+**重点**: ${segment.focus}
+**分析结果**:
+${summary}
+
+`;
+            });
             
-            const synthesisPrompt = buildSmartPrompt(synthesisStructuredData, isTruncated, 'synthesis');
+            const synthesisPrompt = `您是资深Java性能综合分析专家。基于${segmentResults.length}个分段的详细分析结果生成最终综合报告。
+
+## 📊 整体数据摘要
+- 总线程数: ${structuredData.summary.totalThreads}
+- 运行中线程: ${structuredData.summary.runningThreads}
+- 等待中线程: ${structuredData.summary.waitingThreads}  
+- 阻塞线程: ${structuredData.summary.blockedThreads}
+- 同步器数量: ${structuredData.summary.synchronizerCount}
+- 是否存在死锁: ${structuredData.summary.hasDeadlocks ? '是' : '否'}
+
+## 🔍 分段分析结果汇总
+${segmentSummary}
+
+## 📝 请生成综合分析报告
+
+### 📈 **综合执行摘要**
+- 🏥 **整体健康度评分**: X/10 分 (基于所有分段综合评估)
+- ⚠️ **整体风险等级**: [低风险/中风险/高风险/紧急]  
+- 📊 **核心问题概述**: 汇总所有分段发现的关键问题
+
+### 🚨 **问题优先级矩阵**
+**P0级问题汇总** (需立即处理)
+- [ ] **死锁问题**: [汇总各分段发现]
+- [ ] **严重阻塞**: [汇总各分段发现]
+- [ ] **资源泄漏**: [汇总各分段发现]
+
+**P1级问题汇总** (24小时内处理)
+- [ ] **性能瓶颈**: [汇总各分段发现]
+- [ ] **资源竞争**: [汇总各分段发现]
+
+**P2级问题汇总** (计划优化)
+- [ ] **代码优化**: [汇总各分段发现]
+- [ ] **架构改进**: [汇总各分段发现]
+
+### 💡 **综合优化路线图**
+**立即行动计划** (0-24小时)
+1. 🔥 **紧急处理**: [基于P0问题的具体行动]
+2. ⚡ **快速解决**: [基于P1问题的快速方案]
+
+**中期优化计划** (1周-1个月)
+1. 🛠️ **系统改进**: [基于多个分段的系统性建议]
+2. 📊 **监控增强**: [基于分析结果的监控方案]
+
+**长期战略规划** (1-3个月)
+1. 🏗️ **架构重构**: [根本性问题解决方案]
+2. 📈 **性能提升**: [长期性能优化策略]
+
+### 📊 **综合监控策略**
+**关键指标阈值** (基于分段发现)
+- 🔍 综合线程使用率阈值: XX%
+- ⏱️ 系统响应时间告警: XXXms
+- 🚦 整体阻塞比例告警: XX%
+- 💾 内存压力监控: XX%
+
+### 📋 **综合分析总结**
+**多阶段分析核心发现**
+1. **最关键发现**: ...
+2. **系统性问题**: ...
+3. **优化机会**: ...
+
+**风险评估与建议**
+- **当前风险等级**: ...
+- **主要风险因素**: ...
+- **风险缓解措施**: ...
+
+**后续行动建议**
+- [ ] **立即执行**: ...
+- [ ] **短期规划**: ...
+- [ ] **长期目标**: ...
+
+---
+**📊 多阶段分析说明**
+- 本报告基于${segmentResults.length}个智能分段的深度分析
+- 每个分段都经过专门的AI分析和问题识别
+- 综合报告确保了分析的全面性和准确性`;
+            
+            console.log(`📏 综合分析提示词大小: ${Math.round(synthesisPrompt.length/1000)}KB`);
             
             // 发送综合分析请求
             sendToAI(synthesisPrompt, false, 'synthesis');
@@ -2256,7 +2834,7 @@
         // 🔙 回退到单阶段分析
         function fallbackToSingleStage(content, structuredData, filename, isTruncated) {
             console.log('🔙 回退到单阶段分析');
-            $('#progressDetails').html('<i class="fas fa-exclamation-triangle text-warning"></i> 多阶段分析失败，回退到单阶段分析');
+            progressManager.addConsoleLog('多阶段分析失败，回退到单阶段分析', 'warning', '🔄');
             setTimeout(() => {
                 performSingleStageAIAnalysis(content, structuredData, filename, isTruncated);
             }, 1000);
@@ -2451,12 +3029,13 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                         content: content
                     }],
                     config: {
-                        maxTokens: analysisType === 'synthesis' ? 4000 : 3000,
+                        maxTokens: analysisType === 'synthesis' ? 10000 : 8000,  // 综合分析10K，单阶段8K
                         temperature: 0.1
                     }
                 }),
                 success: function(response) {
                     console.log(`✅ ${analysisType}分析API调用成功:`, response);
+                    progressManager.addConsoleLog(`${analysisType === 'synthesis' ? '综合' : 'AI'}分析API调用成功`, 'success', '🎯');
                     
                     // 完成分析，转到结果生成阶段
                     progressManager.updateStage(3, '整理分析结果，生成最终报告...');
@@ -2508,22 +3087,24 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             });
         }
 
-        // 增强的进度管理系统
+        // 现代化进度管理系统
         const progressManager = {
             startTime: null,
             currentStage: 0,
+            consoleLines: [],
             stages: [
-                { name: '文件解析', progress: 10, duration: 1000, explanation: '正在解析您上传的线程转储文件，提取基本信息...' },
-                { name: '结构化解析', progress: 25, duration: 2000, explanation: '使用 jstack-review 引擎进行结构化数据提取，识别线程状态和同步器...' },
-                { name: 'AI智能分析', progress: 85, duration: 15000, explanation: '使用 Claude 4.0 Sonnet 基于结构化数据进行智能分析，这是最耗时但也是最重要的阶段...' },
-                { name: '结果生成', progress: 100, duration: 1000, explanation: '整理分析结果，生成最终智能报告...' }
+                { name: '文件解析', progress: 10, duration: 1000 },
+                { name: '结构化解析', progress: 25, duration: 2000 },
+                { name: 'AI智能分析', progress: 85, duration: 15000 },
+                { name: '结果生成', progress: 100, duration: 1000 }
             ],
             
             init() {
                 this.startTime = Date.now();
                 this.currentStage = 0;
+                this.consoleLines = [];
                 this.startTimer();
-                this.updateStageIndicator(0, 'active');
+                this.addConsoleLog('系统初始化完成，准备开始分析...', 'info');
             },
             
             startTimer() {
@@ -2535,57 +3116,71 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                     $('#analysisTimer').text(timeStr);
                 }, 1000);
             },
+
+            addConsoleLog(message, level = 'info', icon = null) {
+                const now = new Date();
+                const timestamp = now.toTimeString().split(' ')[0];
+                
+                const icons = {
+                    info: '▶',
+                    success: '✓',
+                    warning: '!',
+                    error: '✗'
+                };
+
+                const logIcon = icon || icons[level] || '▶';
+                
+                const logLine = `
+                    <div class="console-line">
+                        <span class="console-timestamp">${timestamp}</span>
+                        <span class="console-icon console-level-${level}">${logIcon}</span>
+                        <span class="console-level-${level}">${message}</span>
+                    </div>
+                `;
+                
+                $('#consoleOutput').append(logLine);
+                
+                // 自动滚动到底部
+                const consoleElement = document.getElementById('consoleOutput');
+                consoleElement.scrollTop = consoleElement.scrollHeight;
+            },
             
-            updateStage(stageIndex, customExplanation = null) {
+            updateStage(stageIndex, customMessage = null) {
                 if (stageIndex >= this.stages.length) return;
                 
                 const stage = this.stages[stageIndex];
                 this.currentStage = stageIndex;
                 
-                // 更新进度条
-                $('#progressBar').css('width', stage.progress + '%')
-                    .find('span').text(stage.progress + '%');
+                // 更新现代进度条
+                $('#modernProgressFill').css('width', stage.progress + '%');
+                $('#progressPercentage').text(stage.progress + '%');
                 
-                // 更新阶段文本
-                $('#progressText').text(stage.name);
-                $('#progressDetails').text(customExplanation || '');
+                // 更新当前阶段文本
+                $('#currentStageText').text(stage.name);
+                $('#stageDetails').text(customMessage || `正在执行${stage.name}...`);
                 
-                // 更新解释文本
-                $('#analysisExplanation').text(customExplanation || stage.explanation);
-                
-                // 更新阶段指示器
-                this.updateStageIndicator(stageIndex, 'active');
-                
-                // 标记之前的阶段为已完成
-                for (let i = 0; i < stageIndex; i++) {
-                    this.updateStageIndicator(i, 'completed');
+                // 添加console日志
+                if (customMessage) {
+                    this.addConsoleLog(`[${stage.name}] ${customMessage}`, 'info', '🔄');
+                } else {
+                    this.addConsoleLog(`开始${stage.name}阶段`, 'info', '🚀');
                 }
                 
                 console.log(`🎯 进度更新: 阶段${stageIndex + 1} - ${stage.name} (${stage.progress}%)`);
-            },
-            
-            updateStageIndicator(index, status) {
-                const circle = $(`#stage${index + 1} .stage-circle`);
-                circle.removeClass('active completed pulse-animation');
-                
-                if (status === 'active') {
-                    circle.addClass('active pulse-animation');
-                } else if (status === 'completed') {
-                    circle.addClass('completed');
-                }
             },
             
             // 显示传统分析统计信息
             showTraditionalStats(summary) {
                 if (!summary) return;
                 
-                $('#threadCount').text(summary.totalThreads);
-                $('#runningCount').text(summary.runningThreads);
-                $('#waitingCount').text(summary.waitingThreads);
-                $('#blockedCount').text(summary.blockedThreads);
-                $('#analysisStats').slideDown();
+                this.addConsoleLog(`解析完成: 发现 ${summary.totalThreads} 个线程`, 'success', '📊');
+                this.addConsoleLog(`运行中: ${summary.runningThreads}, 等待中: ${summary.waitingThreads}, 阻塞: ${summary.blockedThreads}`, 'info', '📈');
                 
-                console.log('📊 显示传统分析统计:', summary);
+                if (summary.hasDeadlocks) {
+                    this.addConsoleLog('⚠️ 检测到死锁情况，将重点分析', 'warning', '🚨');
+                }
+                
+                console.log('📊 传统分析统计已记录到console:', summary);
             },
             
             // 平滑进度更新（用于AI分析阶段）
@@ -2593,17 +3188,29 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 const startTime = Date.now();
                 const progressDiff = endPercent - startPercent;
                 
+                // 添加开始分析的console日志
+                this.addConsoleLog('开始AI深度分析，这可能需要一些时间...', 'info', '🤖');
+                
                 const animate = () => {
                     const elapsed = Date.now() - startTime;
                     const progress = Math.min(elapsed / duration, 1);
                     const currentPercent = startPercent + (progressDiff * progress);
                     
-                    $('#progressBar').css('width', currentPercent + '%')
-                        .find('span').text(Math.round(currentPercent) + '%');
+                    $('#modernProgressFill').css('width', currentPercent + '%');
+                    $('#progressPercentage').text(Math.round(currentPercent) + '%');
+                    
+                    // 定期添加进度日志
+                    if (Math.floor(progress * 10) > Math.floor((progress - 0.01) * 10)) {
+                        const progressPercent = Math.round(progress * 100);
+                        if (progressPercent % 20 === 0 && progressPercent > 0) {
+                            this.addConsoleLog(`AI分析进度: ${progressPercent}%`, 'info', '⚡');
+                        }
+                    }
                     
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else if (callback) {
+                        this.addConsoleLog('AI分析完成，正在生成报告...', 'success', '🎉');
                         callback();
                     }
                 };
@@ -2613,8 +3220,8 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
         };
 
         function updateProgress(percent) {
-            $('#progressBar').css('width', percent + '%')
-                .find('span').text(Math.round(percent) + '%');
+            $('#modernProgressFill').css('width', percent + '%');
+            $('#progressPercentage').text(Math.round(percent) + '%');
         }
 
         function showResults(content, filename) {
@@ -2623,6 +3230,15 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             $('#progressSection').addClass('d-none');
             $('#reuploadBtn').removeClass('d-none'); // 显示重新上传按钮
             $('#demoButton').addClass('d-none'); // 隐藏Demo按钮，保持界面简洁
+            
+            // 🎯 更改主标题为"AI智能分析报告"
+            $('h1').html(`
+                <i class="fas fa-chart-line text-primary me-3"></i>
+                AI智能分析报告
+                <small class="text-muted ms-3" style="font-size: 0.6em; font-weight: 400;">
+                    文件: ${filename}
+                </small>
+            `).addClass('results-main-title');
             
             console.log('🔍 showResults 调用，检查两阶段分析结果');
             console.log('🔍 traditionalAnalysis:', window.traditionalAnalysis);
@@ -2827,6 +3443,127 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             setTimeout(() => $('.alert').fadeOut(), 5000);
         }
 
+        function updateTraditionalAnalysisButton() {
+            console.log('🔧 updateTraditionalAnalysisButton() 被调用');
+            
+            // 确保DOM已经加载完成
+            setTimeout(() => {
+                const btn = $('#traditionalAnalysisBtn');
+                console.log('🔍 查找按钮元素，找到:', btn.length, '个');
+                
+                if (btn.length === 0) {
+                    console.error('❌ 找不到 traditionalAnalysisBtn 元素！');
+                    return;
+                }
+                
+                console.log('🔍 window.originalContent:', !!window.originalContent);
+                console.log('🔍 window.originalFilename:', !!window.originalFilename);
+                
+                if (window.originalContent && window.originalFilename) {
+                    console.log('✅ 条件满足，开始更新按钮样式');
+                    
+                    // 记录当前按钮类
+                    const beforeClass = btn.attr('class');
+                    console.log('🎨 变更前按钮类:', beforeClass);
+                    
+                    btn.removeClass('btn-outline-secondary')
+                       .addClass('btn-success')  // 改为实心绿色按钮，更明显
+                       .attr('title', `点击分析文件: ${window.originalFilename}`);
+                    
+                    // 记录变更后按钮类
+                    const afterClass = btn.attr('class');
+                    console.log('🎨 变更后按钮类:', afterClass);
+                    console.log('✅ 传统分析按钮已激活');
+                } else {
+                    console.log('⚠️ 条件不满足，保持默认样式');
+                    btn.removeClass('btn-outline-success')
+                       .addClass('btn-outline-secondary')
+                       .attr('title', '上传文件后可用');
+                }
+            }, 100); // 100ms延迟确保DOM完全加载
+        }
+
+        function openTraditionalAnalysis() {
+            console.log('🔵 openTraditionalAnalysis 函数被调用');
+            console.log('🔍 检查全局变量:');
+            console.log('  - window.originalContent 存在:', !!window.originalContent);
+            console.log('  - window.originalFilename 存在:', !!window.originalFilename);
+            
+            if (window.originalContent) {
+                console.log('  - 文件内容长度:', window.originalContent.length);
+            }
+            if (window.originalFilename) {
+                console.log('  - 文件名:', window.originalFilename);
+            }
+            
+            // 检查是否有已分析的文件内容
+            if (window.originalContent && window.originalFilename) {
+                console.log('✅ 条件满足，开始传递文件内容到传统分析页面');
+                console.log(`📁 文件: ${window.originalFilename}, 大小: ${window.originalContent.length}字符`);
+                
+                // 将文件内容存储到sessionStorage，供传统分析页面使用
+                const fileData = {
+                    content: window.originalContent,
+                    filename: window.originalFilename,
+                    timestamp: Date.now(),
+                    source: 'ai-enhanced-analysis'
+                };
+                
+                console.log('📦 准备存储的数据结构:');
+                console.log('  - filename:', fileData.filename);
+                console.log('  - content长度:', fileData.content.length);
+                console.log('  - timestamp:', fileData.timestamp);
+                console.log('  - source:', fileData.source);
+                
+                const jsonData = JSON.stringify(fileData);
+                console.log('📋 序列化后的JSON长度:', jsonData.length);
+                console.log('📋 JSON前100字符:', jsonData.substring(0, 100) + '...');
+                
+                sessionStorage.setItem('jstack_auto_analysis_data', jsonData);
+                console.log('✅ SessionStorage 设置完成');
+                
+                // 验证存储是否成功
+                const storedData = sessionStorage.getItem('jstack_auto_analysis_data');
+                if (storedData) {
+                    console.log('✅ SessionStorage 验证成功，存储的数据长度:', storedData.length);
+                    console.log('📋 存储的数据前100字符:', storedData.substring(0, 100) + '...');
+                } else {
+                    console.error('❌ SessionStorage 验证失败，没有找到存储的数据');
+                }
+                
+                // 添加小延时确保SessionStorage设置完成后再打开页面
+                setTimeout(() => {
+                    // 打开传统分析页面
+                    console.log('🌐 延时后准备打开传统分析页面...');
+                    const url = 'jstack-review-original/index.html';
+                    console.log('🔗 目标URL:', url);
+                    
+                    window.open(url, '_blank');
+                    console.log('✅ 页面已打开');
+                    
+                    // 显示提示信息
+                    showAlert(`文件 "${window.originalFilename}" 已自动传递到传统分析页面`, 'success');
+                }, 100); // 100ms延时确保SessionStorage操作完成
+            } else {
+                // 如果没有分析过的文件，正常打开传统分析页面
+                console.log('⚠️ 条件不满足：');
+                console.log('  - originalContent:', window.originalContent ? '存在' : '不存在');
+                console.log('  - originalFilename:', window.originalFilename ? '存在' : '不存在');
+                console.log('⚠️ 正常打开传统分析页面（不传递数据）');
+                
+                window.open('jstack-review-original/index.html', '_blank');
+                showAlert('请先上传并分析文件，或在传统分析页面手动上传文件', 'info');
+            }
+        }
+
+        function resetToUploadMode() {
+            // 恢复原始标题
+            $('h1').html('AI 增强 Java 线程转储分析工具').removeClass('results-main-title');
+            
+            // 重新加载页面
+            location.reload();
+        }
+
         $(document).ready(function() {
             window.aiAnalysisResult = null;
             window.traditionalAnalysis = null;
@@ -2890,6 +3627,15 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             reader.onload = function(e) {
                 const content = e.target.result;
                 console.log('📄 文件读取成功，内容长度:', content.length);
+                
+                // ✅ 立即存储文件内容和文件名，使传统分析按钮可用
+                window.originalContent = content;
+                window.originalFilename = file.name;
+                console.log('📁 文件内容已存储，传统分析按钮现在可用');
+                
+                // 更新传统分析按钮状态
+                updateTraditionalAnalysisButton();
+                
                 showAlert(`文件 "${file.name}" 上传成功，开始AI分析...`, 'success');
                 
                 // 开始分析

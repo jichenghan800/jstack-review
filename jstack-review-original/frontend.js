@@ -636,6 +636,102 @@ $(document).ready(function() {
     // create the first dump window
     var currentId = addDump(true);
     
+    // Check for auto-analysis data from AI-enhanced analyzer
+    console.log('🔍 检查SessionStorage中的自动分析数据...');
+    var autoAnalysisData = sessionStorage.getItem('jstack_auto_analysis_data');
+    console.log('📋 SessionStorage数据:', autoAnalysisData ? '存在' : '不存在');
+    
+    if (autoAnalysisData) {
+        try {
+            console.log('📋 原始SessionStorage数据:', autoAnalysisData.substring(0, 200) + '...');
+            var fileData = JSON.parse(autoAnalysisData);
+            console.log('📊 解析后的数据结构:', {
+                hasContent: !!fileData.content,
+                hasFilename: !!fileData.filename,
+                contentLength: fileData.content ? fileData.content.length : 0,
+                filename: fileData.filename,
+                timestamp: fileData.timestamp,
+                source: fileData.source
+            });
+            
+            if (fileData.content && fileData.filename) {
+                console.log('✅ 数据验证通过，开始自动加载...');
+                console.log('🔄 自动加载来自AI增强分析器的文件:', fileData.filename);
+                
+                // Set the content in the textarea
+                console.log('📝 设置文本框内容，目标ID:', currentId + '_dumpInput');
+                $('#' + currentId + '_dumpInput').val(fileData.content);
+                console.log('📝 文本框内容已设置，当前值长度:', $('#' + currentId + '_dumpInput').val().length);
+                
+                // Update the tab name with the filename
+                var tabName = fileData.filename.length > 20 ? 
+                    fileData.filename.substring(0, 17) + '...' : 
+                    fileData.filename;
+                console.log('🏷️ 更新标签页名称为:', tabName);
+                $('#dumptabs>li[data-dumpid=' + currentId + ']>a').text(tabName);
+                
+                // Auto-analyze the content
+                setTimeout(function() {
+                    console.log('🚀 延时500ms后开始自动分析...');
+                    var buttonSelector = '#' + currentId + '_input form button';
+                    console.log('🔘 查找分析按钮，选择器:', buttonSelector);
+                    var button = $(buttonSelector);
+                    console.log('🔘 找到按钮数量:', button.length);
+                    
+                    if (button.length > 0) {
+                        console.log('✅ 按钮存在，准备点击...');
+                        console.log('🔘 按钮文本:', button.text());
+                        console.log('🔘 按钮类名:', button.attr('class'));
+                        button.click();
+                        console.log('✅ 按钮点击完成');
+                    } else {
+                        console.error('❌ 未找到分析按钮！');
+                        console.log('🔍 尝试查找所有可能的按钮...');
+                        console.log('Form按钮:', $('#' + currentId + '_input form button').length);
+                        console.log('所有按钮:', $('#' + currentId + '_input button').length);
+                        console.log('类型按钮:', $('#' + currentId + '_input button[type="button"]').length);
+                        
+                        // 尝试直接调用executeAnalysis
+                        console.log('🔄 尝试直接调用executeAnalysis函数...');
+                        executeAnalysis(currentId);
+                    }
+                    
+                    // Show success message
+                    var successMessage = '<div class="alert alert-success alert-dismissible">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        '<strong>自动加载成功！</strong> 文件 "' + fileData.filename + '" 已自动从AI增强分析器传递并开始解析。' +
+                        '</div>';
+                    $('body').prepend(successMessage);
+                    
+                    // Auto-remove the success message after 5 seconds
+                    setTimeout(function() {
+                        $('.alert-success').fadeOut();
+                    }, 5000);
+                }, 1000); // 增加延时到1000ms，确保DOM完全加载
+                
+                // Clear the sessionStorage after use
+                sessionStorage.removeItem('jstack_auto_analysis_data');
+                console.log('🧹 SessionStorage已清理');
+                
+                // Update afterInit to skip tour since we're auto-loading
+                afterInit = function(){
+                    console.log('🎯 afterInit被调用（跳过tour）');
+                    if (location.hash !== undefined && location.hash !== "" && $(location.hash).length > 0) {
+                        location.hash = location.hash; 
+                    }
+                    afterInit = function(){};
+                };
+            } else {
+                console.log('❌ 数据验证失败：缺少content或filename');
+            }
+        } catch (e) {
+            console.error('❌ 自动分析数据解析失败:', e);
+            sessionStorage.removeItem('jstack_auto_analysis_data');
+        }
+    } else {
+        console.log('ℹ️ 没有找到自动分析数据，正常启动');
+    }
+    
     // Load data from query string
     if (location.search !== '') {
     	importFromUrl(currentId, location.search.substring(1)); 

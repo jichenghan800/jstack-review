@@ -38,6 +38,142 @@
     <script src="bootstrap-tour.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="stylesheet.css">
     <script src="frontend.js" type="text/javascript"></script>
+    
+    <!-- 调试SessionStorage的内联脚本 -->
+    <script type="text/javascript">
+        console.log('🚀 传统分析页面HTML加载完成');
+        console.log('🔍 立即检查SessionStorage...');
+        
+        // 立即检查SessionStorage
+        var immediateCheck = sessionStorage.getItem('jstack_auto_analysis_data');
+        if (immediateCheck) {
+            console.log('✅ HTML加载时发现SessionStorage数据');
+            console.log('📏 数据长度:', immediateCheck.length);
+            console.log('📋 数据前100字符:', immediateCheck.substring(0, 100));
+        } else {
+            console.log('❌ HTML加载时没有找到SessionStorage数据');
+        }
+        
+        // 显示所有SessionStorage键值对
+        console.log('🔑 当前所有SessionStorage键:');
+        for (var i = 0; i < sessionStorage.length; i++) {
+            var key = sessionStorage.key(i);
+            var value = sessionStorage.getItem(key);
+            console.log('  - ' + key + ': ' + (value ? value.substring(0, 50) + '...' : 'null'));
+        }
+        
+        // 监听DOMContentLoaded事件
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOMContentLoaded事件触发');
+            var domReadyCheck = sessionStorage.getItem('jstack_auto_analysis_data');
+            if (domReadyCheck) {
+                console.log('✅ DOM准备完成时发现SessionStorage数据');
+                
+                // 在这里直接执行自动分析，不等frontend.js
+                console.log('🚀 直接在DOMContentLoaded中执行自动分析...');
+                
+                try {
+                    var fileData = JSON.parse(domReadyCheck);
+                    console.log('📊 解析数据成功:', {
+                        filename: fileData.filename,
+                        contentLength: fileData.content ? fileData.content.length : 0
+                    });
+                    
+                    // 等待一下让其他脚本加载完成，然后尝试自动分析
+                    setTimeout(function() {
+                        console.log('🔄 延时后尝试自动分析...');
+                        
+                        // 检查是否有addDump函数
+                        if (typeof addDump === 'function') {
+                            console.log('✅ addDump函数存在');
+                            // 直接执行自动分析
+                            performAutoAnalysis(fileData);
+                        } else {
+                            console.log('❌ addDump函数不存在，等待更长时间...');
+                            
+                            // 再等待一段时间
+                            setTimeout(function() {
+                                if (typeof addDump === 'function') {
+                                    console.log('✅ 延时后addDump函数存在');
+                                    // 执行自动分析
+                                    performAutoAnalysis(fileData);
+                                } else {
+                                    console.log('❌ 长时间等待后addDump函数仍不存在');
+                                }
+                            }, 2000);
+                        }
+                    }, 1000);
+                    
+                } catch (e) {
+                    console.error('❌ 直接分析失败:', e);
+                }
+                
+            } else {
+                console.log('❌ DOM准备完成时没有找到SessionStorage数据');
+            }
+        });
+        
+        // 自动分析执行函数
+        function performAutoAnalysis(fileData) {
+            console.log('🎯 开始执行自动分析...');
+            
+            // 查找第一个dump的ID
+            var dumpTabs = document.querySelectorAll('#dumptabs li[data-dumpid]');
+            if (dumpTabs.length > 0) {
+                var firstDumpId = dumpTabs[0].getAttribute('data-dumpid');
+                console.log('🔍 找到第一个dump ID:', firstDumpId);
+                
+                // 设置文本框内容
+                var textarea = document.getElementById(firstDumpId + '_dumpInput');
+                if (textarea) {
+                    console.log('📝 找到文本框，设置内容...');
+                    textarea.value = fileData.content;
+                    
+                    // 更新标签页名称
+                    var tabLink = document.querySelector('#dumptabs li[data-dumpid="' + firstDumpId + '"] a');
+                    if (tabLink) {
+                        var tabName = fileData.filename.length > 20 ? 
+                            fileData.filename.substring(0, 17) + '...' : 
+                            fileData.filename;
+                        tabLink.textContent = tabName;
+                        console.log('🏷️ 标签页名称已更新为:', tabName);
+                    }
+                    
+                    // 查找并点击分析按钮
+                    var analyzeButton = document.querySelector('#' + firstDumpId + '_input form button');
+                    if (analyzeButton) {
+                        console.log('🔘 找到分析按钮，准备点击...');
+                        console.log('🔘 按钮文本:', analyzeButton.textContent);
+                        analyzeButton.click();
+                        console.log('✅ 分析按钮已点击');
+                        
+                        // 清理SessionStorage
+                        sessionStorage.removeItem('jstack_auto_analysis_data');
+                        console.log('🧹 SessionStorage已清理');
+                        
+                        // 显示成功消息
+                        var successDiv = document.createElement('div');
+                        successDiv.className = 'alert alert-success';
+                        successDiv.innerHTML = '<strong>自动加载成功！</strong> 文件 "' + fileData.filename + '" 已自动传递并开始分析。';
+                        document.body.insertBefore(successDiv, document.body.firstChild);
+                        
+                        setTimeout(function() {
+                            successDiv.style.display = 'none';
+                        }, 5000);
+                        
+                    } else {
+                        console.log('❌ 未找到分析按钮');
+                        console.log('🔍 尝试查找的选择器:', '#' + firstDumpId + '_input form button');
+                    }
+                } else {
+                    console.log('❌ 未找到文本框');
+                    console.log('🔍 尝试查找的ID:', firstDumpId + '_dumpInput');
+                }
+            } else {
+                console.log('❌ 未找到任何dump标签页');
+            }
+        }
+    </script>
   </head>
   <body>
     <div class="alert alert-info alert-dismissible" id="clientSideNotice">
