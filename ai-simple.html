@@ -92,6 +92,343 @@
         .pulse-animation {
             animation: pulse 2s infinite;
         }
+        
+        /* AI分析内容美化样式 */
+        .ai-analysis-content {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin: 16px 0;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ai-analysis-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .ai-analysis-content h1,
+        .ai-analysis-content h2,
+        .ai-analysis-content h3,
+        .ai-analysis-content h4,
+        .ai-analysis-content h5,
+        .ai-analysis-content h6 {
+            color: #1e293b;
+            font-weight: 700;
+            margin: 24px 0 16px 0;
+            line-height: 1.3;
+            position: relative;
+        }
+        
+        .ai-analysis-content h1 {
+            font-size: 2rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .ai-analysis-content h2 {
+            font-size: 1.5rem;
+            color: #4f46e5;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .ai-analysis-content h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        .ai-analysis-content h3 {
+            font-size: 1.25rem;
+            color: #059669;
+            margin-left: 16px;
+        }
+        
+        .ai-analysis-content p {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #374151;
+            margin: 16px 0;
+            text-align: justify;
+        }
+        
+        .ai-analysis-content ul,
+        .ai-analysis-content ol {
+            margin: 16px 0 16px 20px;
+            padding: 0;
+        }
+        
+        .ai-analysis-content li {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #4b5563;
+            margin: 8px 0;
+            padding-left: 8px;
+            position: relative;
+        }
+        
+        .ai-analysis-content li::marker {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .ai-analysis-content strong {
+            color: #1e293b;
+            font-weight: 600;
+        }
+        
+        .ai-analysis-content em {
+            color: #7c3aed;
+            font-style: italic;
+        }
+        
+        .ai-analysis-content code {
+            background: rgba(99, 102, 241, 0.1);
+            color: #4f46e5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 0.9em;
+        }
+        
+        .ai-analysis-content pre {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .ai-analysis-content blockquote {
+            border-left: 4px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.05);
+            margin: 20px 0;
+            padding: 16px 20px;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #92400e;
+        }
+        
+        /* 特殊标识符样式 */
+        .ai-analysis-content .score-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 8px;
+        }
+        
+        .ai-analysis-content .risk-high {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        
+        .ai-analysis-content .risk-medium {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+        
+        .ai-analysis-content .risk-low {
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        /* 动画效果 */
+        .ai-analysis-content {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 表格样式 */
+        .ai-analysis-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ai-analysis-content th,
+        .ai-analysis-content td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .ai-analysis-content th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .ai-analysis-content tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        .ai-analysis-content tr:hover {
+            background-color: #f3f4f6;
+            transition: background-color 0.2s ease;
+        }
+        
+        /* 警告和提示框 */
+        .ai-analysis-content .alert-box {
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+            position: relative;
+        }
+        
+        .ai-analysis-content .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-left-color: #10b981;
+            color: #065f46;
+        }
+        
+        .ai-analysis-content .alert-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left-color: #f59e0b;
+            color: #92400e;
+        }
+        
+        .ai-analysis-content .alert-danger {
+            background-color: rgba(220, 38, 38, 0.1);
+            border-left-color: #dc2626;
+            color: #991b1b;
+        }
+        
+        .ai-analysis-content .alert-info {
+            background-color: rgba(99, 102, 241, 0.1);
+            border-left-color: #6366f1;
+            color: #3730a3;
+        }
+        
+        /* 进度条样式 */
+        .ai-analysis-content .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .ai-analysis-content .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        /* 徽章和标签 */
+        .ai-analysis-content .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 2px 4px;
+        }
+        
+        .ai-analysis-content .badge-primary {
+            background-color: #667eea;
+            color: white;
+        }
+        
+        .ai-analysis-content .badge-success {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .ai-analysis-content .badge-warning {
+            background-color: #f59e0b;
+            color: white;
+        }
+        
+        .ai-analysis-content .badge-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+        
+        /* 分隔线 */
+        .ai-analysis-content hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 32px 0;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .ai-analysis-content {
+                padding: 20px 16px;
+            }
+            
+            .ai-analysis-content h1 {
+                font-size: 1.5rem;
+            }
+            
+            .ai-analysis-content h2 {
+                font-size: 1.25rem;
+            }
+            
+            .ai-analysis-content h3 {
+                font-size: 1.1rem;
+            }
+            
+            .ai-analysis-content p {
+                font-size: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -280,6 +617,128 @@
             inferenceProfileArn: '',
             profileName: ''
         };
+
+        // 美化AI分析内容
+        function formatAIAnalysisContent(content) {
+            if (!content || typeof content !== 'string') {
+                return '<p class="text-muted">暂无分析内容</p>';
+            }
+            
+            // 转换Markdown格式到HTML
+            let formattedContent = content
+                // 处理标题
+                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                
+                // 处理粗体和斜体
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                
+                // 处理代码块和行内代码
+                .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                
+                // 处理列表项（改进版）
+                .replace(/^- (.*$)/gm, '<li>$1</li>')
+                .replace(/^(\d+)\. (.*$)/gm, '<li>$2</li>')
+                
+                // 处理评分和数值（增强版）
+                .replace(/(\d+)\/10\s*分/g, '<span class="score-badge">$1/10 分</span>')
+                .replace(/(\d+\/10)/g, '<span class="score-badge">$1</span>')
+                .replace(/(\d+)分/g, '<span class="badge badge-primary">$1分</span>')
+                
+                // 处理风险等级（增强版）
+                .replace(/(紧急|高风险|严重|P0)/gi, '<span class="risk-high">$1</span>')
+                .replace(/(重要|中风险|中等|P1)/gi, '<span class="risk-medium">$1</span>')
+                .replace(/(一般|低风险|轻微|P2)/gi, '<span class="risk-low">$1</span>')
+                
+                // 处理特殊关键词
+                .replace(/(立即处理|紧急修复|马上执行)/gi, '<span class="badge badge-danger">$1</span>')
+                .replace(/(优先处理|重点关注|建议修复)/gi, '<span class="badge badge-warning">$1</span>')
+                .replace(/(计划优化|可选改进|后续考虑)/gi, '<span class="badge badge-success">$1</span>')
+                
+                // 处理数字百分比和指标
+                .replace(/(\d+)%/g, '<strong style="color: #667eea;">$1%</strong>')
+                .replace(/(\d+)(ms|KB|MB|GB)/g, '<code>$1$2</code>')
+                
+                // 处理emoji和特殊符号（增强版）
+                .replace(/⚠️|⚡/g, '<i class="fas fa-exclamation-triangle text-warning"></i>')
+                .replace(/✅|☑️/g, '<i class="fas fa-check-circle text-success"></i>')
+                .replace(/❌|✖️/g, '<i class="fas fa-times-circle text-danger"></i>')
+                .replace(/🔥/g, '<i class="fas fa-fire text-danger"></i>')
+                .replace(/💡/g, '<i class="fas fa-lightbulb text-warning"></i>')
+                .replace(/📊|📈/g, '<i class="fas fa-chart-bar text-info"></i>')
+                .replace(/🚨/g, '<i class="fas fa-exclamation-triangle text-danger"></i>')
+                .replace(/🎯/g, '<i class="fas fa-bullseye text-success"></i>')
+                .replace(/🔍/g, '<i class="fas fa-search text-info"></i>')
+                .replace(/🛠️|🔧/g, '<i class="fas fa-tools text-primary"></i>')
+                .replace(/📝/g, '<i class="fas fa-edit text-secondary"></i>')
+                .replace(/🏥/g, '<i class="fas fa-heart text-danger"></i>')
+                .replace(/🔒/g, '<i class="fas fa-lock text-warning"></i>')
+                
+                // 处理分隔线
+                .replace(/^---+$/gm, '<hr>')
+                .replace(/^===+$/gm, '<hr>')
+                
+                // 处理引用块
+                .replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
+                
+                // 处理特殊警告块
+                .replace(/\*\*警告\*\*(.*?)(?=\n\n|\n$|$)/gs, '<div class="alert-box alert-warning"><strong>警告</strong>$1</div>')
+                .replace(/\*\*注意\*\*(.*?)(?=\n\n|\n$|$)/gs, '<div class="alert-box alert-info"><strong>注意</strong>$1</div>')
+                .replace(/\*\*重要\*\*(.*?)(?=\n\n|\n$|$)/gs, '<div class="alert-box alert-danger"><strong>重要</strong>$1</div>')
+                
+                // 处理换行（放在最后）
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+            
+            // 智能包装列表项
+            formattedContent = formattedContent.replace(/(<li>.*?<\/li>(\s*<br>\s*<li>.*?<\/li>)*)/gs, (match) => {
+                return `<ul>${match.replace(/<br>\s*/g, '')}</ul>`;
+            });
+            
+            // 包装段落（如果没有其他块级元素）
+            if (!formattedContent.includes('<h') && !formattedContent.includes('<ul>') && !formattedContent.includes('<div>')) {
+                formattedContent = `<p>${formattedContent}</p>`;
+            }
+            
+            // 清理和优化HTML结构
+            formattedContent = formattedContent
+                // 移除空段落
+                .replace(/<p><\/p>/g, '')
+                .replace(/<p>\s*<\/p>/g, '')
+                
+                // 修复标题周围的段落标签
+                .replace(/<p>(<h[1-6]>)/g, '$1')
+                .replace(/(<\/h[1-6]>)<\/p>/g, '$1')
+                
+                // 修复列表周围的段落标签
+                .replace(/<p>(<ul>)/g, '$1')
+                .replace(/(<\/ul>)<\/p>/g, '$1')
+                
+                // 修复其他块级元素
+                .replace(/<p>(<div)/g, '$1')
+                .replace(/(<\/div>)<\/p>/g, '$1')
+                .replace(/<p>(<hr>)/g, '$1')
+                .replace(/(<hr>)<\/p>/g, '$1')
+                .replace(/<p>(<blockquote>)/g, '$1')
+                .replace(/(<\/blockquote>)<\/p>/g, '$1')
+                
+                // 清理多余的<br>标签
+                .replace(/(<\/h[1-6]>)<br>/g, '$1')
+                .replace(/(<\/ul>)<br>/g, '$1')
+                .replace(/(<\/div>)<br>/g, '$1')
+                .replace(/<br>(<h[1-6]>)/g, '$1')
+                .replace(/<br>(<ul>)/g, '$1')
+                .replace(/<br>(<div)/g, '$1')
+                
+                // 最后的清理
+                .replace(/\s+/g, ' ')
+                .replace(/>\s+</g, '><');
+            
+            return formattedContent;
+        }
 
         // 自定义系统提示词管理
         let customPrompts = JSON.parse(localStorage.getItem('customPrompts')) || {
@@ -2037,7 +2496,7 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                                     <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">${subtitleText}</p>
                                 </div>
                             </div>
-                            <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 5px solid #667eea; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace; line-height: 1.6; color: #2c3e50; white-space: pre-wrap; overflow-x: auto;">${window.aiAnalysisResult}</div>
+                            <div class="ai-analysis-content">${formatAIAnalysisContent(window.aiAnalysisResult)}</div>
                         </div>
                     </div>
                 `;
