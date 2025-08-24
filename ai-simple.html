@@ -108,6 +108,9 @@
                             <i class="fas fa-play-circle"></i>
                             Demo 演示
                         </button>
+                        <button class="btn btn-outline-success me-2 d-none" id="reuploadBtn" onclick="location.reload()">
+                            <i class="fas fa-upload"></i> 重新上传
+                        </button>
                         <button class="btn btn-outline-info me-2" id="configButton">
                             <i class="fas fa-cog"></i>
                             AI 配置
@@ -119,9 +122,6 @@
                         <button class="btn btn-outline-secondary me-2" onclick="window.open('jstack-review-original/index.html', '_blank')">
                             <i class="fas fa-chart-line"></i>
                             传统分析
-                        </button>
-                        <button class="btn btn-outline-success me-2 d-none" id="reuploadBtn">
-                            <i class="fas fa-upload"></i> 重新上传
                         </button>
                     </div>
                 </div>
@@ -1985,6 +1985,7 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             // 隐藏上传相关区域，让分析结果从顶部开始展示
             $('#uploadSection').slideUp(500);
             $('#progressSection').addClass('d-none');
+            $('#reuploadBtn').removeClass('d-none'); // 显示重新上传按钮
             
             console.log('🔍 showResults 调用，检查两阶段分析结果');
             console.log('🔍 traditionalAnalysis:', window.traditionalAnalysis);
@@ -2122,17 +2123,6 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 `;
             }
             
-            // 🔄 添加重新分析按钮
-            htmlContent += `
-                <div class="text-center mt-4">
-                    <button class="btn btn-outline-primary btn-lg" onclick="location.reload()">
-                        <i class="fas fa-upload"></i> 重新分析文件
-                    </button>
-                    <button class="btn btn-outline-secondary btn-lg ms-2" onclick="window.open('jstack-review-original/index.html', '_blank')">
-                        <i class="fas fa-external-link-alt"></i> 查看完整传统分析
-                    </button>
-                </div>
-            `;
             
             // 如果没有有效结果，显示基础统计
             if (!htmlContent || htmlContent.trim() === '') {
