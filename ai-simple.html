@@ -100,7 +100,6 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1>
-                        <i class="fas fa-robot text-primary"></i>
                         AI 增强 Java 线程转储分析工具
                     </h1>
                     <div>
@@ -114,10 +113,6 @@
                         <button class="btn btn-outline-info me-2" id="configButton">
                             <i class="fas fa-cog"></i>
                             AI 配置
-                        </button>
-                        <button class="btn btn-outline-primary me-2" id="promptButton">
-                            <i class="fas fa-edit"></i>
-                            自定义提示词
                         </button>
                         <button class="btn btn-outline-secondary me-2" onclick="window.open('jstack-review-original/index.html', '_blank')">
                             <i class="fas fa-chart-line"></i>
@@ -863,76 +858,144 @@
             
             const configModal = `
                 <div class="modal fade" id="aiConfigModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
+                    <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-header bg-primary text-white">
                                 <h5 class="modal-title">
-                                    <i class="fas fa-robot me-2"></i>AutoGen Bedrock 配置
+                                    <i class="fas fa-robot me-2"></i>AI 配置设置
                                 </h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">AWS Access Key ID</label>
-                                    <input type="password" class="form-control" id="awsAccessKey" 
-                                           placeholder="AKIA..." value="${aiConfig.accessKey || ''}">
-                                </div>
+                                <!-- 标签页导航 -->
+                                <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="bedrock-tab" data-bs-toggle="tab" data-bs-target="#bedrock-panel" type="button" role="tab">
+                                            <i class="fab fa-aws me-2"></i>AWS Bedrock
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="prompt-tab" data-bs-toggle="tab" data-bs-target="#prompt-panel" type="button" role="tab">
+                                            <i class="fas fa-edit me-2"></i>自定义提示词
+                                        </button>
+                                    </li>
+                                </ul>
                                 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">AWS Secret Access Key</label>
-                                    <input type="password" class="form-control" id="awsSecretKey" 
-                                           placeholder="输入秘密访问密钥" value="${aiConfig.secretKey || ''}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">AWS Session Token <span class="text-muted">(可选)</span></label>
-                                    <textarea class="form-control" id="awsSessionToken" rows="3" 
-                                              placeholder="如果使用临时凭证，请输入Session Token">${aiConfig.sessionToken || ''}</textarea>
-                                    <small class="text-muted">使用临时凭证时需要填写</small>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">AWS 区域</label>
-                                    <select class="form-select" id="regionSelect">
-                                        <option value="us-east-1">us-east-1</option>
-                                        <option value="us-west-2" selected>us-west-2</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">推理配置文件名称</label>
-                                    <select class="form-select" id="profileName" onchange="updateProfileArn()">
-                                        <option value="">请选择推理配置文件</option>
-                                        <option value="us.anthropic.claude-sonnet-4-20250514-v1:0">US Claude Sonnet 4 (推荐)</option>
-                                        <option value="us.anthropic.claude-3-7-sonnet-20250219-v1:0">US Anthropic Claude 3.7 Sonnet</option>
-                                        <option value="us.anthropic.claude-3-5-sonnet-20241022-v2:0">US Anthropic Claude 3.5 Sonnet v2</option>
-                                        <option value="us.anthropic.claude-3-5-haiku-20241022-v1:0">US Anthropic Claude 3.5 Haiku</option>
-                                        <option value="us.anthropic.claude-3-haiku-20240307-v1:0">US Anthropic Claude 3 Haiku</option>
-                                        <option value="us.anthropic.claude-3-sonnet-20240229-v1:0">US Anthropic Claude 3 Sonnet</option>
-                                    </select>
-                                    <small class="text-muted">选择您账户中可用的推理配置文件</small>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">推理配置文件 ARN</label>
-                                    <textarea class="form-control" id="profileArn" rows="2" readonly></textarea>
-                                    <small class="text-muted">将根据选择的配置文件自动生成 (账号: 590183689329)</small>
-                                </div>
-                                
-                                <button class="btn btn-success w-100 mb-3" onclick="testWithModel()" id="testModelBtn">
-                                    <i class="fas fa-check me-2"></i>测试选中模型
-                                </button>
-                                
-                                <div id="connectionStatus">
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-info-circle me-2"></i>点击测试按钮验证配置
+                                <!-- 标签页内容 -->
+                                <div class="tab-content" id="configTabsContent">
+                                    <!-- AWS Bedrock 配置 -->
+                                    <div class="tab-pane fade show active" id="bedrock-panel" role="tabpanel">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">AWS Access Key ID</label>
+                                            <input type="password" class="form-control" id="awsAccessKey" 
+                                                   placeholder="AKIA..." value="${aiConfig.accessKey || ''}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">AWS Secret Access Key</label>
+                                            <input type="password" class="form-control" id="awsSecretKey" 
+                                                   placeholder="输入秘密访问密钥" value="${aiConfig.secretKey || ''}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">AWS Session Token <span class="text-muted">(可选)</span></label>
+                                            <textarea class="form-control" id="awsSessionToken" rows="3" 
+                                                      placeholder="如果使用临时凭证，请输入Session Token">${aiConfig.sessionToken || ''}</textarea>
+                                            <small class="text-muted">使用临时凭证时需要填写</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">AWS 区域</label>
+                                            <select class="form-select" id="regionSelect">
+                                                <option value="us-east-1">us-east-1</option>
+                                                <option value="us-west-2" selected>us-west-2</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">推理配置文件名称</label>
+                                            <select class="form-select" id="profileName" onchange="updateProfileArn()">
+                                                <option value="">请选择推理配置文件</option>
+                                                <option value="us.anthropic.claude-sonnet-4-20250514-v1:0">US Claude Sonnet 4 (推荐)</option>
+                                                <option value="us.anthropic.claude-3-7-sonnet-20250219-v1:0">US Anthropic Claude 3.7 Sonnet</option>
+                                                <option value="us.anthropic.claude-3-5-sonnet-20241022-v2:0">US Anthropic Claude 3.5 Sonnet v2</option>
+                                                <option value="us.anthropic.claude-3-5-haiku-20241022-v1:0">US Anthropic Claude 3.5 Haiku</option>
+                                                <option value="us.anthropic.claude-3-haiku-20240307-v1:0">US Anthropic Claude 3 Haiku</option>
+                                                <option value="us.anthropic.claude-3-sonnet-20240229-v1:0">US Anthropic Claude 3 Sonnet</option>
+                                            </select>
+                                            <small class="text-muted">选择您账户中可用的推理配置文件</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">推理配置文件 ARN</label>
+                                            <textarea class="form-control" id="profileArn" rows="2" readonly></textarea>
+                                            <small class="text-muted">将根据选择的配置文件自动生成 (账号: 590183689329)</small>
+                                        </div>
+                                        
+                                        <button class="btn btn-success w-100 mb-3" onclick="testWithModel()" id="testModelBtn">
+                                            <i class="fas fa-check me-2"></i>测试选中模型
+                                        </button>
+                                        
+                                        <div id="connectionStatus">
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-info-circle me-2"></i>点击测试按钮验证配置
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 自定义提示词配置 -->
+                                    <div class="tab-pane fade" id="prompt-panel" role="tabpanel">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">启用自定义提示词</label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="enableCustomPrompt" ${customPrompts.enabled ? 'checked' : ''}>
+                                                        <label class="form-check-label" for="enableCustomPrompt">
+                                                            使用自定义提示词替代默认提示词
+                                                        </label>
+                                                    </div>
+                                                    <small class="text-muted">关闭时使用系统默认提示词</small>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">提示词模板</label>
+                                                    <select class="form-select" id="promptTemplate" onchange="loadPromptTemplate()">
+                                                        <option value="">请选择模板</option>
+                                                        <option value="jstack_optimized">JStack 优化分析</option>
+                                                        <option value="performance_focus">性能聚焦分析</option>
+                                                        <option value="security_analysis">安全风险分析</option>
+                                                        <option value="detailed_report">详细诊断报告</option>
+                                                        <option value="custom">自定义</option>
+                                                    </select>
+                                                    <small class="text-muted">选择预设模板或创建自定义提示词</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-8">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">提示词内容</label>
+                                                    <textarea class="form-control" id="promptContent" rows="12" 
+                                                              placeholder="输入您的自定义提示词...">${customPrompts.currentPrompt || ''}</textarea>
+                                                    <div class="d-flex justify-content-between">
+                                                        <small class="text-muted">支持变量: {totalThreads}, {runningThreads}, {blockedThreads}, {waitingThreads}, {deadlocks}</small>
+                                                        <small class="text-muted" id="promptLength">0 字符</small>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-lightbulb me-2"></i>
+                                                    <strong>提示:</strong> 自定义提示词允许您调整AI分析的重点和风格。系统会自动替换变量为实际的线程统计数据。
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                                <button type="button" class="btn btn-primary" onclick="saveAIConfig()">
-                                    <i class="fas fa-save me-2"></i>保存配置
+                                <button type="button" class="btn btn-primary" onclick="saveAllConfigs()">
+                                    <i class="fas fa-save me-2"></i>保存所有配置
                                 </button>
                             </div>
                         </div>
@@ -946,16 +1009,33 @@
             const modal = new bootstrap.Modal(document.getElementById('aiConfigModal'));
             modal.show();
             
-            // 模态框显示后，设置保存的配置值
+            // 模态框显示后，设置事件绑定和初始值
             setTimeout(() => {
+                // 设置AI配置的保存值
                 if (aiConfig.profileName) {
                     $('#profileName').val(aiConfig.profileName);
                     updateProfileArn();
                 } else {
-                    // 设置默认选项
                     $('#profileName').val('us.anthropic.claude-sonnet-4-20250514-v1:0');
                     updateProfileArn();
                 }
+                
+                // 设置自定义提示词相关事件绑定
+                $('#promptContent').on('input', updatePromptLength);
+                $('#enableCustomPrompt').change(function() {
+                    const enabled = $(this).prop('checked');
+                    $('#promptContent').prop('disabled', !enabled);
+                    $('#promptTemplate').prop('disabled', !enabled);
+                });
+                
+                // 初始化提示词长度显示
+                updatePromptLength();
+                
+                // 根据当前启用状态设置控件状态
+                const enabled = $('#enableCustomPrompt').prop('checked');
+                $('#promptContent').prop('disabled', !enabled);
+                $('#promptTemplate').prop('disabled', !enabled);
+                
             }, 100);
         }
         
@@ -1047,6 +1127,79 @@
             if (modal) modal.hide();
             
             showAlert('✅ 配置已保存！', 'success');
+        }
+
+        function saveAllConfigs() {
+            console.log('💾 保存所有配置');
+            
+            // 保存AI配置
+            const accessKey = $('#awsAccessKey').val().trim();
+            const secretKey = $('#awsSecretKey').val().trim();
+            const sessionToken = $('#awsSessionToken').val().trim();
+            const region = $('#regionSelect').val();
+            const profileName = $('#profileName').val();
+            const profileArn = $('#profileArn').val().trim();
+            
+            if (!accessKey || !secretKey || !profileName || !profileArn) {
+                showAlert('请填写完整的AWS配置信息', 'warning');
+                return;
+            }
+            
+            aiConfig.accessKey = accessKey;
+            aiConfig.secretKey = secretKey;
+            aiConfig.sessionToken = sessionToken;
+            aiConfig.region = region;
+            aiConfig.profileName = profileName;
+            aiConfig.inferenceProfileArn = profileArn;
+            
+            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
+            
+            // 保存自定义提示词配置
+            const enabled = $('#enableCustomPrompt').prop('checked');
+            const promptContent = $('#promptContent').val().trim();
+            
+            if (enabled && !promptContent) {
+                showAlert('启用自定义提示词时必须提供提示词内容', 'warning');
+                return;
+            }
+            
+            customPrompts.enabled = enabled;
+            customPrompts.currentPrompt = promptContent;
+            
+            // 保存模板选择
+            const selectedTemplate = $('#promptTemplate').val();
+            if (selectedTemplate && selectedTemplate !== 'custom' && customPrompts.templates[selectedTemplate]) {
+                customPrompts.currentPrompt = customPrompts.templates[selectedTemplate];
+            }
+            
+            localStorage.setItem('customPrompts', JSON.stringify(customPrompts));
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('aiConfigModal'));
+            if (modal) modal.hide();
+            
+            const aiStatus = accessKey ? '已配置' : '未配置';
+            const promptStatus = enabled ? '启用' : '禁用';
+            showAlert(`✅ 所有配置已保存！AI配置: ${aiStatus}, 自定义提示词: ${promptStatus}`, 'success');
+            
+            console.log('💾 所有配置已保存:', { aiConfig, customPrompts });
+        }
+
+        // 加载提示词模板
+        function loadPromptTemplate() {
+            const selectedTemplate = $('#promptTemplate').val();
+            if (selectedTemplate && selectedTemplate !== 'custom' && customPrompts.templates[selectedTemplate]) {
+                $('#promptContent').val(customPrompts.templates[selectedTemplate]);
+                updatePromptLength();
+            } else if (selectedTemplate === 'custom') {
+                $('#promptContent').val('');
+                updatePromptLength();
+            }
+        }
+
+        // 更新提示词长度显示
+        function updatePromptLength() {
+            const length = $('#promptContent').val().length;
+            $('#promptLength').text(length + ' 字符');
         }
 
         function loadDemo() {
@@ -1986,6 +2139,7 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             $('#uploadSection').slideUp(500);
             $('#progressSection').addClass('d-none');
             $('#reuploadBtn').removeClass('d-none'); // 显示重新上传按钮
+            $('#demoButton').addClass('d-none'); // 隐藏Demo按钮，保持界面简洁
             
             console.log('🔍 showResults 调用，检查两阶段分析结果');
             console.log('🔍 traditionalAnalysis:', window.traditionalAnalysis);
@@ -2210,7 +2364,6 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             
             $('#demoButton').click(loadDemo);
             $('#configButton').click(showAIConfig);
-            $('#promptButton').click(showCustomPrompt);
             $('#reuploadBtn').click(() => location.reload());
             
             // 文件上传处理
