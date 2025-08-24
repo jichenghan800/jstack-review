@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<!--
+   Copyright 2014-2016 Spotify AB
+   Copyright 2016-2018 MP Objects BV
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>jstack.review - Java Thread Dump Analyzer</title>
+    <meta name="description" content="Browser based Java thread dump analyzer." />
+    <meta name="keywords" content="jstack,java,threads,tda,analyzer,jvm" />
+    <meta name="application-name" content="jstack.review" />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js" integrity="sha256-RASNMNlmRtIreeznffYMDUxBXcMRjijEaaGF/gxT6vw=" crossorigin="anonymous"></script>
+    <script src="jtdajs.js" type="text/javascript"></script>
+    <script src="jtdajs.render.js" type="text/javascript"></script>
+    <script src="jtdajs.diff.js" type="text/javascript"></script>
+    <script src="jtdajs.diff.render.js" type="text/javascript"></script>
+    <script src="filereader.js" type="text/javascript"></script>
+    <link href="bootstrap-tour.min.css" rel="stylesheet">
+    <script src="bootstrap-tour.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="stylesheet.css">
+    <script src="frontend.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div class="alert alert-info alert-dismissible" id="clientSideNotice">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <p><strong>jstack.review</strong> Analyze java thread dumps from within the browser.
+      This page is client-side only. No data will leave your computer when you click Analyze.</p>
+    </div>
+
+    <span id="top"></span>
+    <ul id="dumptabs" class="nav nav-tabs">
+      <li><a class="btn" id="adddump" title="New dump analysis"><span class="glyphicon glyphicon-plus"></span></a></li>
+      <li data-tabtarget="compare"><a class="btn" id="comparetabbtn" href="#compare" data-toggle="tab" title="Compare dumps"><span class="glyphicon glyphicon-transfer"></span></a></li>
+      <li data-tabtarget="settings"><a class="btn" href="#settings" data-toggle="tab"><span class="glyphicon glyphicon-cog"></span></a></li>
+      <li data-tabtarget="about"><a class="btn" href="#about" data-toggle="tab"><span class="glyphicon glyphicon-info-sign"></span></a></li>
+    </ul>
+    
+    <div id="dumps" class="tab-content">      
+      <div id="about" class="tab-pane container">
+        <p></p>
+        <div class="jumbotron">
+          <h1>jstack.review</h1>
+          <h2>Browser based Java Thread Dump Analyzer</h2>
+          <p><a href="https://github.com/jstack-review/jstack-review" target="_blank" rel="noopener noreferrer">Source code on GitHub</a></p>
+          <p><button id="tourbtn" type="button" class="btn btn-default">Start the tour of jstack.review</button></p>
+        </div>
+
+        <div>
+          <h2>License</h2>
+          <p>The Online Java Thread Dump Analyzer is licensed under version <a href="https://www.apache.org/licenses/LICENSE-2.0.html" target="_blank" rel="noopener noreferrer">2.0 of the Apache license</a>.</p>
+          <p>Copyright 2014-2016 Spotify AB</p>
+          <p>Copyright 2016-2018 MP Objects BV</p>
+          <p>Copyright 2020 jstack.review</p>
+          <h2>Third party libraries</h2>
+          <p>The following libraries are used in this software.</p>
+          <ul>
+            <li><a href="https://jquery.com" target="_blank" rel="noopener noreferrer">jQuery</a></li>
+            <li><a href="http://getbootstrap.com" target="_blank" rel="noopener noreferrer">Bootstrap</a></li>
+            <li><a href="https://github.com/janl/mustache.js/" target="_blank" rel="noopener noreferrer">mustache.js</a></li>
+            <li><a href="http://www.chartjs.org/" target="_blank" rel="noopener noreferrer">Chart.js</a></li>
+            <li><a href="https://bgrins.github.io/filereader.js/" target="_blank" rel="noopener noreferrer">FileReader.js</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div id="settings" class="tab-pane container">
+        <form>
+        <div>
+          <h1>Settings</h1>
+          <div class="alert alert-info" role="alert">Most settings will only take effect after performing a thread dump analysis.</div>
+          <button type="button" class="btn btn-danger" id="settingsClear">Reset Settings</button>
+        </div>
+        
+        <div data-settings="renderConfig">
+          <h2>Collapsed Stack Frames <a href="https://github.com/mpobjects/jstack-review/wiki/Settings:-Collapsed-Stack-Frames" class="helplink" target="_blank" rel="noopener noreferrer"><span class="glyphicon glyphicon-question-sign small " aria-hidden="true"></span></a></h2>
+          <div class="checkbox">
+            <label><input type="checkbox" data-settings id="compactFrames.enabled" value="true"> Enabled</label>
+          </div>
+          <div class="form-group">
+            <label for="compactFrames.minimum">Minimum Stack Size</label>
+            <input type="number" min="0" step="1" class="form-control" data-settings id="compactFrames.minimum">
+          </div>
+          <div class="form-group">
+            <label for="compactFrames.skip">Skip First Frames</label>
+            <input type="number" min="0" step="1" class="form-control" data-settings id="compactFrames.skip">
+          </div>
+          <div class="form-group">
+            <label for="compactFrames.count">Group Size</label>
+            <input type="number" min="0" step="1" class="form-control" data-settings id="compactFrames.count">
+          </div>
+          <div class="form-group">
+            <label for="compactFrames.patterns[]">Patterns</label>
+            <textarea class="form-control" data-settings id="compactFrames.patterns[]" rows="5"></textarea>
+          </div>
+        </div>
+        
+        </form>
+      </div>
+      
+      <div id="compare" class="tab-pane container">
+        <h1>Compare thread dumps</h1>
+        <div id="comparenotenough" class="alert alert-danger" role="alert">
+          You need at least to analyse at least <strong>two</strong> thread dumps in order to compare.
+        </div>
+        <form id="compareform" action="#">
+          <div class="form-group">
+            <label>Older thread dump</label>
+            <select id="olderAnalysis" class="form-control" required></select>
+            <span class="help-block">Select the thread dump which was taken earlier in time.</span>
+          </div>
+          <div class="form-group">
+            <label>Newer thread dump</label>
+            <select id="newerAnalysis" class="form-control" required></select>
+            <span class="help-block">Select the thread dump which was taken later in time.</span>
+          </div>
+          <button type="submit" class="btn btn-primary">Compare</button>
+        </form>
+      </div>    
+    </div>
+    
+    <div id="download-dialog" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Retrieving stack trace</h4>
+          </div>
+          <div class="modal-body">
+            <p>Downloading stack trace from:</p>
+            <p><samp></samp></p>
+            <div class="progress">
+              <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script id="tmpl-alert-dialog" type="x-tmpl-mustache">
+      <div id="{{dialogId}}" class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title text-{{type}}">{{title}}</h4>
+            </div>
+            <div class="modal-body">
+              {{#message}}
+                <p>{{.}}</p>
+              {{/message}}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-{{type}}" data-dismiss="modal">Ok</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script id="tmpl-alert" type="x-tmpl-mustache">
+      <div class="container-fluid">
+        <div class="alert alert-{{level}}" role="alert">{{message}}</div>
+      </div>
+    </script>
+
+    <script id="tmpl-tab" type="x-tmpl-mustache">
+    <li data-dumpid="{{id}}" data-tabtarget="{{id}}">
+      <a href="#{{id}}_dump" data-toggle="tab">{{name}}</a>
+      <span class="glyphicon glyphicon-remove"></span>
+    </li>
+    </script>
+    
+    <script id="tmpl-tab-panel" type="x-tmpl-mustache">
+    <div id="{{id}}_dump" class="tab-pane bottom-navbar" data-dumpid="{{id}}">
+      <div id="{{id}}_top" class="container-fluid">
+        <h1>Analysis for <span>{{name}} <small></small></span></h1>
+        <div id="{{id}}_input">
+          <form action="#">
+            <div class="form-group">
+              <label for="{{id}}_dumpInput">Thread Dump</label>
+              <textarea class="form-control" id="{{id}}_dumpInput" rows="5" placeholder="Paste your thread dump here"></textarea>
+              {{#fileReader}}
+              <label>Or select/drop files
+              <input type="file" multiple id="{{id}}_dumpFile" />
+              </label>
+              <p class="help-block">Dropping multiple files will open additional tabs.</p>
+              {{/fileReader}}
+            </div>
+            <button type="button" class="btn btn-primary">Analyze</button>
+          </form>
+        </div>
+        <div id="{{id}}_inputpeak" style="display: none;">
+          <div class="form-group">
+            <label>Thread Dump</label>
+            <textarea class="form-control sneakpeak" rows="5" disabled readonly></textarea>
+          </div>
+          <button type="button" class="btn btn-primary">Reveal input</button>
+        </div>
+      </div>
+      
+      <div class="results">
+      </div>
+    </div>
+    </script>
+    
+    <script id="tmpl-analysis-navbar" type="x-tmpl-mustache">
+      <nav id="{{analysisId}}_navbar" class="navbar navbar-default navbar-fixed-bottom">
+        <div class="navbar-header">
+          <a href="#{{analysisId}}_top" class="navbar-brand">{{analysis.name}}</a>
+        </div>
+        <div class="container-fluid">
+          <ul class="nav navbar-nav">
+            <li><a href="#{{analysisId}}_top">Input</a></li>
+            <li><a href="#{{analysisId}}_overview">Overview</a></li>
+            <li><a href="#{{analysisId}}_running_methods">Running Methods <span class="label label-default"></span></a></li>
+            <li><a href="#{{analysisId}}_threads">Thread <span class="label label-default">{{analysis.threads.length}}</span></a></li>
+            <li><a href="#{{analysisId}}_synchronizers">Synchronizers
+              {{#analysis.deadlockStatus}} 
+              <span class="label label-default label-{{notificationLevel}}">{{analysis.synchronizers.length}}</span>
+              {{/analysis.deadlockStatus}}
+            </a></li>
+            <li><a href="#{{analysisId}}_garbage">Ignored Lines</a></li>
+          </ul>
+        </div>
+      </nav>
+    </script>
+    
+    <script id="tmpl-analysis-overview" type="x-tmpl-mustache">
+    <div id="{{analysisId}}_overview" class="container-fluid">
+      <h2>Overview</h2>
+      <div class="row">
+        <div class="col-md-2">
+          <dl>
+            {{#analysis.dateString}}
+            <dt>Timestamp</dt>
+            <dd>{{.}}</dd>
+            {{/analysis.dateString}}
+            <dt>Threads</dt>
+            <dd>{{analysis.threads.length}}</dd>
+            <dt>Synchronizers</dt>
+            <dd>{{analysis.synchronizers.length}}</dd>
+            <dt>Deadlock status</dt>
+            <dd>
+              {{#analysis.deadlockStatus}}
+              <span class="label label-default label-{{notificationLevel}} synchronizer-deadlock">{{.}}</span>
+              {{/analysis.deadlockStatus}}
+            </dd>
+          </dl>
+        </div>
+        <div class="col-md-5">
+          <canvas id="{{analysisId}}_thread_status_chart" width="300" height="100"></canvas>
+        </div>
+        <div class="col-md-5">
+          <canvas id="{{analysisId}}_sync_type_chart" width="300" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+    </script>
+    
+    <script id="tmpl-analysis-running-methods" type="x-tmpl-mustache">
+    <div class="container-fluid" id="{{analysisId}}_running_methods">
+      <h2>Running Methods</h2>
+      <dl class="dl-striped">
+      {{#methods}}
+        <dt><samp>{{string}}</samp></dt>
+        <dd>
+          <ul class="list-unstyled">
+          {{#sources}}
+            <li>
+              <span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span>
+              <a href="#{{analysisId}}_thread_{{tid}}">{{name}}</a>
+            </li>
+          {{/sources}}
+          <ul>
+        </dd>
+      {{/methods}}
+      </dl>
+    </div>
+    </script>
+    
+    <script id="tmpl-analysis-thread-summary" type="x-tmpl-mustache">
+      <span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span>
+      {{#showThreadDetails}}
+      <span class="thread-name"><a href="#{{prefix}}{{analysisId}}_threaddetails_{{tid}}" data-toggle="collapse" aria-expanded="false" aria-controls="{{prefix}}{{analysisId}}_threaddetails_{{tid}}">{{name}}</a></span>
+      {{/showThreadDetails}}
+      {{^showThreadDetails}}
+      <span class="thread-name"><a href="#{{analysisId}}_thread_{{tid}}">{{name}}</a></span>
+      {{/showThreadDetails}}
+      <span class="thread-status">{{getStatus}}</span> 
+      {{#wantNotificationOn}}
+      on <span class="thread-wait-on-sync">[ <a href="#{{analysisId}}_sync_{{wantNotificationOn}}">{{wantNotificationOn}}</a> ]</span>
+      {{/wantNotificationOn}}
+      {{#wantToAcquire}}
+      <span class="thread-wait-on-sync">[ <a href="#{{analysisId}}_sync_{{wantToAcquire}}">{{wantToAcquire}}</a> ]</span>
+      {{/wantToAcquire}}
+      {{#locksHeld.length}}
+        , holding [
+        <ul class="list-csv">
+        {{#locksHeld}}        
+          <li><a href="#{{analysisId}}_sync_{{.}}">{{.}}</a></li>
+        {{/locksHeld}}
+        </ul>
+        ]
+      {{/locksHeld.length}}
+      {{#showThreadDetails}}
+      <div class="collapse well well-sm" id="{{prefix}}{{analysisId}}_threaddetails_{{tid}}">
+        <dl class="dl-horizontal">
+          <dt>Thread ID</dt>
+          <dd>{{tid}}
+            <a class="deeplink" href="#{{prefix}}{{analysisId}}_thread_{{tid}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></a>
+          </dd>
+          <dt>Status</dt>
+          <dd>{{getStatus}}</dd>
+          {{#threadState}}
+          <dt>ThreadState</dt>
+          <dd>{{threadState}}</dd>
+          {{/threadState}}
+          <dt>State</dt>
+          <dd>{{state}}</dd>
+          <dt>Group</dt>
+          <dd>{{group}}</dd>
+          <dt>Daemon</dt>
+          <dd>{{daemon}}</dd>
+          <dt>NID</dt>
+          <dd>{{nid}}</dd>
+          <dt>Priority</dt>
+          <dd>{{prio}}</dd>
+        </dl>
+        
+        {{#showTopFrames}}
+          <div class="row thread-stack">
+            <div class="col-md-offset-1 thread-stack">        
+              {{#topFrames}}
+                <samp>at {{.}}</samp><br />
+              {{/topFrames}}
+              <a href="#{{analysisId}}_thread_{{tid}}">Full thread details</a>
+            </div>
+          </div>
+        {{/showTopFrames}}
+      </div>
+      {{/showThreadDetails}}
+    </script>
+    
+    <script id="tmpl-analysis-threads-status-summary" type="x-tmpl-mustache">
+    <div class="container-fluid" id="{{analysisId}}_threads">
+      <h2>Threads by status</h2>
+      
+      <div class="panel-group" id="{{analysisId}}_status" role="tablist">
+      {{#threadsByStatus}}
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="{{analysisId}}_status_{{statusId}}">
+          <h4 class="panel-title accordion-toggle text-capitalize collapsed" role="button" data-toggle="collapse" data-target="#{{analysisId}}_status_{{statusId}}t">
+            <span class="thread-status-color" style="background-color: {{statusColor}}"></span>
+            {{status}} <span class="badge">{{threads.length}}</span>
+          </h4>        
+        </div>
+        <div class="panel-collapse collapse" role="tabpanel" id="{{analysisId}}_status_{{statusId}}t">
+          <div class="panel-body">
+            <ul class="list-unstyled">
+              {{#threads}}
+              <li>
+                <span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span>
+                <span class="thread-name"><a href="#{{analysisId}}_thread_{{tid}}">{{name}}</a></span>
+              </li>
+              {{/threads}}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {{/threadsByStatus}}
+      </div>
+    </div>
+    </script>
+    
+    <script id="tmpl-analysis-threads" type="x-tmpl-mustache">
+    <div class="container-fluid">     
+      <h2>Threads</h2>
+      
+      {{#threads}}
+      <div class="thread-entry panel panel-default">
+        {{! It is either a group of threads, or just a single thread}}
+        {{#threads.length}}
+        <div class="panel-heading" id="{{analysisId}}_tg_{{groupId}}">
+          <span class="badge">{{threads.length}}</span> thread(s) with {{#frames.length}}this{{/frames.length}}{{^frames}}no{{/frames}} stack
+          <a class="deeplink" href="#{{analysisId}}_tg_{{groupId}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></a></span>
+          </div>
+        {{/threads.length}}
+        <div class="panel-body">
+          {{#threads}}
+          <div id="{{analysisId}}_thread_{{tid}}" class="thread-header">
+            {{> thread-summary}}
+          </div>
+          {{/threads}}
+          {{^threads}}
+          <div id="{{analysisId}}_thread_{{tid}}" class="thread-header">
+            {{> thread-summary}}
+          </div>
+          {{/threads}}
+          <div class="row thread-stack">
+            <div class="col-md-offset-1 thread-stack">        
+              {{#stackframes}}
+                {{#first}}
+                  <div class="frame-collapse">
+                  <samp>at {{first}}</samp><br />
+                  <a class="collapsed" role="button" data-toggle="collapse" data-target="#{{analysisId}}_clpsfrms_{{id}}" title="Expand {{rest.length}} lines">
+                    <span class="glyphicon glyphicon-option-vertical" title="Collapse"></span>
+                    <span class="glyphicon glyphicon-option-horizontal"></span>
+                  </a>
+                  <div class="collapse" id="{{analysisId}}_clpsfrms_{{id}}">
+                    {{#rest}}
+                      <samp>at {{.}}</samp><br />
+                    {{/rest}}
+                  </div>
+                  </div>
+                {{/first}}
+                {{^first}}
+                  <samp>at {{.}}</samp><br />
+                {{/first}}
+              {{/stackframes}}
+              {{^frames}}
+                <samp>&lt;Empty stack&gt;</samp><br />
+              {{/frames}}
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/threads}}
+    </div>
+    </script>
+    
+    <script id="tmpl-analysis-synchronizers" type="x-tmpl-mustache">
+    <div class="container-fluid" id="{{analysisId}}_synchronizers">
+      <h2>Synchronizers</h2>
+      <table class="table table-striped">
+      {{#synchronizers}}
+      <tr class="synchronizer-entry">
+        <td id="{{analysisId}}_sync_{{id}}">
+          <span class="synchronizer-id">{{id}} <a class="deeplink" href="#{{analysisId}}_sync_{{id}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></a></span><br />
+          <span class="synchronizer-class" title="{{className}}"><samp>{{prettyClassName}}</samp></span> <br />
+          
+          {{#deadlockStatus.severity}}
+          {{#deadlockStatus}}
+          <span class="label label-{{notificationLevel}} synchronizer-deadlock" title="{{detail}}">{{.}}</span>
+          {{/deadlockStatus}}
+          {{/deadlockStatus.severity}}          
+        </td>
+        <td>
+          {{#lockHolder}}
+          <div class="synchronizer-lock-holder">
+            Held by<br />           
+            {{> thread-summary}}
+           </div>            
+          {{/lockHolder}}
+          
+          {{#notificationWaiters.length}}
+          <div class="synchronizer-notification-waiters">
+            <span>{{notificationWaiters.length}} thread(s) waiting for notifcation:</span>
+            <ul class="list-unstyled">
+            {{#notificationWaiters}}
+              <li>
+                <span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span>
+                <a href="#{{analysisId}}_thread_{{tid}}">{{name}}</a>
+              </li>
+            {{/notificationWaiters}}
+            </ul>
+          </div>
+          {{/notificationWaiters.length}}
+        
+          {{#lockWaiters.length}}
+          <div class="synchronizer-lock-waiters">
+            <span>{{lockWaiters.length}} thread(s) waiting to take lock</span>
+            <ul class="list-unstyled">
+            {{#lockWaiters}}
+              <li>
+                <span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span>
+                <a href="#{{analysisId}}_thread_{{tid}}">{{name}}</a>
+              </li>
+            {{/lockWaiters}}
+            </ul>
+          <div class="synchronizer-lock-waiters">
+          {{/lockWaiters.length}}
+        </td>
+      </tr>
+      {{/synchronizers}}
+      </table>
+    </div>
+    </script>
+    
+    <script id="tmpl-analysis-garbage" type="x-tmpl-mustache">
+    <div class="container-fluid" id="{{analysisId}}_garbage">
+      <h2>Ignored Lines</h2>
+      {{#analysis.ignoredData}}
+        <table class="table table-striped">
+          <tr>
+            <th>Count</th>
+            <th>Line</th>
+          </tr>
+        {{#getStrings}}
+          <tr>
+            <td>{{count}}</td>
+            <td><samp>{{string}}</samp></td>
+          </tr>
+        {{/getStrings}}
+        </table>
+      {{/analysis.ignoredData}}
+    </div>
+    </script>
+    
+    <script id="tmpl-diff-tab" type="x-tmpl-mustache">
+    <li data-diffid="{{id}}" data-tabtarget="{{id}}">
+      <a href="#{{id}}_diff" data-toggle="tab"><span class="glyphicon glyphicon-transfer"></span> {{name}}</a>
+      <span class="glyphicon glyphicon-remove"></span>
+    </li>
+    </script>
+    
+    <script id="tmpl-diff-tab-panel" type="x-tmpl-mustache">
+    <div id="{{id}}_diff" class="tab-pane bottom-navbar" data-diffid="{{id}}">
+      <div id="{{id}}_top" class="container-fluid">
+        <h1>Thread dump compare <small>{{name}}</small></h1>
+        <dl>
+          <dt>Older thread dump</dt>
+          <dd><a href="#{{old.id}}_dump">{{old.name}}{{#old.filename}}: {{old.filename}}{{/old.filename}}</a></dd> 
+          {{#old.analysis.dateString}}
+          <dd>{{.}}</dd>
+          {{/old.analysis.dateString}}
+          <dt>Newer thread dump</dt>
+          <dd><a href="#{{new.id}}_dump">{{new.name}}{{#new.filename}}: {{new.filename}}{{/new.filename}}</a></dd>
+          {{#new.analysis.dateString}}
+          <dd>{{.}}</dd>
+          {{/new.analysis.dateString}}
+        </dl>
+      </div>
+      <div class="results">
+      </div>
+    </div>
+    </script>
+    
+    <script id="tmpl-diff-navbar" type="x-tmpl-mustache">
+      <nav id="{{diffId}}_navbar" class="navbar navbar-default navbar-fixed-bottom">
+        <div class="navbar-header">
+          <a href="#{{diffId}}_top" class="navbar-brand">{{diff.info.name}}</a>
+        </div>
+        <div class="container-fluid">
+          <ul class="nav navbar-nav">
+            <li><a href="#{{diffId}}_overview">Overview</a></li>
+            {{#diff.newThreads.length}}
+            <li><a href="#{{diffId}}_new">New Threads <span class="label label-default">{{diff.newThreads.length}}</span></a></li>
+            {{/diff.newThreads.length}}
+            {{#diff.goneThreads.length}}
+            <li><a href="#{{diffId}}_gone">Gone Threads <span class="label label-default">{{diff.goneThreads.length}}</span></a></li>
+            {{/diff.goneThreads.length}}
+            {{#diff.changedThreads.length}}
+            <li><a href="#{{diffId}}_changed">Changed Threads <span class="label label-default">{{diff.changedThreads.length}}</span></a></li>
+            {{/diff.changedThreads.length}}
+            {{#diff.unchangedThreads.length}}
+            <li><a href="#{{diffId}}_unchanged">Unchanged Threads <span class="label label-default">{{diff.unchangedThreads.length}}</span></a></li>
+            {{/diff.unchangedThreads.length}}
+          </ul>
+        </div>
+      </nav>
+    </script>
+    
+    <script id="tmpl-diff-overview" type="x-tmpl-mustache">
+    <div id="{{diffId}}_overview" class="container-fluid">
+      <h2>Overview</h2>
+      <canvas id="{{diffId}}_thread_status_chart" width="600" height="150"></canvas>
+    </div>
+    </script>
+    
+    <script id="tmpl-diff-thread-list" type="x-tmpl-mustache">
+    <div id="{{divId}}" class="container-fluid">
+      <h2>{{title}}</h2>
+      {{#threads}}
+      <div class="thread-header">
+        {{> ^analysis-thread-summary}}
+      </div>
+      {{/threads}}
+    </div>
+    </script>
+    
+    <script id="tmpl-diff-changed-threads" type="x-tmpl-mustache">
+    <div id="{{diffId}}_changed" class="container-fluid">
+      <h2>Changed Threads</h2>
+      
+      <table class="table table-striped table-hover">
+        <tr>
+          <th>Thread ID</th>
+          <th>Name</th>
+          <th>Frames Changed</th>
+          <th>Name Changed</th>
+          <th>Status Changed</th>
+          <th>Waiting for Notification Changed</th>
+          <th>Want to Acquire Changed</th>
+          <th>Locks Held Changed</th>
+        </tr>
+        {{#threads}}
+          {{> changed-thread-summary}}
+        {{/threads}}
+        <tr>
+          <th>Thread ID</th>
+          <th>Name</th>
+          <th>Frames Changed</th>
+          <th>Name Changed</th>
+          <th>Status Changed</th>
+          <th>Waiting for Notification Changed</th>
+          <th>Want to Acquire Changed</th>
+          <th>Locks Held Changed</th>
+        </tr>
+      </table>
+      
+      {{#threads}}
+        {{> changed-thread}}
+      {{/threads}}
+    </div>
+    </script>
+    
+    <script id="tmpl-diff-changed-thread-summary" type="x-tmpl-mustache">
+      <tr>
+        <td><a href="#{{diffId}}_changedthread_{{older.tid}}">{{older.tid}}</a></td>
+        <td class="nowrap">{{#older}}<span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span> {{name}}{{/older}}</td>
+        <td>{{#changed.frames}}<span class="glyphicon glyphicon-ok text-success"></span>{{/changed.frames}}</td>
+        <td>{{#changed.name}}<span class="glyphicon glyphicon-ok text-success"></span>{{/changed.name}}</td>
+        <td>{{#changed.status}}
+          {{#older}}<span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span>{{/older}}
+          <span class="glyphicon glyphicon-arrow-right text-muted"></span>
+          {{#newer}}<span class="thread-status-color" style="background-color: {{threadStatusColor}}" title="{{getStatus}}"></span>{{/newer}}          
+          {{/changed.status}}
+        </td>
+        <td>{{#changed.wantNotificationOn}}<span class="glyphicon glyphicon-ok text-success"></span>{{/changed.wantNotificationOn}}</td>
+        <td>{{#changed.wantToAcquire}}<span class="glyphicon glyphicon-ok text-success"></span>{{/changed.wantToAcquire}}</td>
+        <td>{{#changed.locksHeld}}<span class="glyphicon glyphicon-ok text-success"></span>{{/changed.locksHeld}}</td>
+      </tr>
+    </script>
+    
+    <script id="tmpl-diff-changed-thread" type="x-tmpl-mustache">
+      <div class="panel panel-default">
+        <div class="panel-heading" id="{{diffId}}_changedthread_{{older.tid}}">
+          <h4 class="panel-title">
+            Thread {{older.tid}}
+            {{^changed.name}}
+            : {{older.name}}
+            {{/changed.name}}
+          </h4>        
+        </div>
+        <div class="panel-body">
+          <table class="table table-striped" style="width: auto;">
+          <tr>
+            {{#isPropertiesChanges}}
+            <th></th>
+            {{/isPropertiesChanges}}
+            <th class="danger"><a href="#{{diff.older.id}}_thread_{{older.tid}}">Older</a></th>
+            <th class="success"><a href="#{{diff.newer.id}}_thread_{{newer.tid}}">Newer</a></th>
+          </tr>
+          {{#changed.name}}
+          <tr>
+            <th>Name</th>
+            <td class="danger">{{older.name}}</td>
+            <td class="success">{{newer.name}}</td>
+          </tr>
+          {{/changed.name}}
+          {{#changed.status}}
+          <tr>          
+            <th>Status</th>
+            <td class="danger">{{#older}}{{> thread-status-full}}{{/older}}</td>
+            <td class="success">{{#newer}}{{> thread-status-full}}{{/newer}}</td>
+          </tr>
+          {{/changed.status}}
+          {{#changed.wantNotificationOn}}
+          <tr>
+            <th>Waiting notification on</th>
+            <td class="danger"><a href="#{{diff.older.id}}_sync_{{older.wantNotificationOn}}">{{older.wantNotificationOn}}</a></td>
+            <td class="success"><a href="#{{diff.newer.id}}_sync_{{newer.wantNotificationOn}}">{{newer.wantNotificationOn}}</a></td>
+          </tr>
+          {{/changed.wantNotificationOn}}
+          {{#changed.wantToAcquire}}
+          <tr>
+            <th>Want to acquire</th>
+            <td class="danger"><a href="#{{diff.older.id}}_sync_{{older.wantToAcquire}}">{{older.wantToAcquire}}</a></td>
+            <td class="success"><a href="#{{diff.newer.id}}_sync_{{newer.wantToAcquire}}">{{newer.wantToAcquire}}</a></td>
+          </tr>
+          {{/changed.wantToAcquire}}
+          {{#changed.locksHeld}}
+          <tr>
+            <th>Locks held</th>
+            <td class="danger">
+              <ul class="list-csv">
+              {{#older.locksHeld}}
+                <li><a href="#{{diff.older.id}}_sync_{{.}}">{{.}}</a></li>
+              {{/older.locksHeld}}
+              </ul>
+            </td>
+            <td class="success">
+              <ul class="list-csv">
+              {{#newer.locksHeld}}
+                <li><a href="#{{diff.newer.id}}_sync_{{.}}">{{.}}</a></li>
+              {{/newer.locksHeld}}
+              </ul>
+            </td>
+          </tr>
+          {{/changed.locksHeld}}
+          </table>
+          
+          {{#changed.frames}}
+          <h4>Changed Stack</h4>
+          {{#stackDiff}}
+            <div class="{{#del}}bg-danger{{/del}}{{#ins}}bg-success{{/ins}}"><samp>
+            at {{line}}
+            <samp></div>
+          {{/stackDiff}}
+          {{/changed.frames}}
+        </div>
+      </div>
+    </script>
+    
+    <script id="tmpl-diff-unchanged-threads" type="x-tmpl-mustache">
+    <div id="{{diffId}}_unchanged" class="container-fluid">
+      <h2>Unchanged Threads</h2>
+      {{#threads}}
+      {{#older}}
+      <div class="thread-header">
+        {{> ^analysis-thread-summary}}
+      </div>
+      {{/older}}
+      {{/threads}}
+    </div>
+    </script>
+    
+    <script id="tmpl-diff-thread-status-full" type="x-tmpl-mustache">
+      <span class="thread-status-color" style="background-color: {{threadStatusColor}}"></span> {{getStatus}}
+    </script>
+  </body>
+</html>
