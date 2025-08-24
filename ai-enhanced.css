@@ -1,0 +1,216 @@
+/*
+AI Enhanced Styles for Java Thread Dump Analyzer
+Copyright 2025 - Enhanced with Claude 4.0 Sonnet
+*/
+
+/* AI 分析加载动画 */
+.ai-loading {
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    border-left: 4px solid #007bff;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* 健康评分样式 */
+.health-score {
+    font-size: 3em;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.health-excellent { color: #28a745; }
+.health-good { color: #17a2b8; }
+.health-warning { color: #ffc107; }
+.health-critical { color: #dc3545; }
+
+/* AI 洞察面板 */
+.ai-insight-panel {
+    border-left: 4px solid #6f42c1;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.ai-insight-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* AI 建议卡片 */
+.ai-recommendation {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.ai-recommendation:hover {
+    border-color: #6f42c1;
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.1);
+}
+
+.ai-recommendation .panel-heading {
+    background: linear-gradient(135deg, #6f42c1 0%, #8e44ad 100%);
+    color: white;
+    border-radius: 7px 7px 0 0;
+}
+
+/* 优先级标签 */
+.priority-high {
+    background-color: #dc3545 !important;
+    animation: blink 2s infinite;
+}
+
+.priority-medium {
+    background-color: #ffc107 !important;
+}
+
+.priority-low {
+    background-color: #6c757d !important;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.7; }
+}
+
+/* AI 图表容器 */
+.ai-chart-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.ai-chart-container canvas {
+    max-height: 300px;
+}
+
+/* 问题诊断样式 */
+.issue-critical {
+    border-left: 5px solid #dc3545;
+    background-color: #f8d7da;
+    animation: shake 0.5s ease-in-out;
+}
+
+.issue-warning {
+    border-left: 5px solid #ffc107;
+    background-color: #fff3cd;
+}
+
+.issue-info {
+    border-left: 5px solid #17a2b8;
+    background-color: #d1ecf1;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* 线程状态颜色增强 */
+.thread-status-runnable { background-color: #28a745; }
+.thread-status-waiting { background-color: #ffc107; }
+.thread-status-blocked { background-color: #dc3545; }
+.thread-status-timed-waiting { background-color: #fd7e14; }
+
+/* AI 功能切换开关 */
+.ai-toggle-container {
+    background: linear-gradient(135deg, #6f42c1 0%, #8e44ad 100%);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    margin: 5px;
+    transition: all 0.3s ease;
+}
+
+.ai-toggle-container:hover {
+    background: linear-gradient(135deg, #8e44ad 0%, #6f42c1 100%);
+    transform: scale(1.05);
+}
+
+.ai-toggle-container input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .health-score {
+        font-size: 2em;
+    }
+    
+    .ai-chart-container {
+        padding: 10px;
+    }
+    
+    .ai-recommendation {
+        margin-bottom: 10px;
+    }
+}
+
+/* 深色主题支持 */
+@media (prefers-color-scheme: dark) {
+    .ai-insight-panel {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: #ecf0f1;
+    }
+    
+    .ai-chart-container {
+        background: #2c3e50;
+        color: #ecf0f1;
+    }
+    
+    .ai-recommendation {
+        background: #34495e;
+        color: #ecf0f1;
+        border-color: #4a5f7a;
+    }
+}
+
+/* 打印样式 */
+@media print {
+    .ai-loading,
+    .ai-toggle-container {
+        display: none;
+    }
+    
+    .ai-chart-container {
+        break-inside: avoid;
+    }
+}
+
+/* 可访问性增强 */
+.ai-insight-panel:focus,
+.ai-recommendation:focus {
+    outline: 2px solid #6f42c1;
+    outline-offset: 2px;
+}
+
+/* 工具提示样式 */
+.ai-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.ai-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 1000;
+    font-size: 12px;
+}

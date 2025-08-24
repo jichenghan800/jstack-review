@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复测试页面</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <style>
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        .log-area {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1>修复测试页面</h1>
+        <p class="text-muted">测试文件选择和分析功能是否正常工作</p>
+        
+        <!-- 文件上传测试 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>1. 文件选择测试</h5>
+            </div>
+            <div class="card-body">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                    <h5>拖拽文件到此处或点击选择文件</h5>
+                    <p class="text-muted">测试透明覆盖文件选择功能</p>
+                    <div style="position: relative; display: inline-block;">
+                        <button class="btn btn-primary btn-lg" id="fileSelectBtn">
+                            选择文件
+                        </button>
+                        <input type="file" id="fileInput" 
+                               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;" 
+                               accept=".txt,.log,.dump,text/plain">
+                    </div>
+                </div>
+                
+                <div id="fileInfo" class="mt-3" style="display: none;">
+                    <div class="alert alert-success">
+                        <h6>文件选择成功！</h6>
+                        <div id="fileDetails"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分析测试 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>2. 分析功能测试</h5>
+            </div>
+            <div class="card-body">
+                <textarea class="form-control mb-3" rows="6" id="textInput" 
+                          placeholder="粘贴线程转储内容或点击加载演示文件..."></textarea>
+                <div class="text-center">
+                    <button class="btn btn-info me-2" onclick="loadDemoContent()">加载演示内容</button>
+                    <button class="btn btn-success" onclick="testAnalysis()">测试分析</button>
+                </div>
+                
+                <div id="analysisResult" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <h6>分析结果：</h6>
+                        <div id="analysisDetails"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 调试日志 -->
+        <div class="card">
+            <div class="card-header">
+                <h5>调试日志</h5>
+            </div>
+            <div class="card-body">
+                <div class="log-area" id="logArea">
+                    页面加载完成，等待测试...<br>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" onclick="clearLog()">清空日志</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logArea = $('#logArea');
+            const timestamp = new Date().toLocaleTimeString();
+            logArea.append(timestamp + ': ' + message + '<br>');
+            logArea.scrollTop(logArea[0].scrollHeight);
+            console.log(message);
+        }
+
+        function clearLog() {
+            $('#logArea').html('日志已清空<br>');
+        }
+
+        $(document).ready(function() {
+            log('✅ 页面初始化完成');
+            
+            // 文件选择事件
+            $('#fileInput').change(function() {
+                const file = this.files[0];
+                if (file) {
+                    log('📁 文件选择成功: ' + file.name + ' (' + file.size + ' bytes)');
+                    
+                    $('#fileDetails').html(
+                        '<strong>文件名:</strong> ' + file.name + '<br>' +
+                        '<strong>大小:</strong> ' + (file.size / 1024).toFixed(1) + ' KB<br>' +
+                        '<strong>类型:</strong> ' + (file.type || '未知')
+                    );
+                    $('#fileInfo').show();
+                    
+                    // 读取文件内容到文本框
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#textInput').val(e.target.result);
+                        log('📄 文件内容已加载到文本框');
+                    };
+                    reader.readAsText(file);
+                } else {
+                    log('❌ 文件选择失败');
+                }
+            });
+            
+            // 拖拽功能
+            $('#uploadArea').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).addClass('border-primary bg-light');
+                log('📂 文件拖拽到区域上方');
+            }).on('dragleave', function(e) {
+                e.preventDefault();
+                $(this).removeClass('border-primary bg-light');
+            }).on('drop', function(e) {
+                e.preventDefault();
+                $(this).removeClass('border-primary bg-light');
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    log('📂 文件拖拽放下: ' + files[0].name);
+                    // 触发文件输入的change事件
+                    $('#fileInput')[0].files = files;
+                    $('#fileInput').trigger('change');
+                }
+            });
+            
+            // 上传区域点击
+            $('#uploadArea').click(function(e) {
+                if (!$(e.target).is('button') && 
+                    !$(e.target).is('input[type="file"]') &&
+                    !$(e.target).closest('button').length &&
+                    !$(e.target).closest('input[type="file"]').length) {
+                    log('📁 点击上传区域，触发文件选择');
+                    $('#fileInput').click();
+                }
+            });
+            
+            log('🎯 事件监听器已绑定');
+        });
+
+        function loadDemoContent() {
+            log('📁 尝试加载演示内容...');
+            
+            // 模拟线程转储内容
+            const demoContent = `2025-08-21 15:00:00
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.281-b09 mixed mode):
+
+"main" #1 prio=5 os_prio=0 tid=0x00007f8b4c001000 nid=0x1234 runnable [0x00007f8b4c100000]
+   java.lang.Thread.State: RUNNABLE
+   at java.lang.Thread.run(Thread.java:748)
+
+"Thread-1" #2 prio=5 os_prio=0 tid=0x00007f8b4c002000 nid=0x1235 waiting on condition [0x00007f8b4c200000]
+   java.lang.Thread.State: WAITING (parking)
+   at sun.misc.Unsafe.park(Native Method)
+   at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+
+"Thread-2" #3 prio=5 os_prio=0 tid=0x00007f8b4c003000 nid=0x1236 blocked on monitor entry [0x00007f8b4c300000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+   at java.lang.Object.wait(Native Method)`;
+
+            $('#textInput').val(demoContent);
+            log('✅ 演示内容已加载');
+        }
+
+        function testAnalysis() {
+            const content = $('#textInput').val().trim();
+            if (!content) {
+                log('❌ 没有内容可分析');
+                alert('请先输入或加载内容');
+                return;
+            }
+            
+            log('🔍 开始测试分析功能...');
+            log('📄 内容长度: ' + content.length + ' 字符');
+            log('📄 行数: ' + content.split('\\n').length);
+            
+            // 检查是否包含线程转储特征
+            const hasThreadDump = content.includes('Thread.State') || content.includes('java.lang');
+            log('🔍 是否包含线程转储特征: ' + (hasThreadDump ? '是' : '否'));
+            
+            // 模拟分析结果
+            setTimeout(function() {
+                const threadCount = (content.match(/Thread\.State/g) || []).length;
+                const runnableCount = (content.match(/RUNNABLE/g) || []).length;
+                const blockedCount = (content.match(/BLOCKED/g) || []).length;
+                const waitingCount = (content.match(/WAITING/g) || []).length;
+                
+                $('#analysisDetails').html(
+                    '<strong>检测到的线程:</strong> ' + threadCount + '<br>' +
+                    '<strong>运行中:</strong> ' + runnableCount + '<br>' +
+                    '<strong>阻塞中:</strong> ' + blockedCount + '<br>' +
+                    '<strong>等待中:</strong> ' + waitingCount
+                );
+                $('#analysisResult').show();
+                
+                log('✅ 分析完成 - 线程数: ' + threadCount);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

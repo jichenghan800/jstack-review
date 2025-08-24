@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 增强 Java 线程转储分析工具</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 引入传统解析库 -->
+    <script src="jstack-review-original/jtdajs.js"></script>
+    <script src="jstack-review-original/jtdajs.render.js"></script>
+    <style>
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .upload-area:hover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+            transform: translateY(-2px);
+        }
+        .upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+            transform: scale(1.02);
+        }
+        
+        /* 进度条增强样式 */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        /* 阶段指示器样式 */
+        .stage-indicator {
+            margin-bottom: 10px;
+        }
+        .stage-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .stage-circle.active {
+            background-color: #0d6efd !important;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+        .stage-circle.completed {
+            background-color: #198754 !important;
+        }
+        .stage-label {
+            display: block;
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+        
+        /* 统计信息样式 */
+        .stat-item {
+            padding: 8px;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>
+                        <i class="fas fa-robot text-primary"></i>
+                        AI 增强 Java 线程转储分析工具
+                    </h1>
+                    <div>
+                        <button class="btn btn-outline-info me-2" id="demoButton">
+                            <i class="fas fa-play-circle"></i>
+                            Demo 演示
+                        </button>
+                        <button class="btn btn-outline-info me-2" id="configButton">
+                            <i class="fas fa-cog"></i>
+                            AI 配置
+                        </button>
+                        <button class="btn btn-outline-primary me-2" id="promptButton">
+                            <i class="fas fa-edit"></i>
+                            自定义提示词
+                        </button>
+                        <button class="btn btn-outline-secondary me-2" onclick="window.open('jstack-review-original/index.html', '_blank')">
+                            <i class="fas fa-chart-line"></i>
+                            传统分析
+                        </button>
+                        <button class="btn btn-outline-success me-2 d-none" id="reuploadBtn">
+                            <i class="fas fa-upload"></i> 重新上传
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件上传区域 -->
+        <div class="row mb-4" id="uploadSection">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-upload"></i> 上传线程转储文件</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>拖拽文件到此处或点击此区域选择文件</h5>
+                            <p class="text-muted">支持 .txt, .log, .dump 等格式，最大 4MB</p>
+                            <p class="text-muted"><small>文件上传后将自动开始AI分析</small></p>
+                            
+                            <input type="file" id="fileInput" 
+                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;" 
+                                   accept=".txt,.log,.dump,text/plain">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 进度显示 -->
+        <div class="row mb-4 d-none" id="progressSection">
+            <div class="col-12">
+                <div class="card border-primary shadow">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs fa-spin"></i> 
+                            AI智能分析进行中
+                            <small class="ms-2" id="analysisTimer">00:00</small>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 主进度条 -->
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
+                                 id="progressBar" 
+                                 style="width: 0%;"
+                                 role="progressbar">
+                                <span class="fw-bold">0%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 当前阶段 -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1" id="progressText">准备分析...</h6>
+                                <small class="text-muted" id="progressDetails"></small>
+                            </div>
+                            <div class="text-end">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status" id="progressSpinner">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 阶段指示器 -->
+                        <div class="row text-center" id="stageIndicators">
+                            <div class="col-3">
+                                <div class="stage-indicator" id="stage1">
+                                    <div class="stage-circle bg-secondary">1</div>
+                                    <small class="stage-label">文件解析</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stage-indicator" id="stage2">
+                                    <div class="stage-circle bg-secondary">2</div>
+                                    <small class="stage-label">传统分析</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stage-indicator" id="stage3">
+                                    <div class="stage-circle bg-secondary">3</div>
+                                    <small class="stage-label">AI分析</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="stage-indicator" id="stage4">
+                                    <div class="stage-circle bg-secondary">4</div>
+                                    <small class="stage-label">结果生成</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 实时分析信息 -->
+                        <div class="mt-4 p-3 bg-light rounded" id="analysisInfo">
+                            <h6 class="text-primary mb-2">
+                                <i class="fas fa-info-circle"></i> 分析过程说明
+                            </h6>
+                            <div id="analysisExplanation" class="small text-muted">
+                                正在准备分析您的线程转储文件...
+                            </div>
+                            
+                            <!-- 统计信息 -->
+                            <div class="row mt-3" id="analysisStats" style="display: none;">
+                                <div class="col-md-3">
+                                    <div class="stat-item text-center">
+                                        <div class="stat-value text-primary" id="threadCount">-</div>
+                                        <div class="stat-label">线程数量</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-item text-center">
+                                        <div class="stat-value text-success" id="runningCount">-</div>
+                                        <div class="stat-label">运行中</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-item text-center">
+                                        <div class="stat-value text-warning" id="waitingCount">-</div>
+                                        <div class="stat-label">等待中</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-item text-center">
+                                        <div class="stat-value text-danger" id="blockedCount">-</div>
+                                        <div class="stat-label">阻塞</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 分析结果 -->
+        <div class="row mb-4 d-none" id="resultsSection">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-brain text-primary"></i> AI 智能分析结果</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="analysisResults">
+                            <!-- 分析结果将在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // AI配置管理
+        let aiConfig = JSON.parse(localStorage.getItem('aiConfig')) || {
+            region: 'us-west-2',
+            accessKey: '',
+            secretKey: '',
+            sessionToken: '',
+            inferenceProfileArn: '',
+            profileName: ''
+        };
+
+        // 自定义系统提示词管理
+        let customPrompts = JSON.parse(localStorage.getItem('customPrompts')) || {
+            enabled: false,
+            currentPrompt: '',
+            templates: {}
+        };
+
+        // 确保所有模板都存在（用于升级兼容性）
+        if (!customPrompts.templates) {
+            customPrompts.templates = {};
+        }
+
+        // 设置默认模板（如果不存在）
+        const defaultTemplates = {
+            default: `作为Java线程转储专家，我已经完成了基础解析，现在需要您进行深度分析：
+
+基础解析结果摘要：{ANALYSIS_SUMMARY}
+
+请基于以上基础解析结果，提供：
+1. 应用健康评分(1-10分)和评分依据
+2. 性能问题识别(死锁/阻塞/高CPU/内存泄漏等)
+3. 具体优化建议和解决方案
+4. 风险预警和监控建议
+{TRUNCATION_WARNING}`,
+            
+            detailed: `作为资深Java性能调优专家，请对以下线程转储数据进行深度分析：
+
+基础解析结果摘要：{ANALYSIS_SUMMARY}
+
+请提供详细的分析报告，包括：
+
+## 1. 应用健康评估
+- 整体健康评分(1-10分)
+- 评分依据和关键指标
+- 与行业标准的对比
+
+## 2. 性能问题诊断
+- 线程阻塞分析
+- 死锁检测和影响评估
+- 资源竞争情况
+- CPU和内存使用模式
+
+## 3. 根因分析
+- 问题根本原因识别
+- 影响范围评估
+- 严重程度分级
+
+## 4. 优化建议
+- 立即行动项
+- 中期优化建议
+- 长期架构改进
+- 代码级优化建议
+
+## 5. 监控和预警
+- 关键指标监控建议
+- 告警阈值设置
+- 预防措施
+
+{TRUNCATION_WARNING}`,
+
+            concise: `作为线程转储分析专家，请提供简洁的分析报告：
+
+解析数据：{ANALYSIS_SUMMARY}
+
+请简要回答：
+1. 健康评分(1-10): 
+2. 主要问题: 
+3. 关键建议: 
+4. 风险等级: 
+
+{TRUNCATION_WARNING}`,
+
+            jstack_optimized: `您是专业的Java性能分析专家，擅长基于jstack-review工具的解析结果生成美观、结构化的AI分析报告。
+
+## 📊 基础解析数据
+{ANALYSIS_SUMMARY}
+
+## 🎯 分析任务
+请基于jstack-review的结构化解析结果，生成一份专业、美观、结构统一的AI分析报告。
+
+## 📝 报告结构要求
+
+### 📈 **执行摘要** 
+- 🏥 **应用健康度评分**: X/10 分 (请提供明确数值)
+- ⚠️ **风险等级**: [低风险/中风险/高风险/紧急]
+- 📊 **关键指标快览**: 一句话概括核心问题
+- 🎨 **分析时间戳**: {当前时间}
+
+### 🔍 **线程状态分析**
+**总览**: 从{总线程数}个线程中发现的关键模式
+- 🟢 **运行中线程**: {运行中线程数}个 - 分析执行效率
+- 🟡 **等待中线程**: {等待中线程数}个 - 识别阻塞原因  
+- 🔴 **阻塞线程**: {阻塞线程数}个 - 重点关注性能瓶颈
+- 🔧 **同步器状态**: {同步器数量}个 - 锁竞争分析
+
+### 🚨 **问题识别与分级**
+**严重问题** (P0 - 需立即处理)
+- [ ] 死锁检测结果: {是否存在死锁}
+- [ ] 关键线程阻塞情况
+- [ ] 资源泄漏风险
+
+**重要问题** (P1 - 24小时内处理)  
+- [ ] 性能瓶颈分析
+- [ ] 异常等待时间
+- [ ] 资源竞争热点
+
+**优化建议** (P2 - 计划优化)
+- [ ] 代码优化点
+- [ ] 架构改进建议
+
+### 💡 **智能建议**
+**立即行动项**
+1. 🔥 [紧急] ...
+2. ⚡ [重要] ...
+
+**中期优化计划**  
+1. 🛠️ [架构] ...
+2. 📊 [监控] ...
+
+**长期战略规划**
+1. 🏗️ [重构] ...
+2. 📈 [扩容] ...
+
+### 📊 **性能指标建议**
+**关键监控指标**
+- 🔍 线程池使用率阈值: XX%
+- ⏱️ 平均响应时间告警: XXXms  
+- 🚦 阻塞线程比例告警: XX%
+- 💾 内存使用率监控: XX%
+
+**告警策略**
+- 🚨 P0级别: [条件] → [动作]
+- ⚠️ P1级别: [条件] → [动作]
+
+### 🔬 **技术深度分析**
+**热点方法分析**
+- 最繁忙的执行路径
+- 潜在性能瓶颈点
+- 优化机会识别
+
+**同步器深度分析**  
+- 锁竞争热点分布
+- 等待时间模式分析
+- 优化建议
+
+### 📋 **总结与后续步骤**
+**本次分析结论**
+1. 核心发现: ...
+2. 风险评估: ...  
+3. 推荐方案: ...
+
+**建议的后续行动**
+- [ ] 立即执行: ...
+- [ ] 短期规划: ...  
+- [ ] 长期目标: ...
+
+---
+**📌 注意事项**
+- 本分析基于jstack-review v1.x解析结果
+- 建议结合业务场景和历史数据综合判断
+- 关键修改前请在测试环境验证
+{TRUNCATION_WARNING}`,
+
+            // 🆕 新增：分段分析专用模板
+            segment_focused: `您是Java线程转储分段分析专家。本次任务为多阶段分析的第{SEGMENT_INDEX}阶段。
+
+## 🎯 分段分析重点
+- **分段名称**: {SEGMENT_NAME}
+- **分析重点**: {SEGMENT_FOCUS}  
+- **优先级**: {SEGMENT_PRIORITY}
+- **线程范围**: 第{SEGMENT_START}-{SEGMENT_END}个线程
+
+## 📊 本段数据概况
+{ANALYSIS_SUMMARY}
+
+## 📋 分段分析任务
+请专注于本分段的特定问题，提供：
+
+### 🔍 **本段线程状态分析**
+- **重点关注**: {SEGMENT_FOCUS}
+- **线程行为模式**: 分析本段线程的具体行为
+- **异常线程识别**: 重点标记有问题的线程
+
+### 🚨 **本段问题识别** (按{SEGMENT_PRIORITY}优先级)
+**发现的关键问题**
+1. **问题1**: [具体描述]
+   - 影响范围: [线程范围]
+   - 严重程度: [P0/P1/P2]
+   - 根本原因: [分析]
+
+2. **问题2**: [具体描述]
+   - 影响范围: [线程范围]  
+   - 严重程度: [P0/P1/P2]
+   - 根本原因: [分析]
+
+### 💡 **本段专项建议**
+**针对本段问题的具体建议**
+- 🔥 **立即处理**: ...
+- ⚡ **优先解决**: ...
+- 🛠️ **优化建议**: ...
+
+### ⚠️ **本段风险评估**
+- **风险等级**: [高/中/低]
+- **潜在影响**: ...
+- **预警指标**: ...
+
+## 📌 分段分析说明
+- 本分析只针对指定的线程范围
+- 结果将与其他分段合并生成综合报告
+- 请专注于本段特有的问题和特征
+
+{TRUNCATION_WARNING}`,
+
+            // 🆕 新增：综合分析专用模板  
+            synthesis_focused: `您是资深Java性能综合分析专家。现在需要基于多个分段分析结果生成最终综合报告。
+
+## 📊 整体数据摘要
+{ANALYSIS_SUMMARY}
+
+## 🎯 综合分析任务
+您已收到{SEGMENT_COUNT}个分段的详细分析结果，请生成一份完整的综合报告。
+
+## 📝 综合报告结构
+
+### 📈 **综合执行摘要**
+- 🏥 **整体健康度评分**: X/10 分 (基于所有分段综合评估)
+- ⚠️ **整体风险等级**: [低风险/中风险/高风险/紧急]  
+- 📊 **核心问题概述**: 汇总所有分段发现的关键问题
+- 🎨 **分析完成时间**: {当前时间}
+
+### 🔍 **分段分析汇总**
+**各分段发现的主要问题**
+- **高优先级分段**: 重点关注的关键问题
+- **中优先级分段**: 需要注意的性能问题  
+- **一般分段**: 优化建议和预防措施
+
+### 🚨 **问题优先级矩阵**
+**P0级问题汇总** (需立即处理)
+- [ ] **死锁问题**: [汇总各分段发现]
+- [ ] **严重阻塞**: [汇总各分段发现]
+- [ ] **资源泄漏**: [汇总各分段发现]
+
+**P1级问题汇总** (24小时内处理)
+- [ ] **性能瓶颈**: [汇总各分段发现]
+- [ ] **资源竞争**: [汇总各分段发现]
+- [ ] **配置问题**: [汇总各分段发现]
+
+**P2级问题汇总** (计划优化)
+- [ ] **代码优化**: [汇总各分段发现]
+- [ ] **架构改进**: [汇总各分段发现]
+
+### 💡 **综合优化路线图**
+**立即行动计划** (0-24小时)
+1. 🔥 **紧急处理**: [基于P0问题的具体行动]
+2. ⚡ **快速解决**: [基于P1问题的快速方案]
+
+**中期优化计划** (1周-1个月)
+1. 🛠️ **系统改进**: [基于多个分段的系统性建议]
+2. 📊 **监控增强**: [基于分析结果的监控方案]
+
+**长期战略规划** (1-3个月)
+1. 🏗️ **架构重构**: [根本性问题解决方案]
+2. 📈 **性能提升**: [长期性能优化策略]
+
+### 📊 **综合监控策略**
+**关键指标阈值** (基于分段发现)
+- 🔍 综合线程使用率阈值: XX%
+- ⏱️ 系统响应时间告警: XXXms
+- 🚦 整体阻塞比例告警: XX%
+- 💾 内存压力监控: XX%
+
+**分级告警策略**
+- 🚨 **P0级告警**: [条件] → [立即行动]
+- ⚠️ **P1级告警**: [条件] → [优先处理]  
+- ℹ️ **P2级提醒**: [条件] → [计划处理]
+
+### 📋 **综合分析总结**
+**多阶段分析核心发现**
+1. **最关键发现**: ...
+2. **系统性问题**: ...
+3. **优化机会**: ...
+
+**风险评估与建议**
+- **当前风险等级**: ...
+- **主要风险因素**: ...
+- **风险缓解措施**: ...
+
+**后续行动建议**
+- [ ] **立即执行**: ...
+- [ ] **短期规划**: ...
+- [ ] **长期目标**: ...
+
+---
+**📊 多阶段分析说明**
+- 本报告基于{SEGMENT_COUNT}个智能分段的深度分析
+- 每个分段都经过专门的AI分析和问题识别
+- 综合报告确保了分析的全面性和准确性
+
+{TRUNCATION_WARNING}`,
+
+            custom: ''
+        };
+
+        // 合并默认模板到customPrompts中（保留用户自定义的内容）
+        Object.keys(defaultTemplates).forEach(key => {
+            if (!customPrompts.templates[key]) {
+                customPrompts.templates[key] = defaultTemplates[key];
+            }
+        });
+
+        // 立即保存更新后的配置
+        localStorage.setItem('customPrompts', JSON.stringify(customPrompts));
+        console.log('🔧 自定义提示词系统初始化完成');
+        console.log('📋 模板总数:', Object.keys(customPrompts.templates).length);
+        console.log('🎯 jstack_optimized长度:', customPrompts.templates.jstack_optimized?.length || '不存在');
+
+        function showCustomPrompt() {
+            console.log('📝 显示自定义提示词配置');
+            
+            const promptModal = `
+                <div class="modal fade" id="customPromptModal" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-edit me-2"></i>自定义系统提示词
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">启用自定义提示词</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="enableCustomPrompt" ${customPrompts.enabled ? 'checked' : ''}>
+                                                <label class="form-check-label" for="enableCustomPrompt">
+                                                    使用自定义提示词替代默认提示词
+                                                </label>
+                                            </div>
+                                            <small class="text-muted">关闭时使用系统默认提示词</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">提示词模板</label>
+                                            <select class="form-select" id="promptTemplate" onchange="loadTemplate()">
+                                                <option value="default">默认模板</option>
+                                                <option value="detailed">详细分析模板</option>
+                                                <option value="concise">简洁分析模板</option>
+                                                <option value="jstack_optimized">jstack-review智能模板 ⭐ (推荐)</option>
+                                                <option value="custom">自定义模板</option>
+                                            </select>
+                                            <small class="text-muted">⭐推荐使用jstack-review智能模板，会根据分析阶段（单阶段/分段/综合）自动选择最佳提示词</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">可用占位符</label>
+                                            <div class="bg-light p-3 rounded">
+                                                <small class="text-muted">
+                                                    <strong>{ANALYSIS_SUMMARY}</strong><br>
+                                                    传统解析的结构化数据摘要
+                                                    <br><br>
+                                                    <strong>{TRUNCATION_WARNING}</strong><br>
+                                                    数据截断警告信息（如适用）
+                                                    <br><br>
+                                                    <strong>jstack-review专用占位符:</strong><br>
+                                                    <small>• {总线程数} {运行中线程数} {等待中线程数}<br>
+                                                    • {阻塞线程数} {同步器数量} {是否存在死锁}<br>
+                                                    • {当前时间} - 自动插入分析时间</small>
+                                                    <br><br>
+                                                    <strong>多阶段分析专用占位符:</strong><br>
+                                                    <small>• {SEGMENT_INDEX} {SEGMENT_NAME} {SEGMENT_FOCUS}<br>
+                                                    • {SEGMENT_PRIORITY} {SEGMENT_START} {SEGMENT_END}<br>
+                                                    • {SEGMENT_COUNT} - 分段总数，用于综合分析</small>
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <button class="btn btn-outline-secondary btn-sm w-100" onclick="previewPrompt()">
+                                                <i class="fas fa-eye"></i> 预览最终提示词
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">提示词内容</label>
+                                            <textarea class="form-control font-monospace" id="promptContent" rows="20" 
+                                                      placeholder="输入您的自定义系统提示词..."></textarea>
+                                            <small class="text-muted">
+                                                使用上述占位符来动态插入分析数据。提示词将发送给AI模型进行线程转储分析。
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="promptPreview" class="d-none">
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-eye"></i> 提示词预览</h6>
+                                        <pre id="previewContent" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetToDefault()">
+                                    <i class="fas fa-undo"></i> 重置为默认
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-primary" onclick="saveCustomPrompt()">
+                                    <i class="fas fa-save me-2"></i>保存配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('#customPromptModal').remove();
+            $('body').append(promptModal);
+            
+            const modal = new bootstrap.Modal(document.getElementById('customPromptModal'));
+            modal.show();
+            
+            // 模态框显示后加载当前配置
+            setTimeout(() => {
+                loadCurrentPrompt();
+            }, 100);
+        }
+
+        function loadTemplate() {
+            const template = $('#promptTemplate').val();
+            console.log('🔄 切换到模板:', template);
+            console.log('📄 模板内容长度:', customPrompts.templates[template]?.length || '模板不存在');
+            
+            if (template !== 'custom') {
+                if (customPrompts.templates[template]) {
+                    $('#promptContent').val(customPrompts.templates[template]);
+                } else {
+                    console.error('❌ 模板不存在:', template);
+                    showAlert(`模板 "${template}" 不存在`, 'warning');
+                }
+            } else {
+                $('#promptContent').val(customPrompts.templates.custom);
+            }
+        }
+
+        function loadCurrentPrompt() {
+            console.log('🔄 加载当前提示词配置');
+            console.log('📋 可用模板:', Object.keys(customPrompts.templates));
+            console.log('🎯 当前提示词存在:', !!customPrompts.currentPrompt);
+            
+            // 设置当前选中的模板
+            if (customPrompts.currentPrompt) {
+                // 检查是否匹配预置模板
+                let matchedTemplate = 'custom';
+                for (let [key, template] of Object.entries(customPrompts.templates)) {
+                    if (key !== 'custom' && template === customPrompts.currentPrompt) {
+                        matchedTemplate = key;
+                        break;
+                    }
+                }
+                console.log('✅ 匹配的模板:', matchedTemplate);
+                $('#promptTemplate').val(matchedTemplate);
+                $('#promptContent').val(customPrompts.currentPrompt);
+            } else {
+                // 首次打开时默认选择jstack_optimized模板
+                console.log('🎯 首次打开，使用jstack_optimized模板');
+                $('#promptTemplate').val('jstack_optimized');
+                if (customPrompts.templates.jstack_optimized) {
+                    $('#promptContent').val(customPrompts.templates.jstack_optimized);
+                    console.log('✅ jstack_optimized模板加载成功，长度:', customPrompts.templates.jstack_optimized.length);
+                } else {
+                    console.error('❌ jstack_optimized模板不存在');
+                    showAlert('jstack_optimized模板不存在，请刷新页面', 'error');
+                }
+            }
+        }
+
+        function previewPrompt() {
+            const promptText = $('#promptContent').val();
+            if (!promptText.trim()) {
+                showAlert('请先输入提示词内容', 'warning');
+                return;
+            }
+            
+            // 模拟分析数据
+            const mockSummary = `
+- 总线程数: 25
+- 运行中线程: 8
+- 等待中线程: 12  
+- 阻塞线程: 5
+- 同步器数量: 3
+- 是否存在死锁: 否
+- 时间戳: 2025-08-23 15:30:00`;
+            
+            const mockWarning = `
+⚠️ 注意：原始文件已截断，基于前40KB内容分析。`;
+
+            const currentTime = new Date().toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            // 替换占位符
+            let previewText = promptText
+                .replace('{ANALYSIS_SUMMARY}', mockSummary)
+                .replace('{TRUNCATION_WARNING}', mockWarning)
+                .replace(/\{总线程数\}/g, '25')
+                .replace(/\{运行中线程数\}/g, '8')
+                .replace(/\{等待中线程数\}/g, '12')
+                .replace(/\{阻塞线程数\}/g, '5')
+                .replace(/\{同步器数量\}/g, '3')
+                .replace(/\{是否存在死锁\}/g, '否')
+                .replace(/\{当前时间\}/g, currentTime)
+                // 多阶段分析专用占位符
+                .replace(/\{SEGMENT_INDEX\}/g, '2')
+                .replace(/\{SEGMENT_NAME\}/g, '高优先级线程分析')
+                .replace(/\{SEGMENT_FOCUS\}/g, '阻塞和死锁风险线程')
+                .replace(/\{SEGMENT_PRIORITY\}/g, 'high')
+                .replace(/\{SEGMENT_START\}/g, '1')
+                .replace(/\{SEGMENT_END\}/g, '10')
+                .replace(/\{SEGMENT_COUNT\}/g, '3');
+            
+            $('#previewContent').text(previewText);
+            $('#promptPreview').removeClass('d-none');
+        }
+
+        function resetToDefault() {
+            if (confirm('确定要重置为默认提示词吗？这将清除所有自定义设置。')) {
+                $('#promptTemplate').val('default');
+                $('#promptContent').val(customPrompts.templates.default);
+                $('#enableCustomPrompt').prop('checked', false);
+                $('#promptPreview').addClass('d-none');
+                showAlert('已重置为默认配置', 'info');
+            }
+        }
+
+        function saveCustomPrompt() {
+            const enabled = $('#enableCustomPrompt').is(':checked');
+            const promptContent = $('#promptContent').val().trim();
+            const selectedTemplate = $('#promptTemplate').val();
+            
+            if (enabled && !promptContent) {
+                showAlert('启用自定义提示词时必须提供提示词内容', 'warning');
+                return;
+            }
+            
+            // 保存配置
+            customPrompts.enabled = enabled;
+            customPrompts.currentPrompt = promptContent;
+            
+            // 如果是自定义模板，保存到custom模板
+            if (selectedTemplate === 'custom') {
+                customPrompts.templates.custom = promptContent;
+            }
+            
+            localStorage.setItem('customPrompts', JSON.stringify(customPrompts));
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('customPromptModal'));
+            if (modal) modal.hide();
+            
+            const status = enabled ? '启用' : '禁用';
+            showAlert(`✅ 自定义提示词配置已保存 (${status})`, 'success');
+            
+            console.log('💾 自定义提示词配置已保存:', customPrompts);
+        }
+
+        function showAIConfig() {
+            console.log('🔧 显示AI配置');
+            
+            const configModal = `
+                <div class="modal fade" id="aiConfigModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-robot me-2"></i>AutoGen Bedrock 配置
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">AWS Access Key ID</label>
+                                    <input type="password" class="form-control" id="awsAccessKey" 
+                                           placeholder="AKIA..." value="${aiConfig.accessKey || ''}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">AWS Secret Access Key</label>
+                                    <input type="password" class="form-control" id="awsSecretKey" 
+                                           placeholder="输入秘密访问密钥" value="${aiConfig.secretKey || ''}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">AWS Session Token <span class="text-muted">(可选)</span></label>
+                                    <textarea class="form-control" id="awsSessionToken" rows="3" 
+                                              placeholder="如果使用临时凭证，请输入Session Token">${aiConfig.sessionToken || ''}</textarea>
+                                    <small class="text-muted">使用临时凭证时需要填写</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">AWS 区域</label>
+                                    <select class="form-select" id="regionSelect">
+                                        <option value="us-east-1">us-east-1</option>
+                                        <option value="us-west-2" selected>us-west-2</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">推理配置文件名称</label>
+                                    <select class="form-select" id="profileName" onchange="updateProfileArn()">
+                                        <option value="">请选择推理配置文件</option>
+                                        <option value="us.anthropic.claude-sonnet-4-20250514-v1:0">US Claude Sonnet 4 (推荐)</option>
+                                        <option value="us.anthropic.claude-3-7-sonnet-20250219-v1:0">US Anthropic Claude 3.7 Sonnet</option>
+                                        <option value="us.anthropic.claude-3-5-sonnet-20241022-v2:0">US Anthropic Claude 3.5 Sonnet v2</option>
+                                        <option value="us.anthropic.claude-3-5-haiku-20241022-v1:0">US Anthropic Claude 3.5 Haiku</option>
+                                        <option value="us.anthropic.claude-3-haiku-20240307-v1:0">US Anthropic Claude 3 Haiku</option>
+                                        <option value="us.anthropic.claude-3-sonnet-20240229-v1:0">US Anthropic Claude 3 Sonnet</option>
+                                    </select>
+                                    <small class="text-muted">选择您账户中可用的推理配置文件</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">推理配置文件 ARN</label>
+                                    <textarea class="form-control" id="profileArn" rows="2" readonly></textarea>
+                                    <small class="text-muted">将根据选择的配置文件自动生成 (账号: 590183689329)</small>
+                                </div>
+                                
+                                <button class="btn btn-success w-100 mb-3" onclick="testWithModel()" id="testModelBtn">
+                                    <i class="fas fa-check me-2"></i>测试选中模型
+                                </button>
+                                
+                                <div id="connectionStatus">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-info-circle me-2"></i>点击测试按钮验证配置
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-primary" onclick="saveAIConfig()">
+                                    <i class="fas fa-save me-2"></i>保存配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('#aiConfigModal').remove();
+            $('body').append(configModal);
+            
+            const modal = new bootstrap.Modal(document.getElementById('aiConfigModal'));
+            modal.show();
+            
+            // 模态框显示后，设置保存的配置值
+            setTimeout(() => {
+                if (aiConfig.profileName) {
+                    $('#profileName').val(aiConfig.profileName);
+                    updateProfileArn();
+                } else {
+                    // 设置默认选项
+                    $('#profileName').val('us.anthropic.claude-sonnet-4-20250514-v1:0');
+                    updateProfileArn();
+                }
+            }, 100);
+        }
+        
+
+        
+        // 自动检测API服务器地址
+        function getApiBaseUrl() {
+            return 'http://localhost:8082';
+        }
+
+        function testWithModel() {
+            const profileArn = $('#profileArn').val().trim();
+            const accessKey = $('#awsAccessKey').val().trim();
+            const secretKey = $('#awsSecretKey').val().trim();
+            const sessionToken = $('#awsSessionToken').val().trim();
+            const region = $('#regionSelect').val();
+            
+            if (!accessKey || !secretKey || !profileArn) {
+                $('#connectionStatus').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> 请填写完整信息</div>');
+                return;
+            }
+            
+            $('#testModelBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 测试中...');
+            $('#connectionStatus').html('<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> 正在测试模型...</div>');
+            
+            $.ajax({
+                url: getApiBaseUrl() + '/api/test-autogen-bedrock',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    accessKey: accessKey,
+                    secretKey: secretKey,
+                    sessionToken: sessionToken || undefined,
+                    region: region,
+                    inferenceProfileArn: profileArn
+                }),
+                success: function(response) {
+                    console.log('✅ API调用成功:', response);
+                    if (response.success) {
+                        $('#connectionStatus').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> 模型测试成功！可以保存配置</div>');
+                    } else {
+                        $('#connectionStatus').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> 测试失败: ' + (response.error || '未知错误') + '</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ API调用失败:', {xhr, status, error, responseText: xhr.responseText});
+                    $('#connectionStatus').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> API调用失败: ' + error + '</div>');
+                },
+                complete: function() {
+                    $('#testModelBtn').prop('disabled', false).html('<i class="fas fa-check"></i> 测试选中模型');
+                }
+            });
+        }
+        
+        
+        function updateProfileArn() {
+            const profileName = $('#profileName').val();
+            if (profileName) {
+                const arn = `arn:aws:bedrock:us-west-2:590183689329:inference-profile/${profileName}`;
+                $('#profileArn').val(arn);
+            } else {
+                $('#profileArn').val('');
+            }
+        }
+
+        function saveAIConfig() {
+            const accessKey = $('#awsAccessKey').val().trim();
+            const secretKey = $('#awsSecretKey').val().trim();
+            const sessionToken = $('#awsSessionToken').val().trim();
+            const region = $('#regionSelect').val();
+            const profileName = $('#profileName').val();
+            const profileArn = $('#profileArn').val().trim();
+            
+            if (!accessKey || !secretKey || !profileName || !profileArn) {
+                showAlert('请填写完整信息', 'warning');
+                return;
+            }
+            
+            aiConfig.accessKey = accessKey;
+            aiConfig.secretKey = secretKey;
+            aiConfig.sessionToken = sessionToken;
+            aiConfig.region = region;
+            aiConfig.profileName = profileName;
+            aiConfig.inferenceProfileArn = profileArn;
+            
+            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('aiConfigModal'));
+            if (modal) modal.hide();
+            
+            showAlert('✅ 配置已保存！', 'success');
+        }
+
+        function loadDemo() {
+            const demoContent = `2025-08-21 15:00:00
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.281-b09 mixed mode):
+
+"main" #1 prio=5 os_prio=0 tid=0x00007f8b4c001000 nid=0x1234 runnable [0x00007f8b4c100000]
+   java.lang.Thread.State: RUNNABLE
+   at java.lang.Thread.run(Thread.java:748)
+
+"Thread-1" #2 prio=5 os_prio=0 tid=0x00007f8b4c002000 nid=0x1235 waiting on condition [0x00007f8b4c200000]
+   java.lang.Thread.State: WAITING (parking)
+   at sun.misc.Unsafe.park(Native Method)
+   at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+
+"Thread-2" #3 prio=5 os_prio=0 tid=0x00007f8b4c003000 nid=0x1236 blocked on monitor entry [0x00007f8b4c300000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+   at java.lang.Object.wait(Native Method)
+
+"pool-1-thread-1" #11 prio=5 os_prio=0 tid=0x00007f8b4c011000 nid=0x1241 waiting to lock <0x000000076ab62208> (a java.lang.Object)
+   java.lang.Thread.State: BLOCKED (on object monitor)
+   at java.lang.Object.wait(Native Method)
+   at org.springframework.web.context.ContextLoader.initWebApplicationContext(ContextLoader.java:307)`;
+
+            $('#uploadSection').slideUp(300);
+            showAlert('正在使用 Claude Sonnet 4 分析演示文件...', 'info');
+            
+            setTimeout(function() {
+                analyzeContent(demoContent, '演示文件');
+            }, 500);
+        }
+
+        function analyzeContent(content, filename) {
+            $('#resultsSection').addClass('d-none');
+            $('#uploadSection').slideUp(300); // 隐藏上传区域
+            $('#progressSection').removeClass('d-none');
+            
+            // 初始化增强进度管理系统
+            progressManager.init();
+            progressManager.updateStage(0, `正在解析文件 "${filename}"...`);
+            
+            // 重置分析结果变量
+            window.aiAnalysisResult = null;
+            window.traditionalAnalysis = null;
+            window.originalContent = content;  // 保存原始内容供后续使用
+            window.originalFilename = filename; // 保存原始文件名
+            console.log('🔄 开始新的两阶段分析流程');
+            
+            // 模拟文件解析延迟
+            setTimeout(() => {
+                // 🔥 阶段1：传统解析 - 使用完整内容进行准确统计
+                progressManager.updateStage(1, '使用 jstack-review 原始解析引擎分析线程信息...');
+                
+                try {
+                    // 使用传统解析库进行解析 - 使用完整内容
+                    const analysis = new jtda.Analysis('ai_enhanced', filename);
+                    analysis.analyze(content); // 使用完整的原始内容
+                
+                // 提取结构化数据
+                const structuredData = {
+                    threads: analysis.threads || [],
+                    synchronizers: analysis.synchronizers || [],
+                    runningMethods: analysis.runningMethods || [],
+                    threadsByStatus: analysis.threadsByStatus || {},
+                    deadlockStatus: analysis.deadlockStatus,
+                    dateString: analysis.dateString,
+                    summary: {
+                        totalThreads: analysis.threads ? analysis.threads.length : 0,
+                        // 使用实际的 threadsByStatus 键名进行准确统计
+                        blockedThreads: (analysis.threadsByStatus['waiting to acquire'] || []).length,
+                        runningThreads: (analysis.threadsByStatus['running'] || []).length,
+                        waitingThreads: (analysis.threadsByStatus['awaiting notification'] || []).length, // 只计算 awaiting notification = 713
+                        sleepingThreads: (analysis.threadsByStatus['sleeping'] || []).length, // 单独计算 sleeping = 10
+                        nonJavaThreads: (analysis.threadsByStatus['non-Java thread'] || []).length, // non-Java thread = 15
+                        synchronizerCount: analysis.synchronizers ? analysis.synchronizers.length : 0,
+                        hasDeadlocks: analysis.deadlockStatus && analysis.deadlockStatus.severity > 0
+                    }
+                };
+                
+                // 🔍 调试信息：显示实际的 threadsByStatus 内容
+                console.log('=' .repeat(50));
+                console.log('🔍 DEBUG: 传统解析结果调试信息');
+                console.log('总线程数:', analysis.threads ? analysis.threads.length : 0);
+                console.log('threadsByStatus 对象:', analysis.threadsByStatus);
+                console.log('threadsByStatus 的所有键:', Object.keys(analysis.threadsByStatus || {}));
+                
+                // 显示每个状态的线程数量
+                Object.keys(analysis.threadsByStatus || {}).forEach(status => {
+                    console.log(`状态 "${status}": ${analysis.threadsByStatus[status].length} 个线程`);
+                });
+                
+                console.log('deadlockStatus:', analysis.deadlockStatus);
+                console.log('=' .repeat(50));
+                
+                window.traditionalAnalysis = structuredData;
+                console.log('✅ 阶段1完成：传统解析结果:', structuredData);
+                console.log('🔍 最终计算的统计信息:', structuredData.summary);
+                
+                // 显示传统分析统计信息
+                progressManager.showTraditionalStats(structuredData.summary);
+                
+                // 延迟一点，让用户看到传统分析完成
+                setTimeout(() => {
+                    // 🤖 阶段2：AI智能分析
+                    progressManager.updateStage(2, '基于传统解析结果进行 Claude 4.0 Sonnet 智能分析...');
+                    
+                    performAIAnalysis(content, structuredData, filename); // 传递原始内容，让AI分析阶段决定是否截断
+                }, 1500);
+                
+            } catch (error) {
+                console.error('❌ 传统解析失败:', error);
+                progressManager.updateStage(1, `传统解析失败: ${error.message}`);
+                
+                // 即使传统解析失败，也尝试直接进行AI分析
+                setTimeout(() => {
+                    window.traditionalAnalysis = null;
+                    progressManager.updateStage(2, '传统解析失败，直接进行 AI 分析...');
+                    performAIAnalysis(content, null, filename); // 传递原始内容
+                }, 2000);
+            }
+            }, 1000); // 文件解析延迟
+        }
+
+        function performAIAnalysis(content, structuredData, filename) {
+            // 🎯 检查文件大小，AI分析阶段才进行截断
+            const maxLength = 40000; // 约40KB的字符限制，为系统提示留出空间
+            let processedContent = content;
+            let isTruncated = false;
+            
+            if (content.length > maxLength) {
+                console.log(`⚠️ AI分析：文件过大 (${content.length} 字符)，截断到前 ${maxLength} 字符`);
+                processedContent = content.substring(0, maxLength);
+                isTruncated = true;
+            }
+            
+            // 🎯 检查是否需要多阶段分析
+            const totalSize = processedContent.length + (structuredData ? JSON.stringify(structuredData).length : 0);
+            const shouldUseMultiStage = totalSize > 30000; // 30KB阈值启用多阶段分析
+            
+            console.log(`📏 内容总大小: ${Math.round(totalSize/1000)}KB`);
+            console.log(`🔄 分析策略: ${shouldUseMultiStage ? '多阶段智能分析' : '单阶段分析'}`);
+            
+            if (shouldUseMultiStage && structuredData) {
+                console.log('🚀 启动多阶段智能分析流程');
+                // 开始平滑进度更新
+                progressManager.smoothProgress(25, 85, 15000);
+                performMultiStageAIAnalysis(processedContent, structuredData, filename, isTruncated);
+            } else {
+                console.log('📝 使用单阶段分析流程');
+                // AI分析阶段的平滑进度
+                progressManager.smoothProgress(25, 85, 12000, () => {
+                    progressManager.updateStage(3, '整理AI分析结果，生成最终报告...');
+                });
+                performSingleStageAIAnalysis(processedContent, structuredData, filename, isTruncated);
+            }
+        }
+
+        // 多阶段智能分析（新增）
+        function performMultiStageAIAnalysis(content, structuredData, filename, isTruncated) {
+            console.log('🎯 启动多阶段智能分析流程');
+            
+            // 🧠 阶段1：AI制定智能分段策略
+            progressManager.updateStage(2, '制定智能分段策略...');
+            
+            // 延迟一点，让用户看到阶段切换
+            setTimeout(() => {
+                createSegmentationPlan(content, structuredData, filename, isTruncated);
+            }, 500);
+        }
+
+        // 单阶段分析（原有逻辑）
+        function performSingleStageAIAnalysis(content, structuredData, filename, isTruncated) {
+            // 🎯 使用智能提示词系统
+            console.log('🤖 使用智能提示词系统 (单阶段分析)');
+            const systemPrompt = buildSmartPrompt(structuredData, isTruncated, 'single');
+
+            let resultSizeWarning = '';
+            let structuredDataText = '';
+            
+            if (structuredData && structuredData.summary) {
+                // 🔍 检查结构化数据的大小
+                const fullStructuredText = JSON.stringify(structuredData, null, 2);
+                const structuredDataSize = fullStructuredText.length;
+                const maxStructuredSize = 15000; // 约15KB限制结构化数据
+                
+                console.log(`📊 传统解析结果大小: ${structuredDataSize} 字符`);
+                
+                if (structuredDataSize > maxStructuredSize) {
+                    // 🚨 结构化数据过大，需要智能截断
+                    const summary = structuredData.summary;
+                    
+                    // 智能截断：保留摘要和前N个线程/同步器
+                    const maxThreads = Math.min(20, structuredData.threads ? structuredData.threads.length : 0);
+                    const maxSynchronizers = Math.min(10, structuredData.synchronizers ? structuredData.synchronizers.length : 0);
+                    
+                    const truncatedData = {
+                        summary: summary,
+                        dateString: structuredData.dateString,
+                        threads: structuredData.threads ? structuredData.threads.slice(0, maxThreads) : [],
+                        synchronizers: structuredData.synchronizers ? structuredData.synchronizers.slice(0, maxSynchronizers) : [],
+                        truncated: {
+                            originalThreadCount: structuredData.threads ? structuredData.threads.length : 0,
+                            shownThreadCount: maxThreads,
+                            originalSyncCount: structuredData.synchronizers ? structuredData.synchronizers.length : 0,
+                            shownSyncCount: maxSynchronizers
+                        }
+                    };
+                    
+                    structuredDataText = JSON.stringify(truncatedData, null, 2);
+                    resultSizeWarning = `
+⚠️ **重要提示**: 传统解析结果过大 (${Math.round(structuredDataSize/1000)}KB)，已智能截断：
+- 显示前 ${maxThreads}/${structuredData.threads ? structuredData.threads.length : 0} 个线程
+- 显示前 ${maxSynchronizers}/${structuredData.synchronizers ? structuredData.synchronizers.length : 0} 个同步器
+- 完整统计信息已保留`;
+                    
+                    console.log('⚡ 智能截断传统解析结果:', {
+                        原始大小: structuredDataSize,
+                        截断后大小: structuredDataText.length,
+                        线程截断: `${maxThreads}/${structuredData.threads?.length || 0}`,
+                        同步器截断: `${maxSynchronizers}/${structuredData.synchronizers?.length || 0}`
+                    });
+                    
+                } else {
+                    // 结果大小合适，直接使用
+                    structuredDataText = fullStructuredText;
+                    console.log('✅ 传统解析结果大小适中，完整发送');
+                }
+            }
+
+            // 🔍 检查最终要发送的内容总大小
+            const finalPrompt = `${systemPrompt}\n\n详细解析数据:\n${structuredDataText}\n\n原始线程转储内容:\n${content}`;
+            const finalSize = finalPrompt.length;
+            const maxFinalSize = 50000; // 50KB总限制
+            
+            console.log(`📏 最终发送内容大小: ${Math.round(finalSize/1000)}KB`);
+            
+            if (finalSize > maxFinalSize) {
+                // 🚨 最终内容过大，进一步截断原始内容
+                const availableForContent = maxFinalSize - (systemPrompt.length + structuredDataText.length + 1000); // 留1KB缓冲
+                const truncatedContent = content.substring(0, Math.max(5000, availableForContent));
+                
+                console.log('🔥 最终内容过大，进一步截断原始内容:', {
+                    原始内容大小: content.length,
+                    截断后大小: truncatedContent.length,
+                    可用空间: availableForContent
+                });
+                
+                // 更新进度提示
+                $('#progressDetails').html(`<i class="fas fa-exclamation-triangle text-warning"></i> 数据量较大，正在优化处理 (${Math.round(finalSize/1000)}KB)`);
+                
+                const finalContent = `${systemPrompt}\n\n详细解析数据:\n${structuredDataText}\n\n原始线程转储内容(已截断):\n${truncatedContent}`;
+                
+                sendToAI(finalContent, true, 'single'); // 标记为已截断
+            } else {
+                sendToAI(finalPrompt, false, 'single');
+            }
+        }
+
+        // 🧠 阶段1：AI制定智能分段策略
+        function createSegmentationPlan(content, structuredData, filename, isTruncated) {
+            const segmentationPrompt = `您是Java线程转储分析专家。现在需要您为一个大型线程转储文件制定智能分段分析策略。
+
+## 📊 数据规模
+- 原始内容大小: ${Math.round(content.length/1000)}KB
+- 线程总数: ${structuredData.summary.totalThreads}
+- 同步器数量: ${structuredData.summary.synchronizerCount}
+- Token限制: 单次分析最多25KB内容
+
+## 🎯 分段目标
+基于jstack-review的结构化解析结果，请制定合理的分段策略：
+
+### 线程分布情况
+- 运行中线程: ${structuredData.summary.runningThreads}个
+- 等待中线程: ${structuredData.summary.waitingThreads}个  
+- 阻塞线程: ${structuredData.summary.blockedThreads}个
+- 睡眠线程: ${structuredData.summary.sleepingThreads}个
+- 非Java线程: ${structuredData.summary.nonJavaThreads}个
+
+### 同步器分析
+- 同步器总数: ${structuredData.summary.synchronizerCount}个
+- 是否存在死锁: ${structuredData.summary.hasDeadlocks ? '是' : '否'}
+
+## 📝 请提供JSON格式的分段计划
+
+请返回严格的JSON格式（不要使用markdown代码块）：
+{
+  "strategy": "分段策略说明",
+  "totalSegments": 分段总数,
+  "segments": [
+    {
+      "id": 1,
+      "name": "分段名称",
+      "focus": "分析重点",
+      "threadRange": {
+        "start": 起始线程索引,
+        "end": 结束线程索引
+      },
+      "includeSync": 是否包含同步器分析(true/false),
+      "priority": "优先级(high/medium/low)"
+    }
+  ]
+}
+
+## 🚨 分段原则
+1. 每段不超过20个线程
+2. 优先分析阻塞和死锁相关线程
+3. 按问题严重程度排序
+4. 确保同步器分析完整性`;
+
+            console.log('🧠 向AI请求分段策略');
+            
+            $.ajax({
+                url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    accessKey: aiConfig.accessKey,
+                    secretKey: aiConfig.secretKey,
+                    region: aiConfig.region,
+                    inferenceProfileArn: aiConfig.inferenceProfileArn,
+                    messages: [{
+                        role: 'user',
+                        content: segmentationPrompt
+                    }],
+                    config: {
+                        maxTokens: 2000,
+                        temperature: 0.1
+                    }
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        try {
+                            console.log('✅ AI分段策略响应:', response.response);
+                            
+                            // 尝试解析JSON响应
+                            let segmentPlan;
+                            let responseContent = response.response;
+                            
+                            // 如果response有content属性，使用content
+                            if (responseContent && typeof responseContent === 'object' && responseContent.content) {
+                                responseContent = responseContent.content;
+                            }
+                            
+                            if (typeof responseContent === 'string') {
+                                // 清理可能的markdown格式
+                                const cleanedResponse = responseContent
+                                    .replace(/```json\s*\n?/g, '')
+                                    .replace(/\n?```/g, '')
+                                    .trim();
+                                segmentPlan = JSON.parse(cleanedResponse);
+                            } else {
+                                segmentPlan = responseContent;
+                            }
+                            
+                            console.log('📋 解析的分段计划:', segmentPlan);
+                            
+                            // 验证分段计划
+                            if (segmentPlan && segmentPlan.segments && Array.isArray(segmentPlan.segments)) {
+                                window.segmentPlan = segmentPlan;
+                                window.segmentResults = [];
+                                console.log(`🎯 分段计划制定成功，共${segmentPlan.totalSegments}个分段`);
+                                
+                                // 开始执行分段分析
+                                executeSegmentAnalysis(content, structuredData, filename, isTruncated, 0);
+                            } else {
+                                console.error('❌ 分段计划格式错误');
+                                fallbackToSingleStage(content, structuredData, filename, isTruncated);
+                            }
+                        } catch (error) {
+                            console.error('❌ 分段计划JSON解析失败:', error);
+                            console.log('原始响应:', response.response);
+                            fallbackToSingleStage(content, structuredData, filename, isTruncated);
+                        }
+                    } else {
+                        console.error('❌ AI分段策略失败:', response.error);
+                        fallbackToSingleStage(content, structuredData, filename, isTruncated);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ 分段策略API调用失败:', error);
+                    fallbackToSingleStage(content, structuredData, filename, isTruncated);
+                }
+            });
+        }
+
+        // 🔄 执行分段分析
+        function executeSegmentAnalysis(content, structuredData, filename, isTruncated, segmentIndex) {
+            const segmentPlan = window.segmentPlan;
+            const totalSegments = segmentPlan.totalSegments;
+            
+            if (segmentIndex >= totalSegments) {
+                // 所有分段分析完成，开始综合分析
+                console.log('✅ 所有分段分析完成，开始综合分析');
+                performSynthesisAnalysis(content, structuredData, filename, isTruncated);
+                return;
+            }
+            
+            const segment = segmentPlan.segments[segmentIndex];
+            const progress = ((segmentIndex + 1) / totalSegments) * 60 + 30; // 30-90%范围
+            
+            console.log(`🔍 执行分段${segmentIndex + 1}/${totalSegments}: ${segment.name}`);
+            
+            // 更新进度显示
+            $('#progressText').text(`阶段2B: 分段分析 (${segmentIndex + 1}/${totalSegments})`);
+            $('#progressDetails').html(`<i class="fas fa-microscope text-success"></i> 正在分析: ${segment.name} - ${segment.focus}`);
+            updateProgress(progress);
+            
+            // 构建分段数据
+            const segmentData = buildSegmentData(structuredData, segment);
+            const segmentContent = content; // 原始内容保持完整，AI会根据指引聚焦特定部分
+            
+            // 构建分段分析提示词
+            const segmentPrompt = buildSegmentPrompt(segment, segmentData, segmentIndex + 1, totalSegments);
+            
+            // 发送分段分析请求
+            $.ajax({
+                url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    accessKey: aiConfig.accessKey,
+                    secretKey: aiConfig.secretKey,
+                    region: aiConfig.region,
+                    inferenceProfileArn: aiConfig.inferenceProfileArn,
+                    messages: [{
+                        role: 'user',
+                        content: `${segmentPrompt}\n\n线程转储原始数据:\n${segmentContent}`
+                    }],
+                    config: {
+                        maxTokens: 3000,
+                        temperature: 0.1
+                    }
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        console.log(`✅ 分段${segmentIndex + 1}分析完成`);
+                        
+                        // 存储分段结果
+                        window.segmentResults.push({
+                            segmentIndex: segmentIndex,
+                            segmentName: segment.name,
+                            focus: segment.focus,
+                            priority: segment.priority,
+                            result: typeof response.response === 'object' && response.response.content 
+                                ? response.response.content 
+                                : response.response
+                        });
+                        
+                        // 继续下一个分段
+                        setTimeout(() => {
+                            executeSegmentAnalysis(content, structuredData, filename, isTruncated, segmentIndex + 1);
+                        }, 500);
+                        
+                    } else {
+                        console.error(`❌ 分段${segmentIndex + 1}分析失败:`, response.error);
+                        // 记录失败但继续下一个分段
+                        window.segmentResults.push({
+                            segmentIndex: segmentIndex,
+                            segmentName: segment.name,
+                            focus: segment.focus,
+                            priority: segment.priority,
+                            result: `分段分析失败: ${response.error}`
+                        });
+                        
+                        setTimeout(() => {
+                            executeSegmentAnalysis(content, structuredData, filename, isTruncated, segmentIndex + 1);
+                        }, 500);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(`❌ 分段${segmentIndex + 1}API调用失败:`, error);
+                    
+                    // 记录失败但继续下一个分段
+                    window.segmentResults.push({
+                        segmentIndex: segmentIndex,
+                        segmentName: segment.name,
+                        focus: segment.focus,
+                        priority: segment.priority,
+                        result: `API调用失败: ${error}`
+                    });
+                    
+                    setTimeout(() => {
+                        executeSegmentAnalysis(content, structuredData, filename, isTruncated, segmentIndex + 1);
+                    }, 500);
+                }
+            });
+        }
+
+        // 🛠️ 构建分段数据
+        function buildSegmentData(structuredData, segment) {
+            if (!structuredData || !structuredData.threads) {
+                return { summary: structuredData?.summary || {} };
+            }
+            
+            const start = segment.threadRange.start;
+            const end = segment.threadRange.end;
+            const segmentThreads = structuredData.threads.slice(start, end + 1);
+            
+            return {
+                summary: structuredData.summary,
+                dateString: structuredData.dateString,
+                threads: segmentThreads,
+                synchronizers: segment.includeSync ? structuredData.synchronizers : [],
+                segmentInfo: {
+                    threadRange: segment.threadRange,
+                    totalThreadsInSegment: segmentThreads.length,
+                    focus: segment.focus
+                }
+            };
+        }
+
+        // 📝 构建分段分析提示词
+        function buildSegmentPrompt(segment, segmentData, currentSegment, totalSegments) {
+            // 使用智能模板系统 - 优先使用分段专用模板
+            console.log('🤖 使用智能提示词系统 (分段分析)');
+            
+            // 构建包含分段信息的结构化数据
+            const segmentStructuredData = {
+                ...segmentData,
+                segmentInfo: {
+                    ...segmentData.segmentInfo,
+                    currentSegment,
+                    totalSegments,
+                    segmentName: segment.name,
+                    segmentFocus: segment.focus,
+                    segmentPriority: segment.priority,
+                    segmentStart: segment.threadRange.start,
+                    segmentEnd: segment.threadRange.end
+                }
+            };
+            
+            return buildSmartPrompt(segmentStructuredData, false, 'segment');
+        }
+
+        // 🎭 执行综合分析（最终阶段）
+        function performSynthesisAnalysis(content, structuredData, filename, isTruncated) {
+            console.log('🎭 开始综合分析阶段');
+            
+            // 更新进度显示
+            $('#progressText').text('阶段2C: AI综合分析...');
+            $('#progressDetails').html('<i class="fas fa-puzzle-piece text-warning"></i> 整合所有分段分析结果，生成最终报告');
+            updateProgress(95);
+            
+            const segmentResults = window.segmentResults;
+            const segmentPlan = window.segmentPlan;
+            
+            if (!segmentResults || segmentResults.length === 0) {
+                console.error('❌ 没有分段结果可以综合');
+                fallbackToSingleStage(content, structuredData, filename, isTruncated);
+                return;
+            }
+            
+            // 构建综合分析提示词 - 使用智能模板系统
+            console.log('🤖 使用智能提示词系统 (综合分析)');
+            
+            // 构建包含分段结果的结构化数据
+            const synthesisStructuredData = {
+                ...structuredData,
+                segmentResults: segmentResults,
+                segmentPlan: segmentPlan,
+                synthesisInfo: {
+                    segmentCount: segmentResults.length,
+                    analysisType: 'synthesis'
+                }
+            };
+            
+            const synthesisPrompt = buildSmartPrompt(synthesisStructuredData, isTruncated, 'synthesis');
+            
+            // 发送综合分析请求
+            sendToAI(synthesisPrompt, false, 'synthesis');
+        }
+
+        // 🔙 回退到单阶段分析
+        function fallbackToSingleStage(content, structuredData, filename, isTruncated) {
+            console.log('🔙 回退到单阶段分析');
+            $('#progressDetails').html('<i class="fas fa-exclamation-triangle text-warning"></i> 多阶段分析失败，回退到单阶段分析');
+            setTimeout(() => {
+                performSingleStageAIAnalysis(content, structuredData, filename, isTruncated);
+            }, 1000);
+        }
+
+        // 构建自定义提示词
+        function buildCustomPrompt(structuredData, isTruncated) {
+            let prompt = customPrompts.currentPrompt;
+            
+            // 构建分析摘要
+            let analysisSummary = '';
+            let totalThreads = 0, runningThreads = 0, waitingThreads = 0, blockedThreads = 0;
+            let synchronizerCount = 0, hasDeadlocks = false, dateString = '';
+            
+            if (structuredData && structuredData.summary) {
+                totalThreads = structuredData.summary.totalThreads;
+                runningThreads = structuredData.summary.runningThreads;
+                waitingThreads = structuredData.summary.waitingThreads;
+                blockedThreads = structuredData.summary.blockedThreads;
+                synchronizerCount = structuredData.summary.synchronizerCount;
+                hasDeadlocks = structuredData.summary.hasDeadlocks;
+                dateString = structuredData.dateString || '';
+                
+                analysisSummary = `
+- 总线程数: ${totalThreads}
+- 运行中线程: ${runningThreads}
+- 等待中线程: ${waitingThreads}  
+- 阻塞线程: ${blockedThreads}
+- 同步器数量: ${synchronizerCount}
+- 是否存在死锁: ${hasDeadlocks ? '是' : '否'}
+${dateString ? '- 时间戳: ' + dateString : ''}`;
+            } else {
+                analysisSummary = `
+⚠️ 基础解析失败，直接分析原始内容`;
+            }
+            
+            // 构建截断警告
+            let truncationWarning = '';
+            if (isTruncated) {
+                truncationWarning = `
+⚠️ 注意：原始文件已截断，基于前40KB内容分析。`;
+            }
+            
+            // 获取当前时间
+            const currentTime = new Date().toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            // 替换基础占位符
+            prompt = prompt.replace('{ANALYSIS_SUMMARY}', analysisSummary);
+            prompt = prompt.replace('{TRUNCATION_WARNING}', truncationWarning);
+            
+            // 替换jstack-review专用占位符
+            prompt = prompt.replace(/\{总线程数\}/g, totalThreads.toString());
+            prompt = prompt.replace(/\{运行中线程数\}/g, runningThreads.toString());
+            prompt = prompt.replace(/\{等待中线程数\}/g, waitingThreads.toString());
+            prompt = prompt.replace(/\{阻塞线程数\}/g, blockedThreads.toString());
+            prompt = prompt.replace(/\{同步器数量\}/g, synchronizerCount.toString());
+            prompt = prompt.replace(/\{是否存在死锁\}/g, hasDeadlocks ? '是' : '否');
+            prompt = prompt.replace(/\{当前时间\}/g, currentTime);
+            
+            // 处理分段分析专用占位符
+            if (structuredData && structuredData.segmentInfo) {
+                const segInfo = structuredData.segmentInfo;
+                prompt = prompt.replace(/\{SEGMENT_INDEX\}/g, segInfo.currentSegment || '');
+                prompt = prompt.replace(/\{SEGMENT_NAME\}/g, segInfo.segmentName || '');
+                prompt = prompt.replace(/\{SEGMENT_FOCUS\}/g, segInfo.segmentFocus || '');
+                prompt = prompt.replace(/\{SEGMENT_PRIORITY\}/g, segInfo.segmentPriority || '');
+                prompt = prompt.replace(/\{SEGMENT_START\}/g, segInfo.segmentStart || '');
+                prompt = prompt.replace(/\{SEGMENT_END\}/g, segInfo.segmentEnd || '');
+            }
+            
+            // 处理综合分析专用占位符
+            if (structuredData && structuredData.synthesisInfo) {
+                const synInfo = structuredData.synthesisInfo;
+                prompt = prompt.replace(/\{SEGMENT_COUNT\}/g, synInfo.segmentCount || '');
+                
+                // 如果有分段结果，添加分段结果摘要
+                if (structuredData.segmentResults && structuredData.segmentResults.length > 0) {
+                    let segmentSummary = '\n\n## 📋 各分段详细结果\n';
+                    structuredData.segmentResults.forEach((segment, index) => {
+                        const resultText = typeof segment.result === 'object' && segment.result.content 
+                            ? segment.result.content 
+                            : segment.result;
+                        const summary = resultText.length > 300 ? resultText.substring(0, 300) + '...' : resultText;
+                        segmentSummary += `**分段${index + 1}** (${segment.priority}): ${segment.segmentName}\n${summary}\n\n`;
+                    });
+                    prompt += segmentSummary;
+                }
+            }
+            
+            console.log('📝 已构建自定义提示词，长度:', prompt.length);
+            console.log('🎯 使用数据:', {
+                totalThreads, runningThreads, waitingThreads, 
+                blockedThreads, synchronizerCount, hasDeadlocks
+            });
+            return prompt;
+        }
+
+        // 智能构建提示词 - 根据分析阶段自动选择最佳模板
+        function buildSmartPrompt(structuredData, isTruncated, analysisType = 'single') {
+            if (!customPrompts.enabled) {
+                return buildDefaultPrompt(structuredData, isTruncated);
+            }
+
+            let templateKey = 'jstack_optimized'; // 默认使用智能模板
+            
+            // 根据分析类型智能选择内部模板
+            if (analysisType === 'segment') {
+                templateKey = 'segment_focused';
+            } else if (analysisType === 'synthesis') {
+                templateKey = 'synthesis_focused';
+            }
+            
+            // 如果用户选择了自定义模板，优先使用用户的选择
+            if (customPrompts.currentPrompt && customPrompts.currentPrompt !== customPrompts.templates.jstack_optimized) {
+                console.log('🎯 使用用户自定义提示词');
+                return buildCustomPrompt(structuredData, isTruncated);
+            }
+            
+            // 否则使用智能选择的内部模板
+            console.log(`🤖 智能选择模板: ${templateKey} (分析类型: ${analysisType})`);
+            
+            const selectedTemplate = customPrompts.templates[templateKey];
+            if (!selectedTemplate) {
+                console.warn(`⚠️ 模板 ${templateKey} 不存在，使用默认模板`);
+                return buildDefaultPrompt(structuredData, isTruncated);
+            }
+            
+            // 临时设置当前提示词为选中的智能模板
+            const originalPrompt = customPrompts.currentPrompt;
+            customPrompts.currentPrompt = selectedTemplate;
+            
+            const result = buildCustomPrompt(structuredData, isTruncated);
+            
+            // 恢复原始设置
+            customPrompts.currentPrompt = originalPrompt;
+            
+            return result;
+        }
+
+        // 构建默认提示词（保持原逻辑）
+        function buildDefaultPrompt(structuredData, isTruncated) {
+            let systemPrompt = `作为Java线程转储专家，我已经完成了基础解析，现在需要您进行深度分析：
+
+基础解析结果摘要：`;
+
+            if (structuredData && structuredData.summary) {
+                systemPrompt += `
+- 总线程数: ${structuredData.summary.totalThreads}
+- 运行中线程: ${structuredData.summary.runningThreads}
+- 等待中线程: ${structuredData.summary.waitingThreads}  
+- 阻塞线程: ${structuredData.summary.blockedThreads}
+- 同步器数量: ${structuredData.summary.synchronizerCount}
+- 是否存在死锁: ${structuredData.summary.hasDeadlocks ? '是' : '否'}
+${structuredData.dateString ? '- 时间戳: ' + structuredData.dateString : ''}`;
+            } else {
+                systemPrompt += `
+⚠️ 基础解析失败，直接分析原始内容`;
+            }
+
+            systemPrompt += `
+
+请基于以上基础解析结果，提供：
+1. 应用健康评分(1-10分)和评分依据
+2. 性能问题识别(死锁/阻塞/高CPU/内存泄漏等)
+3. 具体优化建议和解决方案
+4. 风险预警和监控建议
+${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容分析。' : ''}`;
+
+            console.log('🔧 已构建默认提示词，长度:', systemPrompt.length);
+            return systemPrompt;
+        }
+        
+        function sendToAI(content, wasContentTruncated, analysisType = 'single') {
+            $.ajax({
+                url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    accessKey: aiConfig.accessKey,
+                    secretKey: aiConfig.secretKey,
+                    region: aiConfig.region,
+                    inferenceProfileArn: aiConfig.inferenceProfileArn,
+                    messages: [{
+                        role: 'user',
+                        content: content
+                    }],
+                    config: {
+                        maxTokens: analysisType === 'synthesis' ? 4000 : 3000,
+                        temperature: 0.1
+                    }
+                }),
+                success: function(response) {
+                    console.log(`✅ ${analysisType}分析API调用成功:`, response);
+                    
+                    // 完成分析，转到结果生成阶段
+                    progressManager.updateStage(3, '整理分析结果，生成最终报告...');
+                    
+                    if (response.success) {
+                        console.log(`🤖 ${analysisType}分析结果:`, response.response);
+                        
+                        // 处理不同类型的响应数据
+                        if (typeof response.response === 'string') {
+                            window.aiAnalysisResult = response.response;
+                        } else if (response.response && typeof response.response === 'object') {
+                            window.aiAnalysisResult = response.response.content || JSON.stringify(response.response, null, 2);
+                        } else {
+                            window.aiAnalysisResult = 'AI分析结果为空';
+                        }
+                        
+                        // 添加分析类型标识
+                        if (analysisType === 'synthesis') {
+                            const multiStageInfo = `\n\n---\n**📊 多阶段分析说明**\n本报告基于智能分段分析生成：\n- 分段总数: ${window.segmentPlan?.totalSegments || '未知'}个\n- 成功分段: ${window.segmentResults?.filter(r => {
+                                const resultText = typeof r.result === 'object' ? (r.result.content || JSON.stringify(r.result)) : r.result;
+                                return !resultText.includes('失败');
+                            }).length || 0}个\n- AI模型: Claude 4.0 Sonnet 多阶段智能分析`;
+                            window.aiAnalysisResult += multiStageInfo;
+                            window.analysisMethod = 'multi-stage';
+                        } else {
+                            window.analysisMethod = 'single-stage';
+                        }
+                        
+                        // 如果内容被截断，在结果中添加说明
+                        if (wasContentTruncated) {
+                            window.aiAnalysisResult = `⚠️ 由于数据量较大，部分内容已被截断以适应AI模型限制。\n\n${window.aiAnalysisResult}`;
+                        }
+                        
+                        console.log(`💾 ${analysisType}分析完成，显示结果`);
+                        setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
+                        
+                    } else {
+                        console.error(`❌ ${analysisType}分析失败:`, response.error);
+                        window.aiAnalysisResult = `${analysisType}分析失败: ` + (response.error || '未知错误');
+                        setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(`❌ ${analysisType}分析API调用失败:`, {xhr, status, error});
+                    progressManager.updateStage(3, `分析失败: ${error}`);
+                    window.aiAnalysisResult = `${analysisType}分析API调用失败: ` + error;
+                    setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
+                }
+            });
+        }
+
+        // 增强的进度管理系统
+        const progressManager = {
+            startTime: null,
+            currentStage: 0,
+            stages: [
+                { name: '文件解析', progress: 10, duration: 1000, explanation: '正在解析您上传的线程转储文件，提取基本信息...' },
+                { name: '传统分析', progress: 25, duration: 2000, explanation: '使用 jstack-review 引擎进行结构化分析，识别线程状态和同步器...' },
+                { name: 'AI分析', progress: 85, duration: 15000, explanation: '使用 Claude 4.0 Sonnet 进行智能分析，这是最耗时但也是最重要的阶段...' },
+                { name: '结果生成', progress: 100, duration: 1000, explanation: '整理分析结果，生成最终报告...' }
+            ],
+            
+            init() {
+                this.startTime = Date.now();
+                this.currentStage = 0;
+                this.startTimer();
+                this.updateStageIndicator(0, 'active');
+            },
+            
+            startTimer() {
+                setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    $('#analysisTimer').text(timeStr);
+                }, 1000);
+            },
+            
+            updateStage(stageIndex, customExplanation = null) {
+                if (stageIndex >= this.stages.length) return;
+                
+                const stage = this.stages[stageIndex];
+                this.currentStage = stageIndex;
+                
+                // 更新进度条
+                $('#progressBar').css('width', stage.progress + '%')
+                    .find('span').text(stage.progress + '%');
+                
+                // 更新阶段文本
+                $('#progressText').text(stage.name);
+                $('#progressDetails').text(customExplanation || '');
+                
+                // 更新解释文本
+                $('#analysisExplanation').text(customExplanation || stage.explanation);
+                
+                // 更新阶段指示器
+                this.updateStageIndicator(stageIndex, 'active');
+                
+                // 标记之前的阶段为已完成
+                for (let i = 0; i < stageIndex; i++) {
+                    this.updateStageIndicator(i, 'completed');
+                }
+                
+                console.log(`🎯 进度更新: 阶段${stageIndex + 1} - ${stage.name} (${stage.progress}%)`);
+            },
+            
+            updateStageIndicator(index, status) {
+                const circle = $(`#stage${index + 1} .stage-circle`);
+                circle.removeClass('active completed pulse-animation');
+                
+                if (status === 'active') {
+                    circle.addClass('active pulse-animation');
+                } else if (status === 'completed') {
+                    circle.addClass('completed');
+                }
+            },
+            
+            // 显示传统分析统计信息
+            showTraditionalStats(summary) {
+                if (!summary) return;
+                
+                $('#threadCount').text(summary.totalThreads);
+                $('#runningCount').text(summary.runningThreads);
+                $('#waitingCount').text(summary.waitingThreads);
+                $('#blockedCount').text(summary.blockedThreads);
+                $('#analysisStats').slideDown();
+                
+                console.log('📊 显示传统分析统计:', summary);
+            },
+            
+            // 平滑进度更新（用于AI分析阶段）
+            smoothProgress(startPercent, endPercent, duration, callback) {
+                const startTime = Date.now();
+                const progressDiff = endPercent - startPercent;
+                
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const currentPercent = startPercent + (progressDiff * progress);
+                    
+                    $('#progressBar').css('width', currentPercent + '%')
+                        .find('span').text(Math.round(currentPercent) + '%');
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else if (callback) {
+                        callback();
+                    }
+                };
+                
+                requestAnimationFrame(animate);
+            }
+        };
+
+        function updateProgress(percent) {
+            $('#progressBar').css('width', percent + '%')
+                .find('span').text(Math.round(percent) + '%');
+        }
+
+        function showResults(content, filename) {
+            // 隐藏上传相关区域，让分析结果从顶部开始展示
+            $('#uploadSection').slideUp(500);
+            $('#progressSection').addClass('d-none');
+            
+            console.log('🔍 showResults 调用，检查两阶段分析结果');
+            console.log('🔍 traditionalAnalysis:', window.traditionalAnalysis);
+            console.log('🔍 aiAnalysisResult:', window.aiAnalysisResult);
+            
+            let htmlContent = '';
+            
+            // 🎯 传统分析结果展示
+            if (window.traditionalAnalysis && window.traditionalAnalysis.summary) {
+                const summary = window.traditionalAnalysis.summary;
+                const healthScore = calculateHealthScore(summary);
+                const healthClass = healthScore >= 80 ? 'success' : healthScore >= 60 ? 'warning' : 'danger';
+                
+                // 检查是否有截断信息
+                let truncationInfo = '';
+                if (window.traditionalAnalysis.truncated) {
+                    const trunc = window.traditionalAnalysis.truncated;
+                    truncationInfo = `
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>数据截断说明：</strong>由于解析结果过大，已智能优化显示：
+                            <br>• 线程详情：显示前 ${trunc.shownThreadCount} 个（共 ${trunc.originalThreadCount} 个）
+                            <br>• 同步器详情：显示前 ${trunc.shownSyncCount} 个（共 ${trunc.originalSyncCount} 个）
+                            <br>• 统计数据完整保留，分析结果基于全量数据
+                        </div>
+                    `;
+                }
+                
+                htmlContent += `
+                    <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-radius: 15px; padding: 2px; margin: 20px 0; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                        <div style="background: #ffffff; border-radius: 13px; padding: 25px;">
+                            <div style="display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #f0f0f0;">
+                                <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                                    <i class="fas fa-chart-bar" style="color: white; font-size: 24px;"></i>
+                                </div>
+                                <div>
+                                    <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 600;">传统分析报告</h2>
+                                    <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">基于 jstack-review 原始解析引擎</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card border-${healthClass} mb-3">
+                                        <div class="card-header bg-${healthClass} text-white text-center">
+                                            <h4 class="mb-0">健康评分</h4>
+                                            <h1 class="mb-0">${healthScore}</h1>
+                                            <small>分</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="row">
+                                        <div class="col-md-3 text-center">
+                                            <h5 class="text-primary">${summary.totalThreads}</h5>
+                                            <small class="text-muted">总线程数</small>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h5 class="text-success">${summary.runningThreads}</h5>
+                                            <small class="text-muted">运行中</small>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h5 class="text-warning">${summary.waitingThreads}</h5>
+                                            <small class="text-muted">等待中</small>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h5 class="text-danger">${summary.blockedThreads}</h5>
+                                            <small class="text-muted">阻塞</small>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6 text-center">
+                                            <h5 class="text-info">${summary.synchronizerCount}</h5>
+                                            <small class="text-muted">同步器数量</small>
+                                        </div>
+                                        <div class="col-md-6 text-center">
+                                            <h5 class="${summary.hasDeadlocks ? 'text-danger' : 'text-success'}">
+                                                ${summary.hasDeadlocks ? '检测到死锁' : '无死锁'}
+                                            </h5>
+                                            <small class="text-muted">死锁状态</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            ${truncationInfo}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 🤖 AI智能分析结果展示
+            if (window.aiAnalysisResult && 
+                typeof window.aiAnalysisResult === 'string' &&
+                window.aiAnalysisResult !== '分析完成' && 
+                window.aiAnalysisResult !== 'API调用失败' &&
+                window.aiAnalysisResult !== '未设置' &&
+                window.aiAnalysisResult !== 'AI分析结果为空' &&
+                !window.aiAnalysisResult.startsWith('AI分析失败') &&
+                !window.aiAnalysisResult.startsWith('AI分析API调用失败') &&
+                window.aiAnalysisResult.length > 10) {
+                
+                console.log('✅ 显示AI智能分析结果');
+                
+                // 根据分析方法选择标题和图标
+                const isMultiStage = window.analysisMethod === 'multi-stage';
+                const titleText = isMultiStage ? 'AI 多阶段智能深度分析' : 'AI 智能深度分析';
+                const subtitleText = isMultiStage ? 
+                    '基于传统解析结果的 Claude Sonnet 4 多阶段智能分析' : 
+                    '基于传统解析结果的 Claude Sonnet 4 深度分析';
+                const iconClass = isMultiStage ? 'fa-layer-group' : 'fa-robot';
+                
+                htmlContent += `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 2px; margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <div style="background: #ffffff; border-radius: 13px; padding: 25px;">
+                            <div style="display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #f0f0f0;">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                                    <i class="fas ${iconClass}" style="color: white; font-size: 24px;"></i>
+                                </div>
+                                <div>
+                                    <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 600;">${titleText}</h2>
+                                    <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">${subtitleText}</p>
+                                </div>
+                            </div>
+                            <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; border-left: 5px solid #667eea; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace; line-height: 1.6; color: #2c3e50; white-space: pre-wrap; overflow-x: auto;">${window.aiAnalysisResult}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (window.aiAnalysisResult && (window.aiAnalysisResult.includes('失败') || window.aiAnalysisResult.includes('错误'))) {
+                console.log('⚠️ AI分析失败，显示错误信息');
+                htmlContent += `
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> AI 分析遇到问题</h6>
+                        <p>${window.aiAnalysisResult}</p>
+                    </div>
+                `;
+            }
+            
+            // 🔄 添加重新分析按钮
+            htmlContent += `
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary btn-lg" onclick="location.reload()">
+                        <i class="fas fa-upload"></i> 重新分析文件
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg ms-2" onclick="window.open('jstack-review-original/index.html', '_blank')">
+                        <i class="fas fa-external-link-alt"></i> 查看完整传统分析
+                    </button>
+                </div>
+            `;
+            
+            // 如果没有有效结果，显示基础统计
+            if (!htmlContent || htmlContent.trim() === '') {
+                console.log('❌ 两阶段分析都失败，显示基础统计');
+                const threadCount = (content.match(/Thread\.State/g) || []).length;
+                const blockedCount = (content.match(/BLOCKED/g) || []).length;
+                const healthScore = Math.max(50, 90 - blockedCount * 10);
+                const healthClass = healthScore >= 80 ? 'success' : healthScore >= 60 ? 'warning' : 'danger';
+                
+                htmlContent = `
+                    <div class="card bg-${healthClass} text-white mb-4">
+                        <div class="card-body text-center">
+                            <h4>基础健康评分: ${healthScore} 分</h4>
+                            <p>检测到 ${threadCount} 个线程，${blockedCount} 个阻塞</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> 基础分析</h6>
+                        <p>解析引擎暂时不可用，基于线程状态关键词的简单统计分析。</p>
+                        <p><strong>调试信息:</strong></p>
+                        <p>traditionalAnalysis = ${window.traditionalAnalysis ? '有数据' : '无数据'}</p>
+                        <p>aiAnalysisResult = ${window.aiAnalysisResult || '未设置'}</p>
+                    </div>
+                `;
+            }
+            
+            $('#analysisResults').html(htmlContent);
+            $('#resultsSection').removeClass('d-none');
+            
+            // 平滑滚动到页面顶部，让分析结果从顶部开始展示
+            setTimeout(() => {
+                $('html, body').animate({ scrollTop: 0 }, 600);
+            }, 100);
+            
+            showAlert('🎉 两阶段分析完成！', 'success');
+        }
+
+        // 计算健康评分的辅助函数
+        function calculateHealthScore(summary) {
+            let score = 100;
+            
+            // 基于阻塞线程比例扣分
+            if (summary.totalThreads > 0) {
+                const blockedRatio = summary.blockedThreads / summary.totalThreads;
+                score -= blockedRatio * 40; // 阻塞线程比例过高扣分
+            }
+            
+            // 死锁严重扣分
+            if (summary.hasDeadlocks) {
+                score -= 30;
+            }
+            
+            // 同步器过多扣分
+            if (summary.synchronizerCount > summary.totalThreads * 0.3) {
+                score -= 15;
+            }
+            
+            // 运行线程过少扣分
+            if (summary.totalThreads > 0) {
+                const runningRatio = summary.runningThreads / summary.totalThreads;
+                if (runningRatio < 0.1) score -= 20;
+            }
+            
+            return Math.max(10, Math.min(100, Math.round(score)));
+        }
+
+        function showAlert(message, type) {
+            $('.alert').remove();
+            $('.container-fluid').prepend(`
+                <div class="alert alert-${type} alert-dismissible fade show">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            setTimeout(() => $('.alert').fadeOut(), 5000);
+        }
+
+        $(document).ready(function() {
+            window.aiAnalysisResult = null;
+            window.traditionalAnalysis = null;
+            console.log('📱 AI增强分析器初始化，支持两阶段分析流程');
+            
+            console.log('🔧 当前AI配置:', aiConfig);
+            console.log('📝 当前自定义提示词配置:', customPrompts);
+            
+            $('#demoButton').click(loadDemo);
+            $('#configButton').click(showAIConfig);
+            $('#promptButton').click(showCustomPrompt);
+            $('#reuploadBtn').click(() => location.reload());
+            
+            // 文件上传处理
+            $('#fileInput').on('change', handleFileUpload);
+            $('#uploadArea').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).addClass('dragover');
+            });
+            $('#uploadArea').on('dragleave', function(e) {
+                e.preventDefault();
+                $(this).removeClass('dragover');
+            });
+            $('#uploadArea').on('drop', function(e) {
+                e.preventDefault();
+                $(this).removeClass('dragover');
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+            
+            console.log('✅ AI线程转储分析器已加载');
+        });
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            console.log('📁 处理文件:', file.name, '大小:', file.size);
+            
+            // 检查文件大小（4MB限制）
+            if (file.size > 4 * 1024 * 1024) {
+                showAlert('文件大小超过4MB限制', 'danger');
+                return;
+            }
+            
+            // 检查文件类型
+            const validTypes = ['.txt', '.log', '.dump', 'text/plain'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!validTypes.includes(fileExtension) && file.type !== 'text/plain') {
+                showAlert('请上传支持的文件格式 (.txt, .log, .dump)', 'warning');
+                return;
+            }
+            
+            // 读取文件内容
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                console.log('📄 文件读取成功，内容长度:', content.length);
+                showAlert(`文件 "${file.name}" 上传成功，开始AI分析...`, 'success');
+                
+                // 开始分析
+                setTimeout(() => {
+                    analyzeContent(content, file.name);
+                }, 500);
+            };
+            
+            reader.onerror = function() {
+                showAlert('文件读取失败，请重试', 'danger');
+            };
+            
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>

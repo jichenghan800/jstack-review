@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>文件选择测试</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .upload-area { 
+            border: 2px dashed #007cba; 
+            padding: 40px; 
+            text-align: center; 
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .btn { 
+            background: #007cba; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+        }
+        .log { 
+            background: #f5f5f5; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>文件选择功能测试</h1>
+    
+    <div class="upload-area" id="upload-area">
+        <h3>点击这里或拖拽文件</h3>
+        <button class="btn" id="file-select-btn">选择文件</button>
+        <input type="file" id="file-input" style="display: none;" accept=".txt,.log,.dump,text/plain">
+    </div>
+    
+    <div id="file-info" style="display: none;">
+        <h3>文件信息:</h3>
+        <p id="file-details"></p>
+    </div>
+    
+    <div class="log" id="log">
+        <strong>调试日志:</strong><br>
+    </div>
+
+    <script>
+        function log(message) {
+            var logDiv = document.getElementById('log');
+            logDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        $(document).ready(function() {
+            log('页面加载完成');
+            log('file-select-btn元素数量: ' + $('#file-select-btn').length);
+            log('file-input元素数量: ' + $('#file-input').length);
+            log('upload-area元素数量: ' + $('#upload-area').length);
+            
+            // 文件选择按钮
+            $('#file-select-btn').click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                log('用户点击选择文件按钮');
+                
+                var fileInput = document.getElementById('file-input');
+                if (fileInput) {
+                    log('找到文件输入元素，尝试触发点击');
+                    try {
+                        fileInput.click();
+                        log('原生click()方法调用成功');
+                    } catch (error) {
+                        log('原生click()方法失败: ' + error.message);
+                        
+                        try {
+                            var clickEvent = new MouseEvent('click', {
+                                view: window,
+                                bubbles: true,
+                                cancelable: true
+                            });
+                            fileInput.dispatchEvent(clickEvent);
+                            log('dispatchEvent方法调用成功');
+                        } catch (error2) {
+                            log('dispatchEvent方法也失败: ' + error2.message);
+                            
+                            try {
+                                $('#file-input').trigger('click');
+                                log('jQuery trigger方法调用成功');
+                            } catch (error3) {
+                                log('所有方法都失败了: ' + error3.message);
+                            }
+                        }
+                    }
+                } else {
+                    log('找不到文件输入元素');
+                }
+            });
+            
+            // 上传区域点击
+            $('#upload-area').click(function(e) {
+                if (!$(e.target).is('button') && !$(e.target).closest('button').length) {
+                    log('用户点击上传区域');
+                    $('#file-select-btn').click();
+                }
+            });
+            
+            // 文件选择事件
+            var fileInput = document.getElementById('file-input');
+            if (fileInput) {
+                log('绑定文件选择事件');
+                
+                fileInput.addEventListener('change', function(e) {
+                    log('原生change事件触发，文件数量: ' + this.files.length);
+                    var file = this.files[0];
+                    if (file) {
+                        log('选择的文件: ' + file.name + ', 大小: ' + file.size + ' bytes');
+                        
+                        $('#file-details').html(
+                            '<strong>文件名:</strong> ' + file.name + '<br>' +
+                            '<strong>大小:</strong> ' + (file.size / 1024).toFixed(1) + ' KB<br>' +
+                            '<strong>类型:</strong> ' + file.type
+                        );
+                        $('#file-info').show();
+                    }
+                });
+                
+                $('#file-input').on('change', function(e) {
+                    log('jQuery change事件触发，文件数量: ' + this.files.length);
+                });
+            } else {
+                log('找不到文件输入元素，无法绑定事件');
+            }
+            
+            // 拖拽功能
+            $('#upload-area').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).css('background-color', '#e3f2fd');
+                log('文件拖拽到区域上方');
+            }).on('dragleave', function(e) {
+                e.preventDefault();
+                $(this).css('background-color', '');
+                log('文件离开拖拽区域');
+            }).on('drop', function(e) {
+                e.preventDefault();
+                $(this).css('background-color', '');
+                var files = e.originalEvent.dataTransfer.files;
+                log('文件拖拽放下，文件数量: ' + files.length);
+                if (files.length > 0) {
+                    var file = files[0];
+                    log('拖拽的文件: ' + file.name + ', 大小: ' + file.size + ' bytes');
+                    
+                    $('#file-details').html(
+                        '<strong>文件名:</strong> ' + file.name + '<br>' +
+                        '<strong>大小:</strong> ' + (file.size / 1024).toFixed(1) + ' KB<br>' +
+                        '<strong>类型:</strong> ' + file.type
+                    );
+                    $('#file-info').show();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

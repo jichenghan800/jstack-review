@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>AI 功能验证 - 时间戳: 2025-08-21 15:28</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI 增强功能验证页面</h1>
+    <p><strong>当前时间:</strong> <span id="current-time"></span></p>
+    
+    <h2>📋 验证清单</h2>
+    <div id="verification-results">
+        <p>正在检查...</p>
+    </div>
+    
+    <h2>🔗 快速链接</h2>
+    <ul>
+        <li><a href="/" target="_blank">主应用 (新窗口)</a></li>
+        <li><a href="/sample-threaddump.txt" target="_blank">示例线程转储文件</a></li>
+        <li><a href="/AI-ENHANCEMENT.md" target="_blank">AI 功能说明文档</a></li>
+    </ul>
+    
+    <h2>💡 使用提示</h2>
+    <ol>
+        <li>点击上面的"主应用"链接在新窗口打开</li>
+        <li>按 Ctrl+F5 (Windows) 或 Cmd+Shift+R (Mac) 强制刷新</li>
+        <li>查看页面标题是否显示 "AI-Enhanced"</li>
+        <li>查看导航栏是否有 "AI 分析" 下拉菜单</li>
+        <li>上传示例文件进行测试</li>
+    </ol>
+    
+    <script>
+        // 显示当前时间
+        document.getElementById('current-time').textContent = new Date().toLocaleString();
+        
+        // 验证文件是否可访问
+        var files = [
+            'jtdajs.ai.js',
+            'jtdajs.ai.render.js', 
+            'jtdajs.aws.simple.js',
+            'aws-config.js',
+            'frontend.ai.js',
+            'ai-enhanced.css'
+        ];
+        
+        var results = [];
+        var completed = 0;
+        
+        files.forEach(function(file) {
+            fetch(file + '?t=' + Date.now())
+                .then(function(response) {
+                    if (response.ok) {
+                        results.push('<span class="success">✅ ' + file + ' - 可访问</span>');
+                    } else {
+                        results.push('<span class="error">❌ ' + file + ' - 访问失败 (' + response.status + ')</span>');
+                    }
+                })
+                .catch(function(error) {
+                    results.push('<span class="error">❌ ' + file + ' - 网络错误</span>');
+                })
+                .finally(function() {
+                    completed++;
+                    if (completed === files.length) {
+                        document.getElementById('verification-results').innerHTML = 
+                            '<ul><li>' + results.join('</li><li>') + '</li></ul>';
+                    }
+                });
+        });
+    </script>
+</body>
+</html>

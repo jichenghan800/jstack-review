@@ -1,0 +1,80 @@
+2025-08-21 15:00:00
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.281-b09 mixed mode):
+
+"Attach Listener" #10 daemon prio=9 os_prio=0 tid=0x00007f8b4c001000 nid=0x1234 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Service Thread" #9 daemon prio=9 os_prio=0 tid=0x00007f8b4c002000 nid=0x1235 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C1 CompilerThread3" #8 daemon prio=9 os_prio=0 tid=0x00007f8b4c003000 nid=0x1236 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread2" #7 daemon prio=9 os_prio=0 tid=0x00007f8b4c004000 nid=0x1237 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread1" #6 daemon prio=9 os_prio=0 tid=0x00007f8b4c005000 nid=0x1238 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"C2 CompilerThread0" #5 daemon prio=9 os_prio=0 tid=0x00007f8b4c006000 nid=0x1239 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Signal Dispatcher" #4 daemon prio=9 os_prio=0 tid=0x00007f8b4c007000 nid=0x123a runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+"Finalizer" #3 daemon prio=8 os_prio=0 tid=0x00007f8b4c008000 nid=0x123b in Object.wait() [0x00007f8b4c100000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x000000076ab62208> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:143)
+	- locked <0x000000076ab62208> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:164)
+	at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:209)
+
+"Reference Handler" #2 daemon prio=10 os_prio=0 tid=0x00007f8b4c009000 nid=0x123c in Object.wait() [0x00007f8b4c200000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x000000076ab61bf8> (a java.lang.ref.Reference$Lock)
+	at java.lang.Object.wait(Object.java:502)
+	at java.lang.ref.Reference.tryHandlePending(Reference.java:191)
+	- locked <0x000000076ab61bf8> (a java.lang.ref.Reference$Lock)
+	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)
+
+"main" #1 prio=5 os_prio=0 tid=0x00007f8b4c00a000 nid=0x123d waiting on condition [0x00007f8b4c300000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at com.example.Application.main(Application.java:25)
+
+"pool-1-thread-1" #11 prio=5 os_prio=0 tid=0x00007f8b4c00b000 nid=0x123e waiting for monitor entry [0x00007f8b4c400000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at com.example.service.DatabaseService.query(DatabaseService.java:45)
+	- waiting to lock <0x000000076ab62300> (a java.lang.Object)
+	at com.example.service.UserService.getUser(UserService.java:30)
+	at com.example.controller.UserController.handleRequest(UserController.java:20)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+
+"pool-1-thread-2" #12 prio=5 os_prio=0 tid=0x00007f8b4c00c000 nid=0x123f waiting for monitor entry [0x00007f8b4c500000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at com.example.service.DatabaseService.query(DatabaseService.java:45)
+	- waiting to lock <0x000000076ab62300> (a java.lang.Object)
+	at com.example.service.UserService.getUser(UserService.java:30)
+	at com.example.controller.UserController.handleRequest(UserController.java:20)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+
+"pool-1-thread-3" #13 prio=5 os_prio=0 tid=0x00007f8b4c00d000 nid=0x1240 runnable [0x00007f8b4c600000]
+   java.lang.Thread.State: RUNNABLE
+	at java.net.SocketInputStream.socketRead0(Native Method)
+	at java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+	at java.net.SocketInputStream.read(SocketInputStream.java:171)
+	at java.net.SocketInputStream.read(SocketInputStream.java:141)
+	at com.example.service.NetworkService.readData(NetworkService.java:55)
+	at com.example.service.NetworkService.processRequest(NetworkService.java:40)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+
+JNI global references: 317

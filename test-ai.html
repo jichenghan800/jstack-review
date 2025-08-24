@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI 功能测试</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="jtdajs.js"></script>
+    <script src="jtdajs.ai.js"></script>
+    <script src="jtdajs.ai.render.js"></script>
+    <script src="jtdajs.aws.simple.js"></script>
+</head>
+<body>
+    <h1>AI 功能测试</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        $(document).ready(function() {
+            var results = [];
+            
+            // 测试 AI 模块是否加载
+            if (typeof jtda !== 'undefined' && jtda.ai) {
+                results.push('✅ jtda.ai 模块已加载');
+            } else {
+                results.push('❌ jtda.ai 模块未加载');
+            }
+            
+            // 测试 AI 分析器
+            if (typeof jtda.ai.Analyzer !== 'undefined') {
+                results.push('✅ AI 分析器可用');
+            } else {
+                results.push('❌ AI 分析器不可用');
+            }
+            
+            // 测试 AI 渲染器
+            if (typeof jtda.ai.render !== 'undefined' && jtda.ai.render.EnhancedRenderer) {
+                results.push('✅ AI 增强渲染器可用');
+            } else {
+                results.push('❌ AI 增强渲染器不可用');
+            }
+            
+            // 测试 AWS 简化客户端
+            if (typeof jtda.aws !== 'undefined' && jtda.aws.simple) {
+                results.push('✅ AWS 简化客户端可用');
+            } else {
+                results.push('❌ AWS 简化客户端不可用');
+            }
+            
+            // 显示结果
+            $('#test-results').html('<ul><li>' + results.join('</li><li>') + '</li></ul>');
+            
+            console.log('AI 功能测试结果:', results);
+        });
+    </script>
+</body>
+</html>

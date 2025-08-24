@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>透明文件输入覆盖测试</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f8f9fa;
+        }
+        .upload-area { 
+            border: 2px dashed #007cba; 
+            padding: 40px; 
+            text-align: center; 
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .upload-area:hover {
+            border-color: #0056b3;
+            background: linear-gradient(145deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+        .btn-modern { 
+            background: linear-gradient(135deg, #007cba 0%, #0056b3 100%);
+            color: white; 
+            padding: 12px 30px; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .log { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            margin: 20px 0; 
+            border-radius: 8px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        .file-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #007cba;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>透明文件输入覆盖按钮测试</h1>
+        <p class="text-muted">这个测试页面验证透明文件输入覆盖按钮的方法是否有效</p>
+        
+        <div class="upload-area" id="upload-area">
+            <i class="glyphicon glyphicon-cloud-upload" style="font-size: 3em; color: #007cba; margin-bottom: 20px; display: block;"></i>
+            <h3>拖拽文件到这里或点击选择文件</h3>
+            <p style="color: #666; margin-bottom: 30px;">支持 .txt, .log, .dump 等格式</p>
+            
+            <div style="position: relative; display: inline-block;">
+                <button class="btn btn-primary btn-lg btn-modern" id="file-select-btn">
+                    <i class="glyphicon glyphicon-folder-open"></i> 选择文件
+                </button>
+                <input type="file" id="file-input" 
+                       style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;" 
+                       accept=".txt,.log,.dump,text/plain">
+            </div>
+        </div>
+        
+        <div id="file-info" style="display: none;" class="file-info">
+            <h4><i class="glyphicon glyphicon-file"></i> 文件信息:</h4>
+            <div id="file-details"></div>
+        </div>
+        
+        <div class="log" id="log">
+            <strong>📋 调试日志:</strong><br>
+        </div>
+        
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4>测试说明</h4>
+            </div>
+            <div class="panel-body">
+                <ul>
+                    <li><strong>方法1:</strong> 点击蓝色的"选择文件"按钮</li>
+                    <li><strong>方法2:</strong> 拖拽文件到上传区域</li>
+                    <li><strong>方法3:</strong> 点击上传区域的其他位置（非按钮区域）</li>
+                </ul>
+                <p><strong>技术原理:</strong> 透明的文件输入元素完全覆盖在按钮上，用户点击按钮实际上是点击了文件输入。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            var logDiv = document.getElementById('log');
+            var timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += timestamp + ': ' + message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        $(document).ready(function() {
+            log('✅ 页面加载完成');
+            
+            // 检查DOM元素
+            log('🔍 检查DOM元素:');
+            log('  - file-select-btn: ' + ($('#file-select-btn').length > 0 ? '✅ 存在' : '❌ 不存在'));
+            log('  - file-input: ' + ($('#file-input').length > 0 ? '✅ 存在' : '❌ 不存在'));
+            log('  - upload-area: ' + ($('#upload-area').length > 0 ? '✅ 存在' : '❌ 不存在'));
+            
+            // 文件选择事件
+            var fileInput = document.getElementById('file-input');
+            if (fileInput) {
+                log('✅ 绑定文件选择事件');
+                
+                fileInput.onchange = function(e) {
+                    log('📁 文件选择事件触发，文件数量: ' + this.files.length);
+                    var file = this.files[0];
+                    if (file) {
+                        log('📁 选择的文件: ' + file.name + ', 大小: ' + file.size + ' bytes');
+                        
+                        $('#file-details').html(
+                            '<strong>文件名:</strong> ' + file.name + '<br>' +
+                            '<strong>大小:</strong> ' + (file.size / 1024).toFixed(1) + ' KB<br>' +
+                            '<strong>类型:</strong> ' + (file.type || '未知') + '<br>' +
+                            '<strong>最后修改:</strong> ' + new Date(file.lastModified).toLocaleString()
+                        );
+                        $('#file-info').show();
+                        
+                        log('✅ 文件信息已显示');
+                    }
+                };
+            } else {
+                log('❌ 找不到文件输入元素');
+            }
+            
+            // 上传区域点击（备用方法）
+            document.getElementById('upload-area').onclick = function(e) {
+                // 如果点击的不是按钮区域和文件输入，则触发文件选择
+                if (e.target.tagName !== 'BUTTON' && 
+                    e.target.tagName !== 'INPUT' && 
+                    !e.target.closest('button') && 
+                    !e.target.closest('input[type="file"]')) {
+                    log('📁 用户点击上传区域（非按钮区域）');
+                    e.preventDefault();
+                    
+                    var fileInput = document.getElementById('file-input');
+                    if (fileInput) {
+                        fileInput.click();
+                        log('🔄 触发文件输入点击');
+                    }
+                }
+            };
+            
+            // 拖拽功能
+            $('#upload-area').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).css('border-color', '#28a745');
+                log('📂 文件拖拽到区域上方');
+            }).on('dragleave', function(e) {
+                e.preventDefault();
+                $(this).css('border-color', '#007cba');
+                log('📂 文件离开拖拽区域');
+            }).on('drop', function(e) {
+                e.preventDefault();
+                $(this).css('border-color', '#007cba');
+                var files = e.originalEvent.dataTransfer.files;
+                log('📂 文件拖拽放下，文件数量: ' + files.length);
+                if (files.length > 0) {
+                    var file = files[0];
+                    log('📂 拖拽的文件: ' + file.name + ', 大小: ' + file.size + ' bytes');
+                    
+                    $('#file-details').html(
+                        '<strong>文件名:</strong> ' + file.name + '<br>' +
+                        '<strong>大小:</strong> ' + (file.size / 1024).toFixed(1) + ' KB<br>' +
+                        '<strong>类型:</strong> ' + (file.type || '未知') + '<br>' +
+                        '<strong>最后修改:</strong> ' + new Date(file.lastModified).toLocaleString() + '<br>' +
+                        '<span class="text-success"><strong>✅ 通过拖拽获取</strong></span>'
+                    );
+                    $('#file-info').show();
+                    
+                    log('✅ 拖拽文件信息已显示');
+                }
+            });
+            
+            log('🎯 初始化完成，可以开始测试');
+        });
+    </script>
+</body>
+</html>

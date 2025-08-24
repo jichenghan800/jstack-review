@@ -1,0 +1,797 @@
+<!-- 专业线程转储分析报告模板 -->
+
+<!-- 1. 系统健康评分模板 -->
+<script id="tmpl-health-score-section" type="x-tmpl-mustache">
+<div class="panel panel-modern health-score-panel">
+  <div class="panel-heading" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%); border-bottom: 3px solid #28a745;">
+    <h3 style="margin: 0; color: #155724; font-weight: 500;">
+      <i class="glyphicon glyphicon-dashboard"></i> 系统健康评分
+    </h3>
+  </div>
+  <div class="panel-body" style="padding: 30px;">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="health-score-display">
+          <div class="score-circle score-{{healthLevel}}">
+            <span class="score-number">{{healthScore}}</span>
+            <span class="score-label">分</span>
+          </div>
+          <div class="score-description">
+            <h4 class="text-{{healthLevelClass}}">{{healthLevelText}}</h4>
+            <p class="text-muted">综合评估结果</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="health-factors">
+          <h5 style="color: #333; margin-bottom: 20px;">评分依据：</h5>
+          {{#healthFactors}}
+          <div class="factor-item">
+            <div class="factor-header">
+              <span class="factor-name">{{name}}</span>
+              <span class="factor-score badge badge-{{levelClass}}">{{score}}/{{maxScore}}</span>
+            </div>
+            <div class="progress" style="height: 8px; margin: 5px 0;">
+              <div class="progress-bar progress-bar-{{levelClass}}" style="width: {{percentage}}%"></div>
+            </div>
+            <small class="text-muted">{{description}}</small>
+          </div>
+          {{/healthFactors}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</script>
+
+<!-- 2. 关键问题识别模板 -->
+<script id="tmpl-critical-issues-section" type="x-tmpl-mustache">
+<div class="panel panel-modern critical-issues-panel">
+  <div class="panel-heading" style="background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border-bottom: 3px solid #dc3545;">
+    <h3 style="margin: 0; color: #721c24; font-weight: 500;">
+      <i class="glyphicon glyphicon-exclamation-triangle"></i> 关键问题识别
+    </h3>
+  </div>
+  <div class="panel-body">
+    <!-- 死锁检测 -->
+    <div class="issue-category">
+      <h4 class="issue-title">
+        <i class="glyphicon glyphicon-{{#hasDeadlocks}}remove-circle text-danger{{/hasDeadlocks}}{{^hasDeadlocks}}ok-circle text-success{{/hasDeadlocks}}"></i>
+        死锁检测
+      </h4>
+      {{#hasDeadlocks}}
+      <div class="alert alert-danger">
+        <strong>发现 {{deadlockCount}} 个死锁！</strong>
+        {{#deadlockDetails}}
+        <div class="deadlock-detail" style="margin-top: 15px;">
+          <h6>死锁 #{{id}}:</h6>
+          <ul>
+            {{#involvedThreads}}
+            <li><code>{{threadName}}</code> - 等待锁: <code>{{waitingFor}}</code></li>
+            {{/involvedThreads}}
+          </ul>
+        </div>
+        {{/deadlockDetails}}
+      </div>
+      {{/hasDeadlocks}}
+      {{^hasDeadlocks}}
+      <div class="alert alert-success">
+        <i class="glyphicon glyphicon-ok"></i> 未发现死锁问题
+      </div>
+      {{/hasDeadlocks}}
+    </div>
+
+    <!-- 阻塞线程分析 -->
+    <div class="issue-category">
+      <h4 class="issue-title">
+        <i class="glyphicon glyphicon-pause text-warning"></i>
+        阻塞线程分析
+      </h4>
+      {{#hasBlockedThreads}}
+      <div class="blocked-threads-summary">
+        <div class="alert alert-warning">
+          <strong>发现 {{blockedThreadCount}} 个阻塞线程</strong> (占总线程数的 {{blockedPercentage}}%)
+        </div>
+        <div class="table-responsive">
+          <table class="table table-modern">
+            <thead>
+              <tr>
+                <th>线程名称</th>
+                <th>阻塞原因</th>
+                <th>等待锁</th>
+                <th>阻塞时长</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#blockedThreads}}
+              <tr>
+                <td><code>{{threadName}}</code></td>
+                <td>{{blockReason}}</td>
+                <td><code>{{waitingLock}}</code></td>
+                <td><span class="label label-{{durationClass}}">{{blockDuration}}</span></td>
+              </tr>
+              {{/blockedThreads}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {{/hasBlockedThreads}}
+      {{^hasBlockedThreads}}
+      <div class="alert alert-success">
+        <i class="glyphicon glyphicon-ok"></i> 未发现严重阻塞线程
+      </div>
+      {{/hasBlockedThreads}}
+    </div>
+
+    <!-- 资源争用分析 -->
+    <div class="issue-category">
+      <h4 class="issue-title">
+        <i class="glyphicon glyphicon-transfer text-info"></i>
+        资源争用分析
+      </h4>
+      {{#hasResourceContention}}
+      <div class="contention-analysis">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>争用热点锁：</h6>
+            <ul class="list-group">
+              {{#contentionHotspots}}
+              <li class="list-group-item">
+                <span class="badge badge-{{severityClass}}">{{threadCount}} 线程</span>
+                <code>{{lockName}}</code>
+                <br><small class="text-muted">{{lockType}} - {{description}}</small>
+              </li>
+              {{/contentionHotspots}}
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6>争用级别：</h6>
+            <div class="contention-level">
+              <span class="label label-lg label-{{contentionLevelClass}}">{{contentionLevel}}</span>
+              <p class="text-muted" style="margin-top: 10px;">{{contentionDescription}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/hasResourceContention}}
+    </div>
+
+    <!-- CPU异常线程 -->
+    <div class="issue-category">
+      <h4 class="issue-title">
+        <i class="glyphicon glyphicon-fire text-danger"></i>
+        CPU占用异常线程
+      </h4>
+      {{#hasHighCpuThreads}}
+      <div class="table-responsive">
+        <table class="table table-modern">
+          <thead>
+            <tr>
+              <th>线程名称</th>
+              <th>CPU占用</th>
+              <th>运行状态</th>
+              <th>主要方法</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#highCpuThreads}}
+            <tr>
+              <td><code>{{threadName}}</code></td>
+              <td><span class="label label-danger">{{cpuUsage}}%</span></td>
+              <td><span class="label label-{{statusClass}}">{{status}}</span></td>
+              <td><code>{{topMethod}}</code></td>
+            </tr>
+            {{/highCpuThreads}}
+          </tbody>
+        </table>
+      </div>
+      {{/hasHighCpuThreads}}
+      {{^hasHighCpuThreads}}
+      <div class="alert alert-success">
+        <i class="glyphicon glyphicon-ok"></i> 未发现CPU占用异常线程
+      </div>
+      {{/hasHighCpuThreads}}
+    </div>
+  </div>
+</div>
+</script>
+
+<!-- 3. 线程状态统计分析模板 -->
+<script id="tmpl-thread-statistics-section" type="x-tmpl-mustache">
+<div class="panel panel-modern statistics-panel">
+  <div class="panel-heading" style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); border-bottom: 3px solid #17a2b8;">
+    <h3 style="margin: 0; color: #0c5460; font-weight: 500;">
+      <i class="glyphicon glyphicon-stats"></i> 线程状态统计分析
+    </h3>
+  </div>
+  <div class="panel-body">
+    <!-- 总体统计 -->
+    <div class="row statistics-overview">
+      <div class="col-md-3">
+        <div class="stat-card-mini">
+          <div class="stat-number">{{totalThreads}}</div>
+          <div class="stat-label">总线程数</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card-mini">
+          <div class="stat-number text-success">{{runnableThreads}}</div>
+          <div class="stat-label">运行中</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card-mini">
+          <div class="stat-number text-warning">{{waitingThreads}}</div>
+          <div class="stat-label">等待中</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card-mini">
+          <div class="stat-number text-danger">{{blockedThreads}}</div>
+          <div class="stat-label">阻塞中</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 详细状态分布 -->
+    <div class="row" style="margin-top: 30px;">
+      <div class="col-md-6">
+        <h5>线程状态分布</h5>
+        <div class="table-responsive">
+          <table class="table table-modern">
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>数量</th>
+                <th>比例</th>
+                <th>状态条</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#threadStates}}
+              <tr>
+                <td><span class="label label-{{statusClass}}">{{stateName}}</span></td>
+                <td><strong>{{count}}</strong></td>
+                <td>{{percentage}}%</td>
+                <td>
+                  <div class="progress" style="height: 20px; margin: 0;">
+                    <div class="progress-bar progress-bar-{{statusClass}}" 
+                         style="width: {{percentage}}%; line-height: 20px;">
+                      {{percentage}}%
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {{/threadStates}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <h5>关键指标</h5>
+        <div class="key-metrics">
+          {{#keyMetrics}}
+          <div class="metric-item">
+            <div class="metric-header">
+              <span class="metric-name">{{name}}</span>
+              <span class="metric-value badge badge-{{levelClass}}">{{value}}</span>
+            </div>
+            <div class="metric-description">{{description}}</div>
+          </div>
+          {{/keyMetrics}}
+        </div>
+      </div>
+    </div>
+
+    <!-- 长时间等待线程 -->
+    {{#hasLongWaitingThreads}}
+    <div style="margin-top: 30px;">
+      <h5>长时间等待线程 (>10秒)</h5>
+      <div class="table-responsive">
+        <table class="table table-modern">
+          <thead>
+            <tr>
+              <th>线程名称</th>
+              <th>等待时间</th>
+              <th>等待原因</th>
+              <th>等待对象</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#longWaitingThreads}}
+            <tr>
+              <td><code>{{threadName}}</code></td>
+              <td><span class="label label-warning">{{waitTime}}</span></td>
+              <td>{{waitReason}}</td>
+              <td><code>{{waitObject}}</code></td>
+            </tr>
+            {{/longWaitingThreads}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {{/hasLongWaitingThreads}}
+  </div>
+</div>
+</script>
+
+<!-- 4. 性能优化建议模板 -->
+<script id="tmpl-optimization-suggestions-section" type="x-tmpl-mustache">
+<div class="panel panel-modern optimization-panel">
+  <div class="panel-heading" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-bottom: 3px solid #ffc107;">
+    <h3 style="margin: 0; color: #856404; font-weight: 500;">
+      <i class="glyphicon glyphicon-lightbulb"></i> 性能优化建议
+    </h3>
+  </div>
+  <div class="panel-body">
+    {{#optimizationCategories}}
+    <div class="optimization-category">
+      <h4 class="category-title">
+        <i class="glyphicon glyphicon-{{icon}} text-{{iconColor}}"></i>
+        {{categoryName}}
+      </h4>
+      <div class="suggestions-list">
+        {{#suggestions}}
+        <div class="suggestion-item panel panel-default">
+          <div class="panel-body">
+            <div class="suggestion-header">
+              <span class="suggestion-priority label label-{{priorityClass}}">{{priority}}</span>
+              <h6 class="suggestion-title">{{title}}</h6>
+            </div>
+            <div class="suggestion-content">
+              <p>{{description}}</p>
+              {{#hasActionItems}}
+              <div class="action-items">
+                <h6>具体操作：</h6>
+                <ul>
+                  {{#actionItems}}
+                  <li>{{.}}</li>
+                  {{/actionItems}}
+                </ul>
+              </div>
+              {{/hasActionItems}}
+              {{#hasCodeExample}}
+              <div class="code-example">
+                <h6>代码示例：</h6>
+                <pre><code>{{codeExample}}</code></pre>
+              </div>
+              {{/hasCodeExample}}
+            </div>
+          </div>
+        </div>
+        {{/suggestions}}
+      </div>
+    </div>
+    {{/optimizationCategories}}
+  </div>
+</div>
+</script>
+
+<!-- 5. 具体改进方案模板 -->
+<script id="tmpl-improvement-plan-section" type="x-tmpl-mustache">
+<div class="panel panel-modern improvement-plan-panel">
+  <div class="panel-heading" style="background: linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%); border-bottom: 3px solid #6c757d;">
+    <h3 style="margin: 0; color: #495057; font-weight: 500;">
+      <i class="glyphicon glyphicon-wrench"></i> 具体改进方案
+    </h3>
+  </div>
+  <div class="panel-body">
+    {{#improvementPlans}}
+    <div class="improvement-plan-item">
+      <div class="plan-header">
+        <h4 class="plan-title">{{planTitle}}</h4>
+        <div class="plan-meta">
+          <span class="plan-priority label label-{{priorityClass}}">{{priority}}</span>
+          <span class="plan-effort label label-info">{{effortLevel}}</span>
+          <span class="plan-impact label label-success">{{impactLevel}}</span>
+        </div>
+      </div>
+      
+      <div class="plan-content">
+        <div class="row">
+          <div class="col-md-8">
+            <div class="plan-description">
+              <h6>问题描述：</h6>
+              <p>{{problemDescription}}</p>
+              
+              <h6>解决方案：</h6>
+              <p>{{solutionDescription}}</p>
+              
+              {{#hasImplementationSteps}}
+              <h6>实施步骤：</h6>
+              <ol>
+                {{#implementationSteps}}
+                <li>{{.}}</li>
+                {{/implementationSteps}}
+              </ol>
+              {{/hasImplementationSteps}}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="plan-metrics">
+              <h6>预期效果：</h6>
+              <ul class="list-unstyled">
+                {{#expectedBenefits}}
+                <li><i class="glyphicon glyphicon-arrow-up text-success"></i> {{.}}</li>
+                {{/expectedBenefits}}
+              </ul>
+              
+              {{#hasRisks}}
+              <h6>注意事项：</h6>
+              <ul class="list-unstyled">
+                {{#risks}}
+                <li><i class="glyphicon glyphicon-warning-sign text-warning"></i> {{.}}</li>
+                {{/risks}}
+              </ul>
+              {{/hasRisks}}
+            </div>
+          </div>
+        </div>
+        
+        {{#hasCodeChanges}}
+        <div class="code-changes">
+          <h6>代码修改建议：</h6>
+          <div class="row">
+            {{#codeChanges}}
+            <div class="col-md-6">
+              <div class="code-change-item">
+                <h7>{{changeTitle}}</h7>
+                <pre><code class="{{language}}">{{codeContent}}</code></pre>
+              </div>
+            </div>
+            {{/codeChanges}}
+          </div>
+        </div>
+        {{/hasCodeChanges}}
+      </div>
+    </div>
+    {{/improvementPlans}}
+  </div>
+</div>
+</script>
+
+<!-- 6. 统计类目建议模板 -->
+<script id="tmpl-statistical-summary-section" type="x-tmpl-mustache">
+<div class="panel panel-modern statistical-summary-panel">
+  <div class="panel-heading" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 3px solid #6c757d;">
+    <h3 style="margin: 0; color: #495057; font-weight: 500;">
+      <i class="glyphicon glyphicon-list-alt"></i> 统计类目汇总
+    </h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <!-- 左侧：核心统计 -->
+      <div class="col-md-6">
+        <h5>核心统计指标</h5>
+        <div class="core-statistics">
+          {{#coreStats}}
+          <div class="stat-row">
+            <div class="stat-label">{{label}}</div>
+            <div class="stat-value">
+              <span class="value-number">{{value}}</span>
+              {{#hasUnit}}<span class="value-unit">{{unit}}</span>{{/hasUnit}}
+              {{#hasPercentage}}<span class="value-percentage">({{percentage}}%)</span>{{/hasPercentage}}
+            </div>
+          </div>
+          {{/coreStats}}
+        </div>
+      </div>
+      
+      <!-- 右侧：异常模式 -->
+      <div class="col-md-6">
+        <h5>异常模式检测</h5>
+        <div class="anomaly-patterns">
+          {{#anomalyPatterns}}
+          <div class="anomaly-item alert alert-{{severityClass}}">
+            <h6><i class="glyphicon glyphicon-{{icon}}"></i> {{patternName}}</h6>
+            <p>{{description}}</p>
+            {{#hasAffectedThreads}}
+            <small>影响线程: {{affectedThreadCount}} 个</small>
+            {{/hasAffectedThreads}}
+          </div>
+          {{/anomalyPatterns}}
+          
+          {{^hasAnomalies}}
+          <div class="alert alert-success">
+            <i class="glyphicon glyphicon-ok"></i> 未检测到异常线程模式
+          </div>
+          {{/hasAnomalies}}
+        </div>
+      </div>
+    </div>
+    
+    <!-- 底部：快速定位 -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+      <h5>快速定位指南</h5>
+      <div class="quick-navigation">
+        <div class="row">
+          {{#quickNavItems}}
+          <div class="col-md-3">
+            <div class="nav-item">
+              <div class="nav-icon">
+                <i class="glyphicon glyphicon-{{icon}} text-{{iconColor}}"></i>
+              </div>
+              <div class="nav-content">
+                <h6>{{title}}</h6>
+                <p><small>{{description}}</small></p>
+                {{#hasAction}}
+                <button class="btn btn-xs btn-{{actionClass}}" onclick="{{actionFunction}}">
+                  {{actionText}}
+                </button>
+                {{/hasAction}}
+              </div>
+            </div>
+          </div>
+          {{/quickNavItems}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</script>
+
+<!-- 专用样式 -->
+<style>
+/* 健康评分样式 */
+.health-score-display {
+  text-align: center;
+}
+
+.score-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  border: 8px solid;
+  position: relative;
+}
+
+.score-circle.score-excellent {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.score-circle.score-good {
+  border-color: #17a2b8;
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+}
+
+.score-circle.score-warning {
+  border-color: #ffc107;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.score-circle.score-critical {
+  border-color: #dc3545;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+
+.score-number {
+  font-size: 2.5em;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 1em;
+  opacity: 0.8;
+}
+
+/* 因子评分样式 */
+.factor-item {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+.factor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.factor-name {
+  font-weight: 500;
+}
+
+/* 统计卡片样式 */
+.stat-card-mini {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.stat-card-mini .stat-number {
+  font-size: 2.5em;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.stat-card-mini .stat-label {
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+/* 关键指标样式 */
+.key-metrics .metric-item {
+  padding: 15px;
+  margin-bottom: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007cba;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.metric-name {
+  font-weight: 500;
+}
+
+.metric-description {
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* 建议项样式 */
+.suggestion-item {
+  margin-bottom: 20px;
+}
+
+.suggestion-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.suggestion-priority {
+  margin-right: 10px;
+}
+
+.suggestion-title {
+  margin: 0;
+  font-weight: 500;
+}
+
+.action-items, .code-example {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+/* 改进方案样式 */
+.improvement-plan-item {
+  margin-bottom: 30px;
+  padding: 25px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+  border-left: 5px solid #007cba;
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.plan-title {
+  margin: 0;
+  color: #333;
+}
+
+.plan-meta .label {
+  margin-left: 5px;
+}
+
+.plan-metrics {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+/* 统计汇总样式 */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.stat-value {
+  text-align: right;
+}
+
+.value-number {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #007cba;
+}
+
+.value-unit, .value-percentage {
+  font-size: 0.9em;
+  color: #666;
+  margin-left: 5px;
+}
+
+/* 异常模式样式 */
+.anomaly-item {
+  margin-bottom: 10px;
+}
+
+.anomaly-item h6 {
+  margin: 0 0 5px 0;
+  font-weight: 500;
+}
+
+/* 快速导航样式 */
+.nav-item {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.nav-icon {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.nav-content h6 {
+  margin: 10px 0 5px 0;
+  font-weight: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .score-circle {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .score-number {
+    font-size: 2em;
+  }
+  
+  .plan-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .plan-meta {
+    margin-top: 10px;
+  }
+}
+</style>
