@@ -597,261 +597,6 @@
         console.log('📋 模板总数:', Object.keys(customPrompts.templates).length);
         console.log('🎯 jstack_optimized长度:', customPrompts.templates.jstack_optimized?.length || '不存在');
 
-        function showCustomPrompt() {
-            console.log('📝 显示自定义提示词配置');
-            
-            const promptModal = `
-                <div class="modal fade" id="customPromptModal" tabindex="-1">
-                    <div class="modal-dialog modal-xl">
-                        <div class="modal-content">
-                            <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-edit me-2"></i>自定义系统提示词
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">启用自定义提示词</label>
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="enableCustomPrompt" ${customPrompts.enabled ? 'checked' : ''}>
-                                                <label class="form-check-label" for="enableCustomPrompt">
-                                                    使用自定义提示词替代默认提示词
-                                                </label>
-                                            </div>
-                                            <small class="text-muted">关闭时使用系统默认提示词</small>
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">提示词模板</label>
-                                            <select class="form-select" id="promptTemplate" onchange="loadTemplate()">
-                                                <option value="default">默认模板</option>
-                                                <option value="detailed">详细分析模板</option>
-                                                <option value="concise">简洁分析模板</option>
-                                                <option value="jstack_optimized">jstack-review智能模板 ⭐ (推荐)</option>
-                                                <option value="custom">自定义模板</option>
-                                            </select>
-                                            <small class="text-muted">⭐推荐使用jstack-review智能模板，会根据分析阶段（单阶段/分段/综合）自动选择最佳提示词</small>
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">可用占位符</label>
-                                            <div class="bg-light p-3 rounded">
-                                                <small class="text-muted">
-                                                    <strong>{ANALYSIS_SUMMARY}</strong><br>
-                                                    传统解析的结构化数据摘要
-                                                    <br><br>
-                                                    <strong>{TRUNCATION_WARNING}</strong><br>
-                                                    数据截断警告信息（如适用）
-                                                    <br><br>
-                                                    <strong>jstack-review专用占位符:</strong><br>
-                                                    <small>• {总线程数} {运行中线程数} {等待中线程数}<br>
-                                                    • {阻塞线程数} {同步器数量} {是否存在死锁}<br>
-                                                    • {当前时间} - 自动插入分析时间</small>
-                                                    <br><br>
-                                                    <strong>多阶段分析专用占位符:</strong><br>
-                                                    <small>• {SEGMENT_INDEX} {SEGMENT_NAME} {SEGMENT_FOCUS}<br>
-                                                    • {SEGMENT_PRIORITY} {SEGMENT_START} {SEGMENT_END}<br>
-                                                    • {SEGMENT_COUNT} - 分段总数，用于综合分析</small>
-                                                </small>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <button class="btn btn-outline-secondary btn-sm w-100" onclick="previewPrompt()">
-                                                <i class="fas fa-eye"></i> 预览最终提示词
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-8">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">提示词内容</label>
-                                            <textarea class="form-control font-monospace" id="promptContent" rows="20" 
-                                                      placeholder="输入您的自定义系统提示词..."></textarea>
-                                            <small class="text-muted">
-                                                使用上述占位符来动态插入分析数据。提示词将发送给AI模型进行线程转储分析。
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="promptPreview" class="d-none">
-                                    <div class="alert alert-info">
-                                        <h6><i class="fas fa-eye"></i> 提示词预览</h6>
-                                        <pre id="previewContent" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></pre>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-secondary" onclick="resetToDefault()">
-                                    <i class="fas fa-undo"></i> 重置为默认
-                                </button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                                <button type="button" class="btn btn-primary" onclick="saveCustomPrompt()">
-                                    <i class="fas fa-save me-2"></i>保存配置
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            $('#customPromptModal').remove();
-            $('body').append(promptModal);
-            
-            const modal = new bootstrap.Modal(document.getElementById('customPromptModal'));
-            modal.show();
-            
-            // 模态框显示后加载当前配置
-            setTimeout(() => {
-                loadCurrentPrompt();
-            }, 100);
-        }
-
-        function loadTemplate() {
-            const template = $('#promptTemplate').val();
-            console.log('🔄 切换到模板:', template);
-            console.log('📄 模板内容长度:', customPrompts.templates[template]?.length || '模板不存在');
-            
-            if (template !== 'custom') {
-                if (customPrompts.templates[template]) {
-                    $('#promptContent').val(customPrompts.templates[template]);
-                } else {
-                    console.error('❌ 模板不存在:', template);
-                    showAlert(`模板 "${template}" 不存在`, 'warning');
-                }
-            } else {
-                $('#promptContent').val(customPrompts.templates.custom);
-            }
-        }
-
-        function loadCurrentPrompt() {
-            console.log('🔄 加载当前提示词配置');
-            console.log('📋 可用模板:', Object.keys(customPrompts.templates));
-            console.log('🎯 当前提示词存在:', !!customPrompts.currentPrompt);
-            
-            // 设置当前选中的模板
-            if (customPrompts.currentPrompt) {
-                // 检查是否匹配预置模板
-                let matchedTemplate = 'custom';
-                for (let [key, template] of Object.entries(customPrompts.templates)) {
-                    if (key !== 'custom' && template === customPrompts.currentPrompt) {
-                        matchedTemplate = key;
-                        break;
-                    }
-                }
-                console.log('✅ 匹配的模板:', matchedTemplate);
-                $('#promptTemplate').val(matchedTemplate);
-                $('#promptContent').val(customPrompts.currentPrompt);
-            } else {
-                // 首次打开时默认选择jstack_optimized模板
-                console.log('🎯 首次打开，使用jstack_optimized模板');
-                $('#promptTemplate').val('jstack_optimized');
-                if (customPrompts.templates.jstack_optimized) {
-                    $('#promptContent').val(customPrompts.templates.jstack_optimized);
-                    console.log('✅ jstack_optimized模板加载成功，长度:', customPrompts.templates.jstack_optimized.length);
-                } else {
-                    console.error('❌ jstack_optimized模板不存在');
-                    showAlert('jstack_optimized模板不存在，请刷新页面', 'error');
-                }
-            }
-        }
-
-        function previewPrompt() {
-            const promptText = $('#promptContent').val();
-            if (!promptText.trim()) {
-                showAlert('请先输入提示词内容', 'warning');
-                return;
-            }
-            
-            // 模拟分析数据
-            const mockSummary = `
-- 总线程数: 25
-- 运行中线程: 8
-- 等待中线程: 12  
-- 阻塞线程: 5
-- 同步器数量: 3
-- 是否存在死锁: 否
-- 时间戳: 2025-08-23 15:30:00`;
-            
-            const mockWarning = `
-⚠️ 注意：原始文件已截断，基于前40KB内容分析。`;
-
-            const currentTime = new Date().toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            // 替换占位符
-            let previewText = promptText
-                .replace('{ANALYSIS_SUMMARY}', mockSummary)
-                .replace('{TRUNCATION_WARNING}', mockWarning)
-                .replace(/\{总线程数\}/g, '25')
-                .replace(/\{运行中线程数\}/g, '8')
-                .replace(/\{等待中线程数\}/g, '12')
-                .replace(/\{阻塞线程数\}/g, '5')
-                .replace(/\{同步器数量\}/g, '3')
-                .replace(/\{是否存在死锁\}/g, '否')
-                .replace(/\{当前时间\}/g, currentTime)
-                // 多阶段分析专用占位符
-                .replace(/\{SEGMENT_INDEX\}/g, '2')
-                .replace(/\{SEGMENT_NAME\}/g, '高优先级线程分析')
-                .replace(/\{SEGMENT_FOCUS\}/g, '阻塞和死锁风险线程')
-                .replace(/\{SEGMENT_PRIORITY\}/g, 'high')
-                .replace(/\{SEGMENT_START\}/g, '1')
-                .replace(/\{SEGMENT_END\}/g, '10')
-                .replace(/\{SEGMENT_COUNT\}/g, '3');
-            
-            $('#previewContent').text(previewText);
-            $('#promptPreview').removeClass('d-none');
-        }
-
-        function resetToDefault() {
-            if (confirm('确定要重置为默认提示词吗？这将清除所有自定义设置。')) {
-                $('#promptTemplate').val('default');
-                $('#promptContent').val(customPrompts.templates.default);
-                $('#enableCustomPrompt').prop('checked', false);
-                $('#promptPreview').addClass('d-none');
-                showAlert('已重置为默认配置', 'info');
-            }
-        }
-
-        function saveCustomPrompt() {
-            const enabled = $('#enableCustomPrompt').is(':checked');
-            const promptContent = $('#promptContent').val().trim();
-            const selectedTemplate = $('#promptTemplate').val();
-            
-            if (enabled && !promptContent) {
-                showAlert('启用自定义提示词时必须提供提示词内容', 'warning');
-                return;
-            }
-            
-            // 保存配置
-            customPrompts.enabled = enabled;
-            customPrompts.currentPrompt = promptContent;
-            
-            // 如果是自定义模板，保存到custom模板
-            if (selectedTemplate === 'custom') {
-                customPrompts.templates.custom = promptContent;
-            }
-            
-            localStorage.setItem('customPrompts', JSON.stringify(customPrompts));
-            
-            const modal = bootstrap.Modal.getInstance(document.getElementById('customPromptModal'));
-            if (modal) modal.hide();
-            
-            const status = enabled ? '启用' : '禁用';
-            showAlert(`✅ 自定义提示词配置已保存 (${status})`, 'success');
-            
-            console.log('💾 自定义提示词配置已保存:', customPrompts);
-        }
 
         function showAIConfig() {
             console.log('🔧 显示AI配置');
@@ -961,14 +706,13 @@
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">提示词模板</label>
                                                     <select class="form-select" id="promptTemplate" onchange="loadPromptTemplate()">
-                                                        <option value="">请选择模板</option>
-                                                        <option value="jstack_optimized">JStack 优化分析</option>
-                                                        <option value="performance_focus">性能聚焦分析</option>
-                                                        <option value="security_analysis">安全风险分析</option>
-                                                        <option value="detailed_report">详细诊断报告</option>
-                                                        <option value="custom">自定义</option>
+                                                        <option value="default">默认模板</option>
+                                                        <option value="detailed">详细分析模板</option>
+                                                        <option value="concise">简洁分析模板</option>
+                                                        <option value="jstack_optimized">jstack-review智能模板 ⭐ (推荐)</option>
+                                                        <option value="custom">自定义模板</option>
                                                     </select>
-                                                    <small class="text-muted">选择预设模板或创建自定义提示词</small>
+                                                    <small class="text-muted">⭐推荐使用jstack-review智能模板，会根据分析阶段（单阶段/分段/综合）自动选择最佳提示词</small>
                                                 </div>
                                             </div>
                                             
@@ -1027,6 +771,25 @@
                     $('#promptContent').prop('disabled', !enabled);
                     $('#promptTemplate').prop('disabled', !enabled);
                 });
+                
+                // 初始化提示词模板选择
+                if (customPrompts.currentPrompt) {
+                    // 检查是否匹配预置模板
+                    let matchedTemplate = 'custom';
+                    for (let [key, template] of Object.entries(customPrompts.templates)) {
+                        if (key !== 'custom' && template === customPrompts.currentPrompt) {
+                            matchedTemplate = key;
+                            break;
+                        }
+                    }
+                    $('#promptTemplate').val(matchedTemplate);
+                } else {
+                    // 首次打开时默认选择jstack_optimized模板
+                    $('#promptTemplate').val('jstack_optimized');
+                    if (customPrompts.templates.jstack_optimized) {
+                        $('#promptContent').val(customPrompts.templates.jstack_optimized);
+                    }
+                }
                 
                 // 初始化提示词长度显示
                 updatePromptLength();
@@ -1187,12 +950,23 @@
         // 加载提示词模板
         function loadPromptTemplate() {
             const selectedTemplate = $('#promptTemplate').val();
+            console.log('🔄 切换到模板:', selectedTemplate);
+            
             if (selectedTemplate && selectedTemplate !== 'custom' && customPrompts.templates[selectedTemplate]) {
+                console.log('✅ 加载模板内容，长度:', customPrompts.templates[selectedTemplate].length);
                 $('#promptContent').val(customPrompts.templates[selectedTemplate]);
                 updatePromptLength();
             } else if (selectedTemplate === 'custom') {
+                console.log('📝 切换到自定义模板');
+                $('#promptContent').val(customPrompts.templates.custom || '');
+                updatePromptLength();
+            } else if (!selectedTemplate) {
+                console.log('⚠️ 未选择模板，清空内容');
                 $('#promptContent').val('');
                 updatePromptLength();
+            } else {
+                console.error('❌ 模板不存在:', selectedTemplate);
+                showAlert(`模板 "${selectedTemplate}" 不存在`, 'warning');
             }
         }
 
