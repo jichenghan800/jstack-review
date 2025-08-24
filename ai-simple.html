@@ -192,13 +192,13 @@
                             <div class="col-3">
                                 <div class="stage-indicator" id="stage2">
                                     <div class="stage-circle bg-secondary">2</div>
-                                    <small class="stage-label">传统分析</small>
+                                    <small class="stage-label">结构化解析</small>
                                 </div>
                             </div>
                             <div class="col-3">
                                 <div class="stage-indicator" id="stage3">
                                     <div class="stage-circle bg-secondary">3</div>
-                                    <small class="stage-label">AI分析</small>
+                                    <small class="stage-label">AI智能分析</small>
                                 </div>
                             </div>
                             <div class="col-3">
@@ -1022,8 +1022,8 @@
             
             // 模拟文件解析延迟
             setTimeout(() => {
-                // 🔥 阶段1：传统解析 - 使用完整内容进行准确统计
-                progressManager.updateStage(1, '使用 jstack-review 原始解析引擎分析线程信息...');
+                // 🔥 阶段1：结构化解析 - 使用完整内容进行准确统计
+                progressManager.updateStage(1, '使用 jstack-review 解析引擎进行结构化数据提取...');
                 
                 try {
                     // 使用传统解析库进行解析 - 使用完整内容
@@ -1067,28 +1067,28 @@
                 console.log('=' .repeat(50));
                 
                 window.traditionalAnalysis = structuredData;
-                console.log('✅ 阶段1完成：传统解析结果:', structuredData);
+                console.log('✅ 阶段1完成：结构化解析结果:', structuredData);
                 console.log('🔍 最终计算的统计信息:', structuredData.summary);
                 
-                // 显示传统分析统计信息
+                // 显示结构化解析统计信息
                 progressManager.showTraditionalStats(structuredData.summary);
                 
-                // 延迟一点，让用户看到传统分析完成
+                // 延迟一点，让用户看到结构化解析完成
                 setTimeout(() => {
                     // 🤖 阶段2：AI智能分析
-                    progressManager.updateStage(2, '基于传统解析结果进行 Claude 4.0 Sonnet 智能分析...');
+                    progressManager.updateStage(2, '基于结构化数据进行 Claude 4.0 Sonnet 智能分析...');
                     
                     performAIAnalysis(content, structuredData, filename); // 传递原始内容，让AI分析阶段决定是否截断
                 }, 1500);
                 
             } catch (error) {
-                console.error('❌ 传统解析失败:', error);
-                progressManager.updateStage(1, `传统解析失败: ${error.message}`);
+                console.error('❌ 结构化解析失败:', error);
+                progressManager.updateStage(1, `结构化解析失败: ${error.message}`);
                 
-                // 即使传统解析失败，也尝试直接进行AI分析
+                // 即使结构化解析失败，也尝试直接进行AI分析
                 setTimeout(() => {
                     window.traditionalAnalysis = null;
-                    progressManager.updateStage(2, '传统解析失败，直接进行 AI 分析...');
+                    progressManager.updateStage(2, '结构化解析失败，直接进行 AI 分析...');
                     performAIAnalysis(content, null, filename); // 传递原始内容
                 }, 2000);
             }
@@ -1157,7 +1157,7 @@
                 const structuredDataSize = fullStructuredText.length;
                 const maxStructuredSize = 15000; // 约15KB限制结构化数据
                 
-                console.log(`📊 传统解析结果大小: ${structuredDataSize} 字符`);
+                console.log(`📊 结构化解析结果大小: ${structuredDataSize} 字符`);
                 
                 if (structuredDataSize > maxStructuredSize) {
                     // 🚨 结构化数据过大，需要智能截断
@@ -1182,12 +1182,12 @@
                     
                     structuredDataText = JSON.stringify(truncatedData, null, 2);
                     resultSizeWarning = `
-⚠️ **重要提示**: 传统解析结果过大 (${Math.round(structuredDataSize/1000)}KB)，已智能截断：
+⚠️ **重要提示**: 结构化解析结果过大 (${Math.round(structuredDataSize/1000)}KB)，已智能截断：
 - 显示前 ${maxThreads}/${structuredData.threads ? structuredData.threads.length : 0} 个线程
 - 显示前 ${maxSynchronizers}/${structuredData.synchronizers ? structuredData.synchronizers.length : 0} 个同步器
 - 完整统计信息已保留`;
                     
-                    console.log('⚡ 智能截断传统解析结果:', {
+                    console.log('⚡ 智能截断结构化解析结果:', {
                         原始大小: structuredDataSize,
                         截断后大小: structuredDataText.length,
                         线程截断: `${maxThreads}/${structuredData.threads?.length || 0}`,
@@ -1197,7 +1197,7 @@
                 } else {
                     // 结果大小合适，直接使用
                     structuredDataText = fullStructuredText;
-                    console.log('✅ 传统解析结果大小适中，完整发送');
+                    console.log('✅ 结构化解析结果大小适中，完整发送');
                 }
             }
 
@@ -1805,9 +1805,9 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             currentStage: 0,
             stages: [
                 { name: '文件解析', progress: 10, duration: 1000, explanation: '正在解析您上传的线程转储文件，提取基本信息...' },
-                { name: '传统分析', progress: 25, duration: 2000, explanation: '使用 jstack-review 引擎进行结构化分析，识别线程状态和同步器...' },
-                { name: 'AI分析', progress: 85, duration: 15000, explanation: '使用 Claude 4.0 Sonnet 进行智能分析，这是最耗时但也是最重要的阶段...' },
-                { name: '结果生成', progress: 100, duration: 1000, explanation: '整理分析结果，生成最终报告...' }
+                { name: '结构化解析', progress: 25, duration: 2000, explanation: '使用 jstack-review 引擎进行结构化数据提取，识别线程状态和同步器...' },
+                { name: 'AI智能分析', progress: 85, duration: 15000, explanation: '使用 Claude 4.0 Sonnet 基于结构化数据进行智能分析，这是最耗时但也是最重要的阶段...' },
+                { name: '结果生成', progress: 100, duration: 1000, explanation: '整理分析结果，生成最终智能报告...' }
             ],
             
             init() {
@@ -1950,8 +1950,8 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                                     <i class="fas fa-chart-bar" style="color: white; font-size: 24px;"></i>
                                 </div>
                                 <div>
-                                    <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 600;">传统分析报告</h2>
-                                    <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">基于 jstack-review 原始解析引擎</p>
+                                    <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 600;">AI智能分析报告 - 结构化数据概览</h2>
+                                    <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">基于 jstack-review 解析引擎提取的结构化统计信息</p>
                                 </div>
                             </div>
                             
@@ -2019,10 +2019,10 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 
                 // 根据分析方法选择标题和图标
                 const isMultiStage = window.analysisMethod === 'multi-stage';
-                const titleText = isMultiStage ? 'AI 多阶段智能深度分析' : 'AI 智能深度分析';
+                const titleText = isMultiStage ? 'AI智能分析报告 - 多阶段深度洞察' : 'AI智能分析报告 - 深度洞察与建议';
                 const subtitleText = isMultiStage ? 
-                    '基于传统解析结果的 Claude Sonnet 4 多阶段智能分析' : 
-                    '基于传统解析结果的 Claude Sonnet 4 深度分析';
+                    '基于结构化数据的 Claude Sonnet 4 多阶段智能分析与优化建议' : 
+                    '基于结构化数据的 Claude Sonnet 4 深度分析与优化建议';
                 const iconClass = isMultiStage ? 'fa-layer-group' : 'fa-robot';
                 
                 htmlContent += `
