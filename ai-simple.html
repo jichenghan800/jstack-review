@@ -1050,33 +1050,31 @@
         }
 
         function loadDemo() {
-            const demoContent = `2025-08-21 15:00:00
-Full thread dump Java HotSpot(TM) 64-Bit Server VM (25.281-b09 mixed mode):
-
-"main" #1 prio=5 os_prio=0 tid=0x00007f8b4c001000 nid=0x1234 runnable [0x00007f8b4c100000]
-   java.lang.Thread.State: RUNNABLE
-   at java.lang.Thread.run(Thread.java:748)
-
-"Thread-1" #2 prio=5 os_prio=0 tid=0x00007f8b4c002000 nid=0x1235 waiting on condition [0x00007f8b4c200000]
-   java.lang.Thread.State: WAITING (parking)
-   at sun.misc.Unsafe.park(Native Method)
-   at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
-
-"Thread-2" #3 prio=5 os_prio=0 tid=0x00007f8b4c003000 nid=0x1236 blocked on monitor entry [0x00007f8b4c300000]
-   java.lang.Thread.State: BLOCKED (on object monitor)
-   at java.lang.Object.wait(Native Method)
-
-"pool-1-thread-1" #11 prio=5 os_prio=0 tid=0x00007f8b4c011000 nid=0x1241 waiting to lock <0x000000076ab62208> (a java.lang.Object)
-   java.lang.Thread.State: BLOCKED (on object monitor)
-   at java.lang.Object.wait(Native Method)
-   at org.springframework.web.context.ContextLoader.initWebApplicationContext(ContextLoader.java:307)`;
-
             $('#uploadSection').slideUp(300);
-            showAlert('正在使用 Claude Sonnet 4 分析演示文件...', 'info');
+            showAlert('正在加载演示文件...', 'info');
             
-            setTimeout(function() {
-                analyzeContent(demoContent, '演示文件');
-            }, 500);
+            // 使用fetch读取demo-threaddump.txt文件，确保与手动上传使用相同的数据
+            fetch('demo-threaddump.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('无法加载演示文件');
+                    }
+                    return response.text();
+                })
+                .then(demoContent => {
+                    console.log('📄 Demo文件读取成功，内容长度:', demoContent.length);
+                    showAlert('演示文件加载成功，开始AI分析...', 'success');
+                    
+                    // 使用与手动上传完全相同的处理流程
+                    setTimeout(() => {
+                        analyzeContent(demoContent, 'demo-threaddump.txt');
+                    }, 500);
+                })
+                .catch(error => {
+                    console.error('❌ Demo文件加载失败:', error);
+                    showAlert('演示文件加载失败: ' + error.message, 'danger');
+                    $('#uploadSection').slideDown(300);
+                });
         }
 
         function analyzeContent(content, filename) {
