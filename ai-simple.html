@@ -840,52 +840,125 @@
         }
 
         .console-output {
-            background: #1e293b;
-            border-radius: 8px;
-            padding: 16px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
             margin-top: 24px;
-            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
             font-size: 13px;
-            line-height: 1.4;
-            max-height: 300px;
+            line-height: 1.5;
+            max-height: 350px;
             overflow-y: auto;
-            border: 1px solid #374151;
+            border: 1px solid #333;
+            box-shadow: 
+                inset 0 1px 3px rgba(0, 0, 0, 0.3),
+                0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .console-output::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 33%, #10b981 66%, #3b82f6 100%);
+            background-size: 200% 100%;
+            animation: console-glow 3s ease-in-out infinite;
+            border-radius: 12px 12px 0 0;
+            opacity: 0.1;
+        }
+        
+        @keyframes console-glow {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 100% 0%; }
+        }
+        
+        .console-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .console-output::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+        
+        .console-output::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+        
+        .console-output::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
         }
 
         .console-line {
-            color: #e5e7eb;
-            margin: 2px 0;
+            color: #e0e0e0;
+            margin: 3px 0;
             display: flex;
             align-items: flex-start;
+            padding: 2px 0;
+            transition: background-color 0.2s ease;
+            border-radius: 3px;
+            font-weight: 400;
+        }
+        
+        .console-line:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .console-timestamp {
-            color: #6b7280;
-            margin-right: 8px;
+            color: #666666;
+            margin-right: 12px;
             font-size: 11px;
             flex-shrink: 0;
+            font-weight: 500;
+            opacity: 0.8;
+            min-width: 60px;
+        }
+        
+        .console-icon {
+            margin-right: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            min-width: 16px;
+            text-align: center;
         }
 
         .console-level-info {
-            color: #3b82f6;
+            color: #60a5fa;
         }
 
         .console-level-success {
-            color: #10b981;
+            color: #34d399;
         }
 
         .console-level-warning {
-            color: #f59e0b;
+            color: #fbbf24;
         }
 
         .console-level-error {
-            color: #ef4444;
+            color: #f87171;
         }
-
-        .console-icon {
-            margin-right: 6px;
-            width: 12px;
-            text-align: center;
+        
+        .console-level-debug {
+            color: #a78bfa;
+        }
+        
+        /* 特殊样式：系统消息 */
+        .console-system {
+            color: #9ca3af;
+            font-style: italic;
+            opacity: 0.9;
+        }
+        
+        /* 特殊样式：高亮重要信息 */
+        .console-highlight {
+            background: rgba(96, 165, 250, 0.1);
+            border-left: 3px solid #60a5fa;
+            padding-left: 8px;
+            margin-left: -8px;
         }
     </style>
 </head>
@@ -976,10 +1049,20 @@
 
                     <!-- Console输出区域 -->
                     <div class="console-output" id="consoleOutput">
-                        <div class="console-line">
+                        <div class="console-line console-system">
                             <span class="console-timestamp">00:00:00</span>
                             <span class="console-icon console-level-info">▶</span>
-                            <span class="console-level-info">系统初始化完成，准备开始分析...</span>
+                            <span class="console-level-info">[jstack-ai-analyzer] v2.0.0 - AI Enhanced Thread Dump Analyzer</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="console-timestamp">00:00:01</span>
+                            <span class="console-icon console-level-debug">◈</span>
+                            <span class="console-level-debug">Initializing analysis engine...</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="console-timestamp">00:00:02</span>
+                            <span class="console-icon console-level-success">✓</span>
+                            <span class="console-level-success">System ready • Waiting for input...</span>
                         </div>
                     </div>
                 </div>
@@ -997,17 +1080,234 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <script>
-        // AI配置管理
-        let aiConfig = JSON.parse(localStorage.getItem('aiConfig')) || {
-            region: 'us-west-2',
-            accessKey: '',
-            secretKey: '',
-            sessionToken: '',
-            inferenceProfileArn: '',
-            profileName: ''
+        // ========== 多用户并发支持系统 v2.0 ==========
+        
+        // 用户会话管理
+        const UserSession = {
+            // 生成唯一用户ID
+            generateUserId() {
+                return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            },
+            
+            // 获取或创建当前用户ID
+            getUserId() {
+                let userId = sessionStorage.getItem('jstack_current_user_id');
+                if (!userId) {
+                    userId = this.generateUserId();
+                    sessionStorage.setItem('jstack_current_user_id', userId);
+                    console.log('🆔 新用户会话创建:', userId);
+                } else {
+                    console.log('🆔 用户会话恢复:', userId);
+                }
+                return userId;
+            },
+            
+            // 获取用户特定的SessionStorage键
+            getStorageKey(baseKey) {
+                return `${baseKey}_${this.getUserId()}`;
+            },
+            
+            // 用户特定的数据存储
+            setUserData(key, data) {
+                const userKey = this.getStorageKey(key);
+                sessionStorage.setItem(userKey, JSON.stringify(data));
+                console.log(`💾 用户数据存储: ${userKey}`);
+            },
+            
+            // 用户特定的数据获取
+            getUserData(key) {
+                const userKey = this.getStorageKey(key);
+                const data = sessionStorage.getItem(userKey);
+                return data ? JSON.parse(data) : null;
+            },
+            
+            // 清理用户数据
+            clearUserData(key) {
+                const userKey = this.getStorageKey(key);
+                sessionStorage.removeItem(userKey);
+                console.log(`🗑️ 用户数据清理: ${userKey}`);
+            }
         };
+        
+        // 初始化用户会话
+        const currentUserId = UserSession.getUserId();
+        console.log('👤 当前用户会话:', currentUserId);
+        
+        // 用户特定的全局变量命名空间
+        window.userSessions = window.userSessions || {};
+        window.userSessions[currentUserId] = {
+            originalContent: null,
+            originalFilename: null,
+            aiAnalysisResult: null,
+            traditionalAnalysis: null,
+            analysisMethod: null
+        };
+        
+        // 获取当前用户的数据命名空间
+        function getUserSession() {
+            return window.userSessions[currentUserId];
+        }
+        
+        // 兼容性：保持向后兼容的全局变量访问
+        Object.defineProperty(window, 'originalContent', {
+            get() { return getUserSession().originalContent; },
+            set(value) { getUserSession().originalContent = value; }
+        });
+        
+        Object.defineProperty(window, 'originalFilename', {
+            get() { return getUserSession().originalFilename; },
+            set(value) { getUserSession().originalFilename = value; }
+        });
+        
+        Object.defineProperty(window, 'aiAnalysisResult', {
+            get() { return getUserSession().aiAnalysisResult; },
+            set(value) { getUserSession().aiAnalysisResult = value; }
+        });
+        
+        Object.defineProperty(window, 'traditionalAnalysis', {
+            get() { return getUserSession().traditionalAnalysis; },
+            set(value) { getUserSession().traditionalAnalysis = value; }
+        });
+        
+        Object.defineProperty(window, 'analysisMethod', {
+            get() { return getUserSession().analysisMethod; },
+            set(value) { getUserSession().analysisMethod = value; }
+        });
+        
+        // ========== 原有AI配置管理（支持隐私模式）==========
+        let aiConfig;
+        
+        // 检测localStorage是否可用（隐私模式检测）
+        function isLocalStorageAvailable() {
+            try {
+                const testKey = '__localStorage_test__';
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // 检测sessionStorage是否可用
+        function isSessionStorageAvailable() {
+            try {
+                const testKey = '__sessionStorage_test__';
+                sessionStorage.setItem(testKey, 'test');
+                sessionStorage.removeItem(testKey);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // 保存分析结果到sessionStorage
+        function saveAnalysisToSession() {
+            if (!isSessionStorageAvailable()) return false;
+            
+            try {
+                const analysisData = {
+                    traditionalAnalysis: window.traditionalAnalysis,
+                    aiAnalysisResult: window.aiAnalysisResult,
+                    currentFilename: window.currentFilename,
+                    analysisMethod: window.analysisMethod,
+                    timestamp: new Date().toISOString()
+                };
+                
+                sessionStorage.setItem('jstack_analysis_results', JSON.stringify(analysisData));
+                console.log('✅ 分析结果已保存到会话存储');
+                return true;
+            } catch (e) {
+                console.warn('⚠️ 保存分析结果失败:', e);
+                return false;
+            }
+        }
+        
+        // 从sessionStorage恢复分析结果
+        function restoreAnalysisFromSession() {
+            if (!isSessionStorageAvailable()) return false;
+            
+            try {
+                const stored = sessionStorage.getItem('jstack_analysis_results');
+                if (!stored) return false;
+                
+                const analysisData = JSON.parse(stored);
+                
+                // 检查数据是否过期（超过24小时）
+                const savedTime = new Date(analysisData.timestamp);
+                const now = new Date();
+                const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
+                
+                if (hoursDiff > 24) {
+                    sessionStorage.removeItem('jstack_analysis_results');
+                    return false;
+                }
+                
+                // 恢复分析数据
+                window.traditionalAnalysis = analysisData.traditionalAnalysis;
+                window.aiAnalysisResult = analysisData.aiAnalysisResult;
+                window.currentFilename = analysisData.currentFilename;
+                window.analysisMethod = analysisData.analysisMethod;
+                
+                console.log('✅ 从会话存储恢复分析结果');
+                return true;
+            } catch (e) {
+                console.warn('⚠️ 恢复分析结果失败:', e);
+                sessionStorage.removeItem('jstack_analysis_results');
+                return false;
+            }
+        }
+        
+        // 安全地加载AI配置
+        function loadAIConfig() {
+            const defaultConfig = {
+                region: 'us-west-2',
+                accessKey: '',
+                secretKey: '',
+                sessionToken: '',
+                inferenceProfileArn: '',
+                profileName: ''
+            };
+            
+            if (isLocalStorageAvailable()) {
+                try {
+                    const stored = localStorage.getItem('aiConfig');
+                    return stored ? JSON.parse(stored) : defaultConfig;
+                } catch (e) {
+                    console.warn('⚠️ 读取AI配置失败，使用默认配置:', e);
+                    return defaultConfig;
+                }
+            } else {
+                console.warn('⚠️ 检测到隐私模式，localStorage不可用，使用内存中的默认配置');
+                return defaultConfig;
+            }
+        }
+        
+        // 安全地保存AI配置
+        function saveAIConfigToStorage(config) {
+            if (isLocalStorageAvailable()) {
+                try {
+                    localStorage.setItem('aiConfig', JSON.stringify(config));
+                    console.log('✅ AI配置已保存');
+                    return true;
+                } catch (e) {
+                    console.warn('⚠️ 保存AI配置失败:', e);
+                    return false;
+                }
+            } else {
+                console.warn('⚠️ 隐私模式下无法保存配置到localStorage');
+                // 在隐私模式下，配置仍保存在内存中，页面刷新后会丢失
+                aiConfig = { ...config };
+                return false;
+            }
+        }
+        
+        // 初始化AI配置
+        aiConfig = loadAIConfig();
 
         // 美化AI分析内容
         function formatAIAnalysisContent(content) {
@@ -1462,6 +1762,11 @@
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
+                                <!-- 服务器共享配置状态显示 -->
+                                <div class="alert alert-info" id="serverConfigStatus">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>正在检查服务器端配置状态...
+                                </div>
+                                
                                 <!-- 标签页导航 -->
                                 <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
@@ -1480,14 +1785,31 @@
                                 <div class="tab-content" id="configTabsContent">
                                     <!-- AWS Bedrock 配置 -->
                                     <div class="tab-pane fade show active" id="bedrock-panel" role="tabpanel">
+                                        <!-- 用户配置说明 -->
+                                        <div class="mb-4">
+                                            <div class="card border-info">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-info">
+                                                        <i class="fas fa-info-circle me-2"></i>配置说明
+                                                    </h6>
+                                                    <p class="card-text mb-1">
+                                                        • <strong>服务器共享配置</strong>：如果服务器已配置共享凭证，无需填写下方表单即可使用AI功能
+                                                    </p>
+                                                    <p class="card-text mb-0">
+                                                        • <strong>个人自定义配置</strong>：填写下方表单可使用您自己的AWS凭证，将覆盖服务器配置
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
                                         <div class="mb-3">
-                                            <label class="form-label fw-bold">AWS Access Key ID</label>
+                                            <label class="form-label fw-bold">AWS Access Key ID <span class="text-muted">(可选 - 服务器有共享配置时)</span></label>
                                             <input type="password" class="form-control" id="awsAccessKey" 
                                                    placeholder="AKIA..." value="${aiConfig.accessKey || ''}">
                                         </div>
                                         
                                         <div class="mb-3">
-                                            <label class="form-label fw-bold">AWS Secret Access Key</label>
+                                            <label class="form-label fw-bold">AWS Secret Access Key <span class="text-muted">(可选 - 服务器有共享配置时)</span></label>
                                             <input type="password" class="form-control" id="awsSecretKey" 
                                                    placeholder="输入秘密访问密钥" value="${aiConfig.secretKey || ''}">
                                         </div>
@@ -1605,6 +1927,9 @@
             
             // 模态框显示后，设置事件绑定和初始值
             setTimeout(() => {
+                // 检查服务器端共享配置状态
+                checkServerConfigStatus();
+                
                 // 设置AI配置的保存值
                 if (aiConfig.profileName) {
                     $('#profileName').val(aiConfig.profileName);
@@ -1652,11 +1977,171 @@
             }, 100);
         }
         
+        // 检查服务器端共享配置状态
+        function checkServerConfigStatus() {
+            console.log('🔍 检查服务器端共享配置状态');
+            
+            $.ajax({
+                url: getApiBaseUrl() + '/api/default-config',
+                type: 'GET',
+                timeout: 5000, // 5秒超时
+                success: function(response) {
+                    console.log('✅ 服务器端配置检查成功:', response);
+                    updateServerConfigDisplay(response);
+                },
+                error: function(xhr, status, error) {
+                    console.warn('⚠️ 服务器端配置检查失败:', error);
+                    updateServerConfigDisplay({
+                        success: false,
+                        hasServerConfig: false,
+                        message: '无法连接到服务器检查共享配置状态'
+                    });
+                }
+            });
+        }
+        
+        // 更新服务器配置状态显示
+        function updateServerConfigDisplay(response) {
+            const statusDiv = $('#serverConfigStatus');
+            
+            if (response.success && response.hasServerConfig) {
+                // 服务器有共享配置
+                const config = response.serverConfig;
+                statusDiv.html(`
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle me-2"></i>服务器端共享配置可用</h6>
+                        <p class="mb-2">${response.message}</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small><strong>区域:</strong> ${config.region}</small><br>
+                                <small><strong>访问密钥:</strong> ${config.accessKey}</small><br>
+                            </div>
+                            <div class="col-md-6">
+                                <small><strong>模型:</strong> ${config.profileName}</small><br>
+                                <small><strong>密钥状态:</strong> ${config.secretKey}</small>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-success">
+                                <i class="fas fa-info-circle me-1"></i>
+                                您可以直接使用AI分析功能，无需填写下方个人配置
+                            </small>
+                        </div>
+                    </div>
+                `);
+                
+                // 更新表单占位符提示
+                $('#awsAccessKey').attr('placeholder', '留空使用服务器共享配置，或填写您的个人密钥');
+                $('#awsSecretKey').attr('placeholder', '留空使用服务器共享配置，或填写您的个人密钥');
+                
+            } else {
+                // 服务器没有共享配置
+                statusDiv.html(`
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>服务器端共享配置不可用</h6>
+                        <p class="mb-1">${response.message || '服务器未配置默认AWS凭证'}</p>
+                        <small class="text-warning">
+                            <i class="fas fa-info-circle me-1"></i>
+                            请在下方填写您的个人AWS凭证以使用AI分析功能
+                        </small>
+                    </div>
+                `);
+                
+                // 恢复表单占位符
+                $('#awsAccessKey').attr('placeholder', 'AKIA...');
+                $('#awsSecretKey').attr('placeholder', '输入秘密访问密钥');
+            }
+        }
+        
 
         
-        // 自动检测API服务器地址
+        // 智能检测API服务器地址（支持云服务器环境）
         function getApiBaseUrl() {
-            return 'http://localhost:8082';
+            // 获取当前页面的hostname
+            const currentHostname = window.location.hostname;
+            
+            // 如果是localhost，先尝试检测是否是跨机器访问
+            if (currentHostname === 'localhost' || currentHostname === '127.0.0.1') {
+                return 'http://localhost:8082';
+            } else {
+                // 云服务器环境：使用代理服务器端口8081来避免防火墙和NAT问题
+                return `http://${currentHostname}:8081`;
+            }
+        }
+        
+        // 显示分段分析结果（避免Mac Chrome中的未定义错误）
+        function displaySegmentResult(segmentNumber, segmentName, content) {
+            try {
+                console.log(`📊 分段${segmentNumber}分析完成: ${segmentName}`);
+                // 简单的日志记录版本，避免UI复杂性
+            } catch (error) {
+                console.error(`❌ 显示分段${segmentNumber}结果失败:`, error);
+            }
+        }
+        
+        // 尝试使用服务器配置进行分段分析
+        function tryServerConfigForSegment(content, structuredData, filename, isTruncated, segmentIndex, segment, segmentPrompt) {
+            console.log('🚀 分段分析使用服务器端共享配置');
+            progressManager.addConsoleLog('分段分析使用服务器端共享配置...', 'info', '🚀');
+            
+            $.ajax({
+                url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
+                type: 'POST',
+                contentType: 'application/json',
+                timeout: 300000, // 增加超时时间到5分钟，适应大文件分析
+                data: JSON.stringify({
+                    // 不传递accessKey和secretKey，让服务器使用默认配置
+                    messages: [{
+                        role: 'user',
+                        content: segmentPrompt
+                    }],
+                    config: {
+                        maxTokens: 8000,
+                        temperature: 0.1,
+                        topP: 0.9
+                    }
+                }),
+                success: function(response) {
+                    console.log(`✅ 分段${segmentIndex + 1}分析成功（服务器配置）:`, response);
+                    progressManager.addConsoleLog(`分段${segmentIndex + 1}分析完成`, 'success', '✅');
+                    
+                    if (response.success && response.response) {
+                        let analysisContent = response.response;
+                        if (typeof analysisContent === 'object' && analysisContent.content) {
+                            analysisContent = analysisContent.content;
+                        }
+                        
+                        // 存储分段分析结果（保持与原始函数一致的数据结构）
+                        if (!window.segmentResults) {
+                            window.segmentResults = [];
+                        }
+                        window.segmentResults.push({
+                            segmentIndex: segmentIndex,
+                            segmentName: segment.name,
+                            focus: segment.focus,
+                            priority: segment.priority,
+                            result: analysisContent
+                        });
+                        
+                        // 显示分段结果
+                        displaySegmentResult(segmentIndex + 1, segment.name, analysisContent);
+                        
+                        // 继续下一个分段
+                        setTimeout(() => {
+                            executeSegmentAnalysis(content, structuredData, filename, isTruncated, segmentIndex + 1);
+                        }, 1000);
+                    } else {
+                        throw new Error(response.error || '分段分析响应格式错误');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    const errorMsg = `❌ 分段${segmentIndex + 1}服务器端分析失败: ${error}`;
+                    console.error(errorMsg);
+                    progressManager.addConsoleLog(errorMsg, 'error', '❌');
+                    
+                    showAlert('分段分析失败，请检查网络连接或联系管理员', 'danger');
+                }
+            });
         }
 
         function testWithModel() {
@@ -1734,18 +2219,22 @@
             aiConfig.profileName = profileName;
             aiConfig.inferenceProfileArn = profileArn;
             
-            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
+            const saved = saveAIConfigToStorage(aiConfig);
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('aiConfigModal'));
             if (modal) modal.hide();
             
-            showAlert('✅ 配置已保存！', 'success');
+            if (saved) {
+                showAlert('✅ 配置已保存！', 'success');
+            } else {
+                showAlert('⚠️ 配置已设置但无法持久保存（隐私模式），页面刷新后需重新配置', 'warning');
+            }
         }
 
         function saveAllConfigs() {
-            console.log('💾 保存所有配置');
+            console.log('💾 保存所有配置 - 开始执行');
             
-            // 保存AI配置
+            // 获取用户输入的配置
             const accessKey = $('#awsAccessKey').val().trim();
             const secretKey = $('#awsSecretKey').val().trim();
             const sessionToken = $('#awsSessionToken').val().trim();
@@ -1753,25 +2242,23 @@
             const profileName = $('#profileName').val();
             const profileArn = $('#profileArn').val().trim();
             
-            if (!accessKey || !secretKey || !profileName || !profileArn) {
-                showAlert('请填写完整的AWS配置信息', 'warning');
-                return;
-            }
-            
-            aiConfig.accessKey = accessKey;
-            aiConfig.secretKey = secretKey;
-            aiConfig.sessionToken = sessionToken;
-            aiConfig.region = region;
-            aiConfig.profileName = profileName;
-            aiConfig.inferenceProfileArn = profileArn;
-            
-            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
+            console.log('📋 获取到的配置信息:', {
+                hasAccessKey: !!accessKey,
+                hasSecretKey: !!secretKey,
+                hasSessionToken: !!sessionToken,
+                region,
+                profileName,
+                hasProfileArn: !!profileArn
+            });
             
             // 保存自定义提示词配置
             const enabled = $('#enableCustomPrompt').prop('checked');
             const promptContent = $('#promptContent').val().trim();
             
+            console.log('📝 提示词配置:', { enabled, hasContent: !!promptContent });
+            
             if (enabled && !promptContent) {
+                console.log('❌ 提示词配置验证失败');
                 showAlert('启用自定义提示词时必须提供提示词内容', 'warning');
                 return;
             }
@@ -1786,15 +2273,126 @@
             }
             
             localStorage.setItem('customPrompts', JSON.stringify(customPrompts));
+            console.log('✅ 自定义提示词配置已保存');
             
-            const modal = bootstrap.Modal.getInstance(document.getElementById('aiConfigModal'));
-            if (modal) modal.hide();
+            // 检查是否需要保存AI配置（如果用户填写了凭证）
+            let shouldSaveAIConfig = false;
+            let configSaved = true; // 默认认为配置已保存（服务器共享配置模式）
             
-            const aiStatus = accessKey ? '已配置' : '未配置';
+            if (accessKey && secretKey && profileName && profileArn) {
+                // 用户填写了完整配置，保存个人配置
+                console.log('💾 用户提供了个人配置，将保存');
+                shouldSaveAIConfig = true;
+                
+                const oldConfig = { ...aiConfig };
+                aiConfig.accessKey = accessKey;
+                aiConfig.secretKey = secretKey;
+                aiConfig.sessionToken = sessionToken;
+                aiConfig.region = region;
+                aiConfig.profileName = profileName;
+                aiConfig.inferenceProfileArn = profileArn;
+                
+                console.log('🔄 配置更新前后对比:', {
+                    before: { ...oldConfig, secretKey: oldConfig.secretKey ? '***' : null, accessKey: oldConfig.accessKey ? '***' : null },
+                    after: { ...aiConfig, secretKey: aiConfig.secretKey ? '***' : null, accessKey: aiConfig.accessKey ? '***' : null }
+                });
+                
+                configSaved = saveAIConfigToStorage(aiConfig);
+                console.log('✅ 个人AI配置保存结果:', configSaved);
+                
+            } else if (accessKey || secretKey || profileArn) {
+                // 用户部分填写了配置，提示需要完整填写
+                console.log('⚠️ 用户部分填写配置，要求完整填写');
+                showAlert('如需使用个人配置，请填写完整的AWS凭证信息。留空则使用服务器共享配置。', 'warning');
+                return;
+            } else {
+                // 用户没有填写任何配置，使用服务器共享配置模式
+                console.log('💾 用户未填写个人配置，使用服务器共享配置模式');
+                
+                // 清空本地存储的个人配置（如果有的话）
+                if (aiConfig.accessKey || aiConfig.secretKey) {
+                    const oldConfig = { ...aiConfig };
+                    aiConfig.accessKey = '';
+                    aiConfig.secretKey = '';
+                    aiConfig.sessionToken = '';
+                    // 保持region等非敏感配置
+                    aiConfig.region = region;
+                    aiConfig.profileName = profileName;
+                    aiConfig.inferenceProfileArn = profileArn;
+                    configSaved = saveAIConfigToStorage(aiConfig);
+                    console.log('🗑️ 已清空本地个人配置，保存结果:', configSaved);
+                    console.log('🔄 配置清空前后对比:', {
+                        before: { ...oldConfig, secretKey: oldConfig.secretKey ? '***' : null, accessKey: oldConfig.accessKey ? '***' : null },
+                        after: { ...aiConfig, secretKey: aiConfig.secretKey ? '***' : null, accessKey: aiConfig.accessKey ? '***' : null }
+                    });
+                }
+            }
+            
+            // 确保模态框关闭 - 多重保障机制
+            console.log('🔄 开始关闭模态框...');
+            setTimeout(() => {
+                console.log('🔄 执行模态框关闭逻辑');
+                
+                // 方法1: Bootstrap 5 实例方式
+                const modal = bootstrap.Modal.getInstance(document.getElementById('aiConfigModal'));
+                if (modal) {
+                    modal.hide();
+                    console.log('✅ Bootstrap实例模态框已关闭');
+                } else {
+                    console.log('⚠️ 未找到Bootstrap实例，尝试其他方法');
+                }
+                
+                // 方法2: jQuery Bootstrap方式（兼容性）
+                $('#aiConfigModal').modal('hide');
+                console.log('✅ jQuery模态框关闭已执行');
+                
+                // 方法3: 直接操作DOM（强制关闭）
+                setTimeout(() => {
+                    const modalElement = document.getElementById('aiConfigModal');
+                    if (modalElement) {
+                        console.log('🔄 执行DOM强制关闭');
+                        modalElement.style.display = 'none';
+                        modalElement.classList.remove('show');
+                        modalElement.setAttribute('aria-hidden', 'true');
+                        
+                        // 移除backdrop
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        backdrops.forEach(backdrop => {
+                            backdrop.remove();
+                            console.log('✅ 移除了一个backdrop');
+                        });
+                        
+                        // 恢复body滚动
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        
+                        console.log('✅ DOM强制关闭模态框完成');
+                    } else {
+                        console.log('❌ 未找到模态框元素');
+                    }
+                }, 200);
+                
+            }, 100);
+            
+            // 显示保存结果
+            const configMode = shouldSaveAIConfig ? '个人自定义配置' : '服务器共享配置';
             const promptStatus = enabled ? '启用' : '禁用';
-            showAlert(`✅ 所有配置已保存！AI配置: ${aiStatus}, 自定义提示词: ${promptStatus}`, 'success');
             
-            console.log('💾 所有配置已保存:', { aiConfig, customPrompts });
+            setTimeout(() => {
+                console.log('📢 显示保存结果消息');
+                if (configSaved || !shouldSaveAIConfig) {
+                    showAlert(`✅ 配置已保存！AI配置模式: ${configMode}, 自定义提示词: ${promptStatus}`, 'success');
+                } else {
+                    showAlert(`⚠️ 配置已设置但无法持久保存（隐私模式）。AI配置模式: ${configMode}, 自定义提示词: ${promptStatus}`, 'warning');
+                }
+            }, 300); // 延迟到模态框关闭之后显示
+            
+            console.log('💾 所有配置保存流程完成:', { 
+                configMode, 
+                hasPersonalConfig: shouldSaveAIConfig,
+                customPrompts: customPrompts.enabled,
+                configSaved
+            });
         }
 
         // 加载提示词模板
@@ -1829,6 +2427,9 @@
         function loadDemo() {
             $('#uploadSection').slideUp(300);
             showAlert('正在加载演示文件...', 'info');
+            
+            // 存储Demo文件名供保存报告使用
+            window.currentFilename = 'demo-threaddump.txt';
             
             // 使用fetch读取demo-threaddump.txt文件，确保与手动上传使用相同的数据
             fetch('demo-threaddump.txt')
@@ -1870,8 +2471,8 @@
             
             // 初始化增强进度管理系统
             progressManager.init();
-            progressManager.addConsoleLog(`开始分析文件: ${filename}`, 'info', '📁');
-            progressManager.addConsoleLog(`文件大小: ${Math.round(content.length/1000)}KB`, 'info', '📏');
+            progressManager.addConsoleLog(`📁 Input: ${filename} (${Math.round(content.length/1000)}KB)`, 'info', '📁');
+            progressManager.addConsoleLog(`🔧 Parsing strategy: ${content.length > 30000 ? 'Multi-stage' : 'Single-stage'} analysis`, 'info', '🔧');
             progressManager.updateStage(0, `正在解析文件 "${filename}"...`);
             
             // 重置分析结果变量
@@ -2475,11 +3076,23 @@
             
             console.log(`📏 分段${segmentIndex + 1}提示词大小: ${Math.round(segmentPrompt.length/1000)}KB`);
             
+            // 验证AI配置（支持服务器端共享配置）
+            if (!aiConfig.accessKey || !aiConfig.secretKey) {
+                const errorMsg = `🔍 分段${segmentIndex + 1}未检测到个人AI配置，尝试使用服务器共享配置`;
+                console.log(errorMsg);
+                progressManager.addConsoleLog(errorMsg, 'info', '🔍');
+                
+                // 使用与sendToAI相同的逻辑：尝试服务器端配置
+                tryServerConfigForSegment(content, structuredData, filename, isTruncated, segmentIndex, segment, segmentPrompt);
+                return;
+            }
+            
             // 发送分段分析请求
             $.ajax({
                 url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
                 type: 'POST',
                 contentType: 'application/json',
+                timeout: 300000, // 增加超时时间到5分钟，适应大文件分析
                 data: JSON.stringify({
                     accessKey: aiConfig.accessKey,
                     secretKey: aiConfig.secretKey,
@@ -3015,68 +3628,85 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
         }
         
         function sendToAI(content, wasContentTruncated, analysisType = 'single') {
+            // 验证AI配置是否完整，支持服务器端共享配置回退
+            if (!aiConfig.accessKey || !aiConfig.secretKey) {
+                console.log('🔍 用户未配置AI凭证，尝试使用服务器端共享配置');
+                progressManager.addConsoleLog('用户未配置AI凭证，尝试使用服务器端共享配置...', 'info', '🔍');
+                
+                // 尝试使用服务器端配置
+                tryServerConfigAndAnalyze(content, wasContentTruncated, analysisType);
+                return;
+            }
+            
+            // 用户有配置，直接使用用户配置
+            console.log('✅ 使用用户自定义AI配置');
+            performAIAnalysisWithConfig(content, wasContentTruncated, analysisType, aiConfig);
+        }
+        
+        // 尝试使用服务器端配置进行分析
+        function tryServerConfigAndAnalyze(content, wasContentTruncated, analysisType) {
+            // 服务器端有配置，直接发送请求（不传凭证，让服务器使用默认配置）
+            console.log('🚀 使用服务器端共享配置进行AI分析');
+            progressManager.addConsoleLog('使用服务器端共享配置进行AI分析...', 'info', '🚀');
+            
             $.ajax({
                 url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
                 type: 'POST',
                 contentType: 'application/json',
+                timeout: 300000, // 增加超时时间到5分钟，适应大文件分析
                 data: JSON.stringify({
-                    accessKey: aiConfig.accessKey,
-                    secretKey: aiConfig.secretKey,
-                    region: aiConfig.region,
-                    inferenceProfileArn: aiConfig.inferenceProfileArn,
+                    // 不传递accessKey和secretKey，让服务器使用默认配置
                     messages: [{
                         role: 'user',
                         content: content
                     }],
                     config: {
-                        maxTokens: analysisType === 'synthesis' ? 10000 : 8000,  // 综合分析10K，单阶段8K
+                        maxTokens: analysisType === 'synthesis' ? 10000 : 8000,
                         temperature: 0.1
                     }
                 }),
                 success: function(response) {
-                    console.log(`✅ ${analysisType}分析API调用成功:`, response);
-                    progressManager.addConsoleLog(`${analysisType === 'synthesis' ? '综合' : 'AI'}分析API调用成功`, 'success', '🎯');
+                    handleAIAnalysisResponse(response, analysisType, wasContentTruncated, '服务器共享配置');
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ 服务器端配置AI分析失败:', error);
+                    progressManager.addConsoleLog('服务器端配置不可用，请手动配置AI凭证', 'error', '❌');
                     
-                    // 完成分析，转到结果生成阶段
-                    progressManager.updateStage(3, '整理分析结果，生成最终报告...');
-                    
-                    if (response.success) {
-                        console.log(`🤖 ${analysisType}分析结果:`, response.response);
-                        
-                        // 处理不同类型的响应数据
-                        if (typeof response.response === 'string') {
-                            window.aiAnalysisResult = response.response;
-                        } else if (response.response && typeof response.response === 'object') {
-                            window.aiAnalysisResult = response.response.content || JSON.stringify(response.response, null, 2);
-                        } else {
-                            window.aiAnalysisResult = 'AI分析结果为空';
-                        }
-                        
-                        // 添加分析类型标识
-                        if (analysisType === 'synthesis') {
-                            const multiStageInfo = `\n\n---\n**📊 多阶段分析说明**\n本报告基于智能分段分析生成：\n- 分段总数: ${window.segmentPlan?.totalSegments || '未知'}个\n- 成功分段: ${window.segmentResults?.filter(r => {
-                                const resultText = typeof r.result === 'object' ? (r.result.content || JSON.stringify(r.result)) : r.result;
-                                return !resultText.includes('失败');
-                            }).length || 0}个\n- AI模型: Claude 4.0 Sonnet 多阶段智能分析`;
-                            window.aiAnalysisResult += multiStageInfo;
-                            window.analysisMethod = 'multi-stage';
-                        } else {
-                            window.analysisMethod = 'single-stage';
-                        }
-                        
-                        // 如果内容被截断，在结果中添加说明
-                        if (wasContentTruncated) {
-                            window.aiAnalysisResult = `⚠️ 由于数据量较大，部分内容已被截断以适应AI模型限制。\n\n${window.aiAnalysisResult}`;
-                        }
-                        
-                        console.log(`💾 ${analysisType}分析完成，显示结果`);
-                        setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
-                        
-                    } else {
-                        console.error(`❌ ${analysisType}分析失败:`, response.error);
-                        window.aiAnalysisResult = `${analysisType}分析失败: ` + (response.error || '未知错误');
-                        setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
+                    // 如果服务器端配置也失败，提示用户配置
+                    if (!isLocalStorageAvailable()) {
+                        progressManager.addConsoleLog('⚠️ 检测到浏览器隐私模式，配置无法保存。请重新配置或切换到正常浏览模式。', 'warning', '⚠️');
                     }
+                    
+                    showAlert('服务器端AI配置不可用，请在右上角配置您的AWS凭证', 'warning');
+                    window.aiAnalysisResult = `服务器端AI分析失败: ${error}`;
+                    setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
+                }
+            });
+        }
+        
+        // 使用指定配置进行AI分析
+        function performAIAnalysisWithConfig(content, wasContentTruncated, analysisType, config) {
+            $.ajax({
+                url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
+                type: 'POST',
+                contentType: 'application/json',
+                timeout: 300000, // 增加超时时间到5分钟，适应大文件分析
+                data: JSON.stringify({
+                    accessKey: config.accessKey,
+                    secretKey: config.secretKey,
+                    region: config.region,
+                    inferenceProfileArn: config.inferenceProfileArn,
+                    messages: [{
+                        role: 'user',
+                        content: content
+                    }],
+                    config: {
+                        maxTokens: analysisType === 'synthesis' ? 10000 : 8000,
+                        temperature: 0.1
+                    }
+                }),
+                success: function(response) {
+                    handleAIAnalysisResponse(response, analysisType, wasContentTruncated, '用户自定义配置');
                 },
                 error: function(xhr, status, error) {
                     console.error(`❌ ${analysisType}分析API调用失败:`, {xhr, status, error});
@@ -3086,12 +3716,63 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 }
             });
         }
+        
+        // 统一的AI分析响应处理函数
+        function handleAIAnalysisResponse(response, analysisType, wasContentTruncated, configSource) {
+            console.log(`✅ ${analysisType}分析API调用成功 (${configSource}):`, response);
+            progressManager.addConsoleLog(`${analysisType === 'synthesis' ? '综合' : 'AI'}分析API调用成功 (${configSource})`, 'success', '🎯');
+            
+            // 完成分析，转到结果生成阶段
+            progressManager.updateStage(3, '整理分析结果，生成最终报告...');
+            
+            if (response.success) {
+                console.log(`🤖 ${analysisType}分析结果:`, response.response);
+                
+                // 处理不同类型的响应数据
+                if (typeof response.response === 'string') {
+                    window.aiAnalysisResult = response.response;
+                } else if (response.response && typeof response.response === 'object') {
+                    window.aiAnalysisResult = response.response.content || JSON.stringify(response.response, null, 2);
+                } else {
+                    window.aiAnalysisResult = 'AI分析结果为空';
+                }
+                
+                // 添加分析类型标识
+                if (analysisType === 'synthesis') {
+                    const multiStageInfo = `\n\n---\n**📊 多阶段分析说明**\n本报告基于智能分段分析生成：\n- 分段总数: ${window.segmentPlan?.totalSegments || '未知'}个\n- 成功分段: ${window.segmentResults?.filter(r => {
+                        const resultText = typeof r.result === 'object' ? (r.result.content || JSON.stringify(r.result)) : r.result;
+                        return !resultText.includes('失败');
+                    }).length || 0}个\n- AI模型: Claude 4.0 Sonnet 多阶段智能分析\n- 配置来源: ${configSource}`;
+                    window.aiAnalysisResult += multiStageInfo;
+                    window.analysisMethod = 'multi-stage';
+                } else {
+                    // 添加配置来源标识
+                    const configInfo = `\n\n---\n**🔧 AI分析配置**\n- AI模型: Claude 4.0 Sonnet\n- 配置来源: ${configSource}`;
+                    window.aiAnalysisResult += configInfo;
+                    window.analysisMethod = 'single-stage';
+                }
+                
+                // 如果内容被截断，在结果中添加说明
+                if (wasContentTruncated) {
+                    window.aiAnalysisResult = `⚠️ 由于数据量较大，部分内容已被截断以适应AI模型限制。\n\n${window.aiAnalysisResult}`;
+                }
+                
+                console.log(`💾 ${analysisType}分析完成，显示结果`);
+                setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
+                
+            } else {
+                console.error(`❌ ${analysisType}分析失败:`, response.error);
+                window.aiAnalysisResult = `${analysisType}分析失败: ` + (response.error || '未知错误');
+                setTimeout(() => showResults(window.originalContent, window.originalFilename), 500);
+            }
+        }
 
         // 现代化进度管理系统
         const progressManager = {
             startTime: null,
             currentStage: 0,
             consoleLines: [],
+            lastLoggedMilestone: -1, // 添加里程碑追踪，防止重复消息
             stages: [
                 { name: '文件解析', progress: 10, duration: 1000 },
                 { name: '结构化解析', progress: 25, duration: 2000 },
@@ -3103,8 +3784,33 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 this.startTime = Date.now();
                 this.currentStage = 0;
                 this.consoleLines = [];
+                this.lastLoggedMilestone = -1; // 重置里程碑追踪
+                
+                // 清空console并添加专业的启动信息
+                $('#consoleOutput').html(`
+                    <div class="console-line console-system">
+                        <span class="console-timestamp">00:00:00</span>
+                        <span class="console-icon console-level-info">▶</span>
+                        <span class="console-level-info">[jstack-ai-analyzer] v2.0.0 - AI Enhanced Thread Dump Analyzer</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-timestamp">00:00:01</span>
+                        <span class="console-icon console-level-debug">◈</span>
+                        <span class="console-level-debug">Loading Claude 4.0 Sonnet analysis engine...</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="console-timestamp">00:00:02</span>
+                        <span class="console-icon console-level-success">✓</span>
+                        <span class="console-level-success">Multi-stage analysis framework initialized</span>
+                    </div>
+                    <div class="console-line console-highlight">
+                        <span class="console-timestamp">00:00:03</span>
+                        <span class="console-icon console-level-info">▶</span>
+                        <span class="console-level-info">Ready to process thread dumps • Waiting for input...</span>
+                    </div>
+                `);
+                
                 this.startTimer();
-                this.addConsoleLog('系统初始化完成，准备开始分析...', 'info');
             },
             
             startTimer() {
@@ -3124,14 +3830,19 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 const icons = {
                     info: '▶',
                     success: '✓',
-                    warning: '!',
-                    error: '✗'
+                    warning: '⚠',
+                    error: '✗',
+                    debug: '◈'
                 };
-
+                
                 const logIcon = icon || icons[level] || '▶';
                 
+                // 为某些特殊消息添加高亮样式
+                const isHighlight = message.includes('AI分析') || message.includes('完成') || message.includes('开始');
+                const highlightClass = isHighlight ? 'console-highlight' : '';
+                
                 const logLine = `
-                    <div class="console-line">
+                    <div class="console-line ${highlightClass}">
                         <span class="console-timestamp">${timestamp}</span>
                         <span class="console-icon console-level-${level}">${logIcon}</span>
                         <span class="console-level-${level}">${message}</span>
@@ -3173,11 +3884,13 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             showTraditionalStats(summary) {
                 if (!summary) return;
                 
-                this.addConsoleLog(`解析完成: 发现 ${summary.totalThreads} 个线程`, 'success', '📊');
-                this.addConsoleLog(`运行中: ${summary.runningThreads}, 等待中: ${summary.waitingThreads}, 阻塞: ${summary.blockedThreads}`, 'info', '📈');
+                this.addConsoleLog(`✓ jstack-review parser: ${summary.totalThreads} threads discovered`, 'success', '📊');
+                this.addConsoleLog(`├── RUNNABLE: ${summary.runningThreads} • WAITING: ${summary.waitingThreads} • BLOCKED: ${summary.blockedThreads}`, 'info', '├──');
                 
                 if (summary.hasDeadlocks) {
-                    this.addConsoleLog('⚠️ 检测到死锁情况，将重点分析', 'warning', '🚨');
+                    this.addConsoleLog('⚠️ Deadlock detected • Escalating analysis priority', 'warning', '🚨');
+                } else {
+                    this.addConsoleLog('✓ No deadlocks detected', 'success', '✓');
                 }
                 
                 console.log('📊 传统分析统计已记录到console:', summary);
@@ -3189,7 +3902,7 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 const progressDiff = endPercent - startPercent;
                 
                 // 添加开始分析的console日志
-                this.addConsoleLog('开始AI深度分析，这可能需要一些时间...', 'info', '🤖');
+                this.addConsoleLog('🤖 Initializing Claude 4.0 Sonnet deep analysis...', 'info', '🤖');
                 
                 const animate = () => {
                     const elapsed = Date.now() - startTime;
@@ -3199,18 +3912,25 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                     $('#modernProgressFill').css('width', currentPercent + '%');
                     $('#progressPercentage').text(Math.round(currentPercent) + '%');
                     
-                    // 定期添加进度日志
-                    if (Math.floor(progress * 10) > Math.floor((progress - 0.01) * 10)) {
-                        const progressPercent = Math.round(progress * 100);
-                        if (progressPercent % 20 === 0 && progressPercent > 0) {
-                            this.addConsoleLog(`AI分析进度: ${progressPercent}%`, 'info', '⚡');
+                    // 定期添加进度日志（防止重复）
+                    const progressPercent = Math.round(currentPercent);
+                    if (progressPercent !== this.lastLoggedMilestone) {
+                        if (progressPercent === 25) {
+                            this.addConsoleLog('◈ Analyzing thread states & synchronizers...', 'debug', '◈');
+                            this.lastLoggedMilestone = 25;
+                        } else if (progressPercent === 50) {
+                            this.addConsoleLog('◈ Detecting bottlenecks & performance issues...', 'debug', '◈');
+                            this.lastLoggedMilestone = 50;
+                        } else if (progressPercent === 75) {
+                            this.addConsoleLog('◈ Generating optimization recommendations...', 'debug', '◈');
+                            this.lastLoggedMilestone = 75;
                         }
                     }
                     
                     if (progress < 1) {
                         requestAnimationFrame(animate);
                     } else if (callback) {
-                        this.addConsoleLog('AI分析完成，正在生成报告...', 'success', '🎉');
+                        this.addConsoleLog('✓ AI analysis completed • Generating report...', 'success', '🎉');
                         callback();
                     }
                 };
@@ -3235,9 +3955,6 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             $('h1').html(`
                 <i class="fas fa-chart-line text-primary me-3"></i>
                 AI智能分析报告
-                <small class="text-muted ms-3" style="font-size: 0.6em; font-weight: 400;">
-                    文件: ${filename}
-                </small>
             `).addClass('results-main-title');
             
             console.log('🔍 showResults 调用，检查两阶段分析结果');
@@ -3246,12 +3963,15 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             
             let htmlContent = '';
             
-            // 🎯 结构化数据概览展示
+            // 🎯 生成线程统计概览（统一样式）
+            let summary = null;
+            let truncationInfo = '';
+            
             if (window.traditionalAnalysis && window.traditionalAnalysis.summary) {
-                const summary = window.traditionalAnalysis.summary;
+                // 使用结构化解析的结果
+                summary = window.traditionalAnalysis.summary;
                 
                 // 检查是否有截断信息
-                let truncationInfo = '';
                 if (window.traditionalAnalysis.truncated) {
                     const trunc = window.traditionalAnalysis.truncated;
                     truncationInfo = `
@@ -3264,19 +3984,32 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                         </div>
                     `;
                 }
+            } else if (content) {
+                // 从原始内容快速提取基本统计信息（作为后备方案）
+                console.log('⚡ 使用简单统计模式生成概览');
+                const threadMatches = content.match(/"[^"]*"\s*#\d+/g) || [];
+                const runnableMatches = content.match(/java\.lang\.Thread\.State:\s*RUNNABLE/g) || [];
+                const waitingMatches = content.match(/java\.lang\.Thread\.State:\s*WAITING/g) || [];
+                const blockedMatches = content.match(/java\.lang\.Thread\.State:\s*BLOCKED/g) || [];
+                const timedWaitingMatches = content.match(/java\.lang\.Thread\.State:\s*TIMED_WAITING/g) || [];
+                const deadlockMatches = content.match(/Found dead lock/i) || content.match(/循环依赖|deadlock/i) || [];
                 
+                summary = {
+                    totalThreads: threadMatches.length,
+                    runningThreads: runnableMatches.length,
+                    waitingThreads: waitingMatches.length + timedWaitingMatches.length,
+                    blockedThreads: blockedMatches.length,
+                    synchronizerCount: (content.match(/- locked <0x[0-9a-f]+>/g) || []).length,
+                    hasDeadlocks: deadlockMatches.length > 0
+                };
+                
+                console.log('📊 快速统计结果:', summary);
+            }
+            
+            // 如果有统计信息，显示统一的概览样式
+            if (summary && summary.totalThreads > 0) {
                 htmlContent += `
                     <div class="structured-data-overview">
-                        <div class="overview-header">
-                            <div class="overview-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <div class="overview-title">
-                                <h2>结构化数据概览</h2>
-                                <p>基于 jstack-review 解析引擎提取的结构化统计信息</p>
-                            </div>
-                        </div>
-                        
                         <div class="overview-content">
                             <div class="stats-grid">
                                 <div class="stat-card primary">
@@ -3360,26 +4093,9 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 
                 console.log('✅ 显示AI智能分析结果');
                 
-                // 根据分析方法选择标题和图标
-                const isMultiStage = window.analysisMethod === 'multi-stage';
-                const titleText = isMultiStage ? '深度洞察与建议 - 多阶段分析' : '深度洞察与建议';
-                const subtitleText = isMultiStage ? 
-                    '基于结构化数据的 Claude Sonnet 4 多阶段智能分析与优化建议' : 
-                    '基于结构化数据的 Claude Sonnet 4 深度分析与优化建议';
-                const iconClass = isMultiStage ? 'fa-layer-group' : 'fa-robot';
-                
                 htmlContent += `
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 2px; margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                         <div style="background: #ffffff; border-radius: 13px; padding: 25px;">
-                            <div style="display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #f0f0f0;">
-                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                                    <i class="fas ${iconClass}" style="color: white; font-size: 24px;"></i>
-                                </div>
-                                <div>
-                                    <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 600;">${titleText}</h2>
-                                    <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 14px;">${subtitleText}</p>
-                                </div>
-                            </div>
                             <div class="ai-analysis-content">${formatAIAnalysisContent(window.aiAnalysisResult)}</div>
                         </div>
                     </div>
@@ -3420,8 +4136,52 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
                 `;
             }
             
+            // 添加保存报告按钮
+            htmlContent += `
+                <div class="text-center mt-3 mb-2">
+                    <div class="btn-group" role="group" aria-label="导出选项">
+                        <button class="btn btn-primary btn-lg" onclick="saveReportAsPDF()" id="saveReportBtn">
+                            <i class="fas fa-file-pdf me-2"></i>保存为PDF报告
+                        </button>
+                        <button class="btn btn-success btn-lg" onclick="saveReportAsImage()" id="saveImageBtn">
+                            <i class="fas fa-image me-2"></i>保存为长图片
+                        </button>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">💡 推荐使用长图片格式，避免跨页显示问题</small>
+                    </div>
+                </div>
+                
+                <!-- Git 仓库链接区域 -->
+                <div class="text-center mt-4 pt-3" style="border-top: 1px solid #e9ecef;">
+                    <div class="mb-2">
+                        <small class="text-muted">基于开源项目构建</small>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                        <a href="https://github.com/anthropics/claude-code" target="_blank" class="btn btn-outline-secondary btn-sm">
+                            <i class="fab fa-github me-1"></i>Claude Code
+                        </a>
+                        <a href="https://github.com/eclipse/jstack-review" target="_blank" class="btn btn-outline-secondary btn-sm">
+                            <i class="fab fa-github me-1"></i>jstack-review
+                        </a>
+                        <a href="https://github.com/your-repo/jstack-ai-analyzer" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fab fa-github me-1"></i>本项目源码
+                        </a>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Powered by <strong>Claude 4.0 Sonnet</strong> • 
+                            Built with <i class="fas fa-heart text-danger"></i> for Java developers
+                        </small>
+                    </div>
+                </div>
+            `;
+            
             $('#analysisResults').html(htmlContent);
             $('#resultsSection').removeClass('d-none');
+            
+            // 保存分析结果到会话存储
+            saveAnalysisToSession();
             
             // 平滑滚动到页面顶部，让分析结果从顶部开始展示
             setTimeout(() => {
@@ -3429,6 +4189,202 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             }, 100);
             
             showAlert('🎉 两阶段分析完成！', 'success');
+        }
+        
+        // 保存分析报告为长图片功能（避免跨页问题）
+        async function saveReportAsImage() {
+            try {
+                // 显示加载提示
+                const loadingMsg = showAlert('⏳ 正在生成长图片报告，请稍候...', 'info');
+                
+                const reportElement = document.getElementById('analysisResults');
+                if (!reportElement) {
+                    showAlert('❌ 未找到分析结果，请先进行分析', 'danger');
+                    return;
+                }
+                
+                // 创建用于截图的容器
+                const imageContainer = document.createElement('div');
+                imageContainer.style.cssText = `
+                    position: absolute;
+                    left: -9999px;
+                    top: 0;
+                    width: 1200px;
+                    background-color: #ffffff;
+                    padding: 40px;
+                    font-family: Arial, "Microsoft YaHei", "微软雅黑", sans-serif;
+                    line-height: 1.6;
+                    box-sizing: border-box;
+                `;
+                
+                // 复制内容并清理不需要的元素
+                imageContainer.innerHTML = reportElement.innerHTML;
+                
+                // 移除导出按钮和交互元素
+                const elementsToRemove = imageContainer.querySelectorAll('[onclick*="saveReport"], .btn-group, button, .modal, .collapse');
+                elementsToRemove.forEach(el => el.remove());
+                
+                // 确保所有折叠内容都展开
+                const collapseElements = imageContainer.querySelectorAll('.collapse');
+                collapseElements.forEach(el => {
+                    el.classList.add('show');
+                    el.style.display = 'block';
+                });
+                
+                document.body.appendChild(imageContainer);
+                
+                // 等待一小段时间确保样式加载
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // 使用html2canvas生成长图片
+                const canvas = await html2canvas(imageContainer, {
+                    allowTaint: true,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    scale: 2, // 高分辨率
+                    logging: false,
+                    width: 1200,
+                    height: imageContainer.scrollHeight,
+                    scrollX: 0,
+                    scrollY: 0,
+                    letterRendering: true, // 改善文字渲染
+                    onclone: function(clonedDoc) {
+                        // 确保克隆文档中的样式正确
+                        const clonedContainer = clonedDoc.querySelector('div');
+                        if (clonedContainer) {
+                            clonedContainer.style.transform = 'none';
+                        }
+                    }
+                });
+                
+                // 清理临时容器
+                document.body.removeChild(imageContainer);
+                
+                // 创建文件名
+                const timestamp = new Date();
+                const fileName = `Java线程转储分析报告_${timestamp.getFullYear()}${String(timestamp.getMonth() + 1).padStart(2, '0')}${String(timestamp.getDate()).padStart(2, '0')}_${String(timestamp.getHours()).padStart(2, '0')}${String(timestamp.getMinutes()).padStart(2, '0')}.png`;
+                
+                // 创建下载链接
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = dataUrl;
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showAlert('✅ 长图片报告已生成并下载！文件名：' + fileName, 'success');
+                
+            } catch (error) {
+                console.error('生成长图片失败:', error);
+                showAlert('❌ 生成长图片失败: ' + error.message, 'danger');
+            }
+        }
+        
+        // 保存分析报告为PDF功能（完全保持原样式版）
+        function saveReportAsPDF() {
+            try {
+                showAlert('⏳ 正在生成PDF报告，请稍候...', 'info');
+                
+                // 使用html2canvas + jsPDF的方案，完美保持网页样式
+                const reportElement = document.getElementById('analysisResults');
+                if (!reportElement) {
+                    showAlert('❌ 未找到分析结果，请先进行分析', 'danger');
+                    return;
+                }
+
+                // 临时创建一个用于PDF生成的容器
+                const pdfContainer = document.createElement('div');
+                pdfContainer.style.position = 'absolute';
+                pdfContainer.style.left = '-9999px';
+                pdfContainer.style.top = '0';
+                pdfContainer.style.width = '794px'; // A4宽度（像素）
+                pdfContainer.style.backgroundColor = '#ffffff';
+                pdfContainer.style.padding = '40px';
+                pdfContainer.style.fontFamily = 'Arial, "Microsoft YaHei", "微软雅黑", sans-serif';
+                
+                // 添加报告标题
+                const titleHtml = `
+                    <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 20px;">
+                        <h1 style="color: #667eea; font-size: 32px; margin: 0; font-weight: bold;">
+                            <i class="fas fa-chart-line" style="margin-right: 15px;"></i>AI 智能分析报告
+                        </h1>
+                        <p style="color: #64748b; font-size: 14px; margin: 10px 0 0 0;">
+                            生成时间: ${new Date().toLocaleString('zh-CN')} | 
+                            文件: ${window.originalFilename || '线程转储文件'}
+                        </p>
+                    </div>
+                `;
+                
+                // 复制原始内容并优化样式
+                const contentHtml = reportElement.innerHTML;
+                
+                // 组合完整的PDF内容
+                pdfContainer.innerHTML = titleHtml + contentHtml;
+                
+                // 临时添加到DOM中
+                document.body.appendChild(pdfContainer);
+                
+                // 使用html2canvas生成图片
+                html2canvas(pdfContainer, {
+                    scale: 2, // 提高清晰度
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: 794,
+                    scrollX: 0,
+                    scrollY: 0
+                }).then(canvas => {
+                    // 移除临时容器
+                    document.body.removeChild(pdfContainer);
+                    
+                    // 创建PDF
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    // 计算PDF页面尺寸
+                    const imgWidth = 210; // A4宽度(mm)
+                    const pageHeight = 295; // A4高度(mm) 
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    let heightLeft = imgHeight;
+                    
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    let position = 0;
+                    
+                    // 添加第一页
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    // 如果内容超过一页，继续添加页面
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    
+                    // 保存PDF
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const filename = `线程转储AI分析报告_${timestamp}.pdf`;
+                    pdf.save(filename);
+                    
+                    showAlert('✅ PDF报告已成功保存！', 'success');
+                    
+                }).catch(error => {
+                    // 移除临时容器
+                    if (document.body.contains(pdfContainer)) {
+                        document.body.removeChild(pdfContainer);
+                    }
+                    console.error('PDF生成失败:', error);
+                    showAlert('❌ PDF生成失败：' + error.message, 'danger');
+                });
+                
+            } catch (error) {
+                console.error('PDF生成失败:', error);
+                showAlert('❌ PDF生成失败：' + error.message, 'danger');
+            }
         }
 
 
@@ -3484,71 +4440,80 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
         }
 
         function openTraditionalAnalysis() {
-            console.log('🔵 openTraditionalAnalysis 函数被调用');
-            console.log('🔍 检查全局变量:');
-            console.log('  - window.originalContent 存在:', !!window.originalContent);
-            console.log('  - window.originalFilename 存在:', !!window.originalFilename);
+            console.log('🔵 openTraditionalAnalysis 函数被调用 - 多用户模式');
+            console.log('👤 当前用户:', currentUserId);
+            console.log('🔍 检查用户会话数据:');
             
-            if (window.originalContent) {
-                console.log('  - 文件内容长度:', window.originalContent.length);
+            const userSession = getUserSession();
+            console.log('  - originalContent 存在:', !!userSession.originalContent);
+            console.log('  - originalFilename 存在:', !!userSession.originalFilename);
+            
+            if (userSession.originalContent) {
+                console.log('  - 文件内容长度:', userSession.originalContent.length);
             }
-            if (window.originalFilename) {
-                console.log('  - 文件名:', window.originalFilename);
+            if (userSession.originalFilename) {
+                console.log('  - 文件名:', userSession.originalFilename);
             }
             
             // 检查是否有已分析的文件内容
-            if (window.originalContent && window.originalFilename) {
+            if (userSession.originalContent && userSession.originalFilename) {
                 console.log('✅ 条件满足，开始传递文件内容到传统分析页面');
-                console.log(`📁 文件: ${window.originalFilename}, 大小: ${window.originalContent.length}字符`);
+                console.log(`📁 用户${currentUserId}的文件: ${userSession.originalFilename}, 大小: ${userSession.originalContent.length}字符`);
                 
-                // 将文件内容存储到sessionStorage，供传统分析页面使用
+                // 使用用户特定的数据传递
                 const fileData = {
-                    content: window.originalContent,
-                    filename: window.originalFilename,
+                    content: userSession.originalContent,
+                    filename: userSession.originalFilename,
                     timestamp: Date.now(),
-                    source: 'ai-enhanced-analysis'
+                    userId: currentUserId,  // 添加用户ID标识
+                    source: 'ai-enhanced-analysis-v2'
                 };
                 
-                console.log('📦 准备存储的数据结构:');
+                console.log('📦 准备存储的多用户数据结构:');
                 console.log('  - filename:', fileData.filename);
                 console.log('  - content长度:', fileData.content.length);
                 console.log('  - timestamp:', fileData.timestamp);
+                console.log('  - userId:', fileData.userId);
                 console.log('  - source:', fileData.source);
+                
+                // 使用用户特定的SessionStorage键
+                const storageKey = UserSession.getStorageKey('jstack_auto_analysis_data');
+                console.log('🔑 用户特定的存储键:', storageKey);
                 
                 const jsonData = JSON.stringify(fileData);
                 console.log('📋 序列化后的JSON长度:', jsonData.length);
                 console.log('📋 JSON前100字符:', jsonData.substring(0, 100) + '...');
                 
-                sessionStorage.setItem('jstack_auto_analysis_data', jsonData);
-                console.log('✅ SessionStorage 设置完成');
+                sessionStorage.setItem(storageKey, jsonData);
+                console.log('✅ 多用户SessionStorage 设置完成');
                 
                 // 验证存储是否成功
-                const storedData = sessionStorage.getItem('jstack_auto_analysis_data');
+                const storedData = sessionStorage.getItem(storageKey);
                 if (storedData) {
-                    console.log('✅ SessionStorage 验证成功，存储的数据长度:', storedData.length);
+                    console.log('✅ 多用户SessionStorage 验证成功，存储的数据长度:', storedData.length);
                     console.log('📋 存储的数据前100字符:', storedData.substring(0, 100) + '...');
                 } else {
-                    console.error('❌ SessionStorage 验证失败，没有找到存储的数据');
+                    console.error('❌ 多用户SessionStorage 验证失败，没有找到存储的数据');
                 }
                 
                 // 添加小延时确保SessionStorage设置完成后再打开页面
                 setTimeout(() => {
-                    // 打开传统分析页面
+                    // 打开传统分析页面，传递用户ID
                     console.log('🌐 延时后准备打开传统分析页面...');
-                    const url = 'jstack-review-original/index.html';
+                    const url = `jstack-review-original/index.html?userId=${currentUserId}`;
                     console.log('🔗 目标URL:', url);
                     
                     window.open(url, '_blank');
-                    console.log('✅ 页面已打开');
+                    console.log('✅ 多用户页面已打开');
                     
                     // 显示提示信息
-                    showAlert(`文件 "${window.originalFilename}" 已自动传递到传统分析页面`, 'success');
+                    showAlert(`文件 "${userSession.originalFilename}" 已自动传递到传统分析页面 (用户: ${currentUserId.substr(-8)})`, 'success');
                 }, 100); // 100ms延时确保SessionStorage操作完成
             } else {
                 // 如果没有分析过的文件，正常打开传统分析页面
                 console.log('⚠️ 条件不满足：');
-                console.log('  - originalContent:', window.originalContent ? '存在' : '不存在');
-                console.log('  - originalFilename:', window.originalFilename ? '存在' : '不存在');
+                console.log('  - originalContent:', userSession.originalContent ? '存在' : '不存在');
+                console.log('  - originalFilename:', userSession.originalFilename ? '存在' : '不存在');
                 console.log('⚠️ 正常打开传统分析页面（不传递数据）');
                 
                 window.open('jstack-review-original/index.html', '_blank');
@@ -3569,12 +4534,52 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
             window.traditionalAnalysis = null;
             console.log('📱 AI增强分析器初始化，支持两阶段分析流程');
             
-            console.log('🔧 当前AI配置:', aiConfig);
+            console.log('🔧 当前AI配置状态:', {
+                region: aiConfig.region,
+                hasAccessKey: !!aiConfig.accessKey,
+                hasSecretKey: !!aiConfig.secretKey,
+                hasInferenceProfile: !!aiConfig.inferenceProfileArn
+            });
             console.log('📝 当前自定义提示词配置:', customPrompts);
+            
+            // 尝试从会话存储恢复分析结果
+            const restored = restoreAnalysisFromSession();
+            if (restored) {
+                // 恢复成功，显示之前的分析结果
+                console.log('🔄 检测到会话中的分析结果，正在恢复...');
+                setTimeout(() => {
+                    showResults('', window.currentFilename || '恢复的分析结果');
+                    showAlert('🔄 已恢复上次的分析结果', 'info');
+                }, 500);
+            }
+            
+            // 检查隐私模式并显示警告
+            if (!isLocalStorageAvailable()) {
+                console.warn('⚠️ 检测到浏览器隐私模式');
+                
+                // 添加隐私模式提示条
+                const privacyWarning = `
+                    <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert" id="privacyWarning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>隐私模式警告</strong>：您正在使用浏览器的隐私模式，AI配置将无法保存。
+                        每次分析都需要重新配置AWS凭证，或切换到正常浏览模式以获得更好的体验。
+                        ${!isSessionStorageAvailable() ? '<br><strong>注意</strong>：页面刷新后分析结果也将丢失。' : ''}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                $('.container-fluid').first().prepend(privacyWarning);
+            }
             
             $('#demoButton').click(loadDemo);
             $('#configButton').click(showAIConfig);
-            $('#reuploadBtn').click(() => location.reload());
+            $('#reuploadBtn').click(() => {
+                // 清除会话存储的分析结果
+                if (isSessionStorageAvailable()) {
+                    sessionStorage.removeItem('jstack_analysis_results');
+                    console.log('🗑️ 已清除会话存储的分析结果');
+                }
+                location.reload();
+            });
             
             // 文件上传处理
             $('#fileInput').on('change', handleFileUpload);
@@ -3607,6 +4612,9 @@ ${isTruncated ? '\n⚠️ 注意：原始文件已截断，基于前40KB内容�
 
         function handleFile(file) {
             console.log('📁 处理文件:', file.name, '大小:', file.size);
+            
+            // 存储当前文件名供保存报告使用
+            window.currentFilename = file.name;
             
             // 检查文件大小（4MB限制）
             if (file.size > 4 * 1024 * 1024) {

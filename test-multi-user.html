@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多用户并发测试页面</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .user-session {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .user-session.active {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .log-area {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: scroll;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-active { background-color: #28a745; }
+        .status-idle { background-color: #6c757d; }
+        .status-error { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-users"></i> 多用户并发系统测试
+                    <small class="text-muted">v2.0</small>
+                </h1>
+                
+                <div class="alert alert-info">
+                    <strong>测试说明：</strong>这个页面模拟多个用户同时使用系统，验证用户会话隔离和并发处理能力。
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <button id="createUser" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> 创建新用户会话
+                        </button>
+                        <button id="clearAll" class="btn btn-outline-danger ms-2">
+                            <i class="fas fa-trash"></i> 清理所有会话
+                        </button>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="badge bg-info">
+                            活跃用户: <span id="userCount">0</span>
+                        </div>
+                        <div class="badge bg-secondary ms-2">
+                            总请求: <span id="requestCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="userSessions" class="row">
+            <!-- 用户会话将动态添加到这里 -->
+        </div>
+        
+        <!-- 系统统计信息 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line"></i> 系统统计
+                            <button id="refreshStats" class="btn btn-sm btn-outline-primary float-end">刷新</button>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="systemStats" class="log-area">
+                            点击"刷新"获取系统统计信息...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MultiUserTester {
+            constructor() {
+                this.users = new Map();
+                this.requestCount = 0;
+                this.init();
+            }
+            
+            init() {
+                $('#createUser').click(() => this.createUser());
+                $('#clearAll').click(() => this.clearAll());
+                $('#refreshStats').click(() => this.refreshStats());
+                
+                // 自动刷新统计信息
+                setInterval(() => this.refreshStats(), 10000);
+                
+                console.log('🚀 多用户测试系统已初始化');
+            }
+            
+            createUser() {
+                const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+                const userSession = new UserSession(userId, this);
+                
+                this.users.set(userId, userSession);
+                this.updateUserCount();
+                
+                console.log('👤 创建新用户:', userId);
+            }
+            
+            clearAll() {
+                if (confirm('确定要清理所有用户会话吗？')) {
+                    this.users.forEach(user => user.destroy());
+                    this.users.clear();
+                    $('#userSessions').empty();
+                    sessionStorage.clear();
+                    
+                    this.updateUserCount();
+                    console.log('🧹 所有用户会话已清理');
+                }
+            }
+            
+            updateUserCount() {
+                $('#userCount').text(this.users.size);
+            }
+            
+            updateRequestCount() {
+                this.requestCount++;
+                $('#requestCount').text(this.requestCount);
+            }
+            
+            async refreshStats() {
+                try {
+                    // 自动检测API服务器地址（支持云服务器环境）
+                    const currentHostname = window.location.hostname;
+                    let apiBaseUrl;
+                    if (currentHostname === 'localhost' || currentHostname === '127.0.0.1') {
+                        apiBaseUrl = 'http://localhost:8082';
+                    } else {
+                        // 云服务器环境：使用代理服务器端口8081
+                        apiBaseUrl = `http://${currentHostname}:8081`;
+                    }
+                    
+                    const response = await fetch(apiBaseUrl + '/api/stats');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const stats = data.stats;
+                        const statsHtml = `
+[${new Date().toLocaleTimeString()}] 系统统计信息:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 活跃请求: ${stats.activeRequests}
+⏱️ 服务器运行时间: ${stats.serverUptime}秒
+💾 内存使用: ${stats.memoryUsageMB}MB
+🕐 更新时间: ${stats.timestamp}
+
+📝 当前请求详情:
+${stats.requests.length > 0 ? 
+    stats.requests.map(req => 
+        `  • [${req.requestId}] ${req.method} ${req.url} (${req.durationMs}ms) - ${req.userId}`
+    ).join('\n') : 
+    '  (无活跃请求)'
+}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        `;
+                        
+                        $('#systemStats').text(statsHtml);
+                    } else {
+                        $('#systemStats').text('[错误] 无法获取系统统计信息');
+                    }
+                } catch (error) {
+                    $('#systemStats').text(`[错误] 连接服务器失败: ${error.message}`);
+                }
+            }
+        }
+        
+        class UserSession {
+            constructor(userId, tester) {
+                this.userId = userId;
+                this.tester = tester;
+                this.status = 'idle';
+                this.logs = [];
+                
+                this.createElement();
+                this.bindEvents();
+                this.log(`用户会话创建: ${this.userId}`);
+            }
+            
+            createElement() {
+                const shortId = this.userId.substr(-8);
+                const html = `
+                    <div class="col-md-6 mb-3">
+                        <div class="user-session" data-user-id="${this.userId}">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">
+                                    <span class="status-indicator status-idle"></span>
+                                    用户: ${shortId}
+                                </h6>
+                                <div>
+                                    <button class="btn btn-sm btn-success simulate-analysis">
+                                        <i class="fas fa-play"></i> 模拟分析
+                                    </button>
+                                    <button class="btn btn-sm btn-info test-traditional">
+                                        <i class="fas fa-exchange-alt"></i> 测试传统分析
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger remove-user">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="log-area" style="height: 120px;"></div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#userSessions').append(html);
+                this.$element = $(`.user-session[data-user-id="${this.userId}"]`);
+                this.$logArea = this.$element.find('.log-area');
+                this.$statusIndicator = this.$element.find('.status-indicator');
+            }
+            
+            bindEvents() {
+                this.$element.find('.simulate-analysis').click(() => this.simulateAnalysis());
+                this.$element.find('.test-traditional').click(() => this.testTraditionalAnalysis());
+                this.$element.find('.remove-user').click(() => this.remove());
+            }
+            
+            async simulateAnalysis() {
+                this.setStatus('active');
+                this.log('🚀 开始模拟AI分析...');
+                
+                // 模拟文件数据存储
+                const mockFileData = {
+                    content: `// Mock Java Thread Dump for ${this.userId}\nJava Stack Trace Example...`,
+                    filename: `thread-dump-${this.userId.substr(-6)}.txt`,
+                    userId: this.userId,
+                    source: 'multi-user-test',
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 存储到SessionStorage（模拟用户上传文件）
+                const storageKey = `jstack_auto_analysis_data_${this.userId}`;
+                sessionStorage.setItem(storageKey, JSON.stringify(mockFileData));
+                
+                this.log(`📦 文件数据已存储到SessionStorage: ${storageKey}`);
+                this.log(`📄 模拟文件: ${mockFileData.filename}`);
+                
+                // 模拟AI分析延迟
+                await this.sleep(Math.random() * 2000 + 1000);
+                
+                this.tester.updateRequestCount();
+                this.setStatus('idle');
+                this.log('✅ AI分析模拟完成');
+            }
+            
+            testTraditionalAnalysis() {
+                this.log('🔄 测试传统分析页面跳转...');
+                
+                // 检查是否有存储的数据
+                const storageKey = `jstack_auto_analysis_data_${this.userId}`;
+                const storedData = sessionStorage.getItem(storageKey);
+                
+                if (storedData) {
+                    this.log('✅ 找到存储数据，准备跳转传统分析页面');
+                    
+                    // 打开传统分析页面（带用户ID参数）
+                    const url = `jstack-review-original/index.html?userId=${this.userId}`;
+                    window.open(url, `traditional_${this.userId}`);
+                    
+                    this.log(`🔗 已打开传统分析页面: ${url}`);
+                } else {
+                    this.log('❌ 未找到存储数据，请先执行"模拟分析"');
+                }
+            }
+            
+            setStatus(status) {
+                this.status = status;
+                this.$statusIndicator.removeClass('status-idle status-active status-error');
+                this.$statusIndicator.addClass(`status-${status}`);
+                
+                if (status === 'active') {
+                    this.$element.addClass('active');
+                } else {
+                    this.$element.removeClass('active');
+                }
+            }
+            
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                
+                this.logs.push(logEntry);
+                if (this.logs.length > 20) {
+                    this.logs.shift(); // 保持最新20条日志
+                }
+                
+                this.$logArea.text(this.logs.join('\n'));
+                this.$logArea.scrollTop(this.$logArea[0].scrollHeight);
+                
+                console.log(`[${this.userId.substr(-8)}] ${message}`);
+            }
+            
+            remove() {
+                this.tester.users.delete(this.userId);
+                this.destroy();
+                this.tester.updateUserCount();
+            }
+            
+            destroy() {
+                // 清理该用户的SessionStorage数据
+                const storageKey = `jstack_auto_analysis_data_${this.userId}`;
+                sessionStorage.removeItem(storageKey);
+                
+                this.$element.remove();
+                this.log('🗑️ 用户会话已销毁');
+            }
+            
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // 初始化多用户测试器
+        $(document).ready(() => {
+            window.multiUserTester = new MultiUserTester();
+            
+            // 创建两个初始用户用于演示
+            setTimeout(() => {
+                window.multiUserTester.createUser();
+                window.multiUserTester.createUser();
+            }, 500);
+        });
+    </script>
+    
+    <!-- Font Awesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+</html>

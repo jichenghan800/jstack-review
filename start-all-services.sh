@@ -36,13 +36,14 @@ echo "🛑 停止已存在的服务..."
 pkill -f "python3 -m http.server 8080" 2>/dev/null || true
 pkill -f "autogen-bedrock-server.js" 2>/dev/null || true
 pkill -f "bedrock-test-server.js" 2>/dev/null || true
+pkill -f "proxy-server.py" 2>/dev/null || true
 
 # 等待进程完全停止
 sleep 1
 
-# 启动Web服务器 (端口 8080)
+# 启动Web服务器 (端口 8080, 允许外部访问)
 echo "🌐 启动Web服务器 (端口 8080)..."
-nohup python3 -m http.server 8080 > logs/web-server.log 2>&1 &
+nohup python3 -m http.server 8080 --bind 0.0.0.0 > logs/web-server.log 2>&1 &
 WEB_PID=$!
 
 # 启动AutoGen Bedrock服务器 (端口 8082)
@@ -54,6 +55,11 @@ AUTOGEN_PID=$!
 echo "🧪 启动Bedrock测试服务器 (端口 3002)..."
 nohup node bedrock-test-server.js > logs/bedrock-test.log 2>&1 &
 BEDROCK_PID=$!
+
+# 启动API代理服务器 (端口 8081) - 解决云服务器网络访问问题，5分钟超时  
+echo "🔗 启动API代理服务器 (端口 8081)..."
+nohup python3 proxy-server.py > logs/proxy-server.log 2>&1 &
+PROXY_PID=$!
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."
@@ -87,6 +93,14 @@ else
     SERVICES_OK=false
 fi
 
+# 检查API代理服务器
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/default-config | grep -q "200"; then
+    echo "✅ API代理服务器运行正常 (端口 8081)"
+else
+    echo "❌ API代理服务器启动失败"
+    SERVICES_OK=false
+fi
+
 if [ "$SERVICES_OK" = true ]; then
     echo ""
     echo "🎉 所有服务启动成功！"
@@ -98,11 +112,13 @@ if [ "$SERVICES_OK" = true ]; then
     echo "📋 服务状态:"
     echo "   Web服务器: http://localhost:8080"
     echo "   AutoGen API: http://localhost:8082"
+    echo "   API代理服务器: http://localhost:8081 (外部访问)"
     echo "   测试API: http://localhost:3002"
     echo ""
     echo "📁 日志文件:"
     echo "   Web: tail -f logs/web-server.log"
     echo "   AutoGen: tail -f logs/autogen-bedrock.log" 
+    echo "   代理服务器: tail -f logs/proxy-server.log"
     echo "   测试服务: tail -f logs/bedrock-test.log"
     echo ""
     echo "🛑 停止所有服务: ./stop-all-services.sh"

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>故障诊断测试</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>故障诊断测试页面</h1>
+    
+    <div>
+        <h3>1. 测试共享配置API</h3>
+        <button onclick="testSharedConfig()">测试共享配置</button>
+        <div id="sharedConfigResult"></div>
+    </div>
+    
+    <div>
+        <h3>2. 测试AI分析API</h3>
+        <button onclick="testAIAnalysis()">测试AI分析</button>
+        <div id="aiAnalysisResult"></div>
+    </div>
+    
+    <div>
+        <h3>3. 测试模态框</h3>
+        <button onclick="testModal()">测试Bootstrap模态框</button>
+        <div id="testModal" style="display:none; position:fixed; top:50px; left:50px; background:white; border:1px solid; padding:20px; z-index:1000;">
+            <p>测试模态框</p>
+            <button onclick="closeModal()">关闭</button>
+        </div>
+    </div>
+    
+    <script>
+        function getApiBaseUrl() {
+            // 自动检测API服务器地址（支持云服务器环境）
+            const currentHostname = window.location.hostname;
+            
+            // 如果是localhost，直接使用localhost
+            if (currentHostname === 'localhost' || currentHostname === '127.0.0.1') {
+                return 'http://localhost:8082';
+            } else {
+                // 云服务器环境：使用代理服务器端口8081
+                return `http://${currentHostname}:8081`;
+            }
+        }
+        
+        function testSharedConfig() {
+            $('#sharedConfigResult').html('正在测试...');
+            
+            $.ajax({
+                url: getApiBaseUrl() + '/api/default-config',
+                type: 'GET',
+                success: function(response) {
+                    $('#sharedConfigResult').html('<pre>' + JSON.stringify(response, null, 2) + '</pre>');
+                },
+                error: function(xhr, status, error) {
+                    $('#sharedConfigResult').html('错误: ' + error + '<br>状态: ' + status + '<br>响应: ' + xhr.responseText);
+                }
+            });
+        }
+        
+        function testAIAnalysis() {
+            $('#aiAnalysisResult').html('正在测试AI分析...');
+            
+            $.ajax({
+                url: getApiBaseUrl() + '/api/invoke-autogen-bedrock',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    messages: [{
+                        role: 'user',
+                        content: '请回复：AI测试成功'
+                    }],
+                    config: {
+                        maxTokens: 20,
+                        temperature: 0.1
+                    }
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#aiAnalysisResult').html('✅ AI测试成功！<br>响应: ' + 
+                            (typeof response.response === 'object' ? response.response.content : response.response));
+                    } else {
+                        $('#aiAnalysisResult').html('❌ AI测试失败: ' + response.error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#aiAnalysisResult').html('❌ 网络错误: ' + error + '<br>状态: ' + status + '<br>响应: ' + xhr.responseText);
+                }
+            });
+        }
+        
+        function testModal() {
+            $('#testModal').show();
+        }
+        
+        function closeModal() {
+            $('#testModal').hide();
+            alert('模态框已关闭');
+        }
+    </script>
+</body>
+</html>

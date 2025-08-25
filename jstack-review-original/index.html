@@ -39,22 +39,74 @@
     <link rel="stylesheet" href="stylesheet.css">
     <script src="frontend.js" type="text/javascript"></script>
     
-    <!-- 调试SessionStorage的内联脚本 -->
+    <!-- 多用户并发支持的内联脚本 -->
     <script type="text/javascript">
-        console.log('🚀 传统分析页面HTML加载完成');
-        console.log('🔍 立即检查SessionStorage...');
+        console.log('🚀 传统分析页面HTML加载完成 - 多用户模式 v2.0');
         
-        // 立即检查SessionStorage
-        var immediateCheck = sessionStorage.getItem('jstack_auto_analysis_data');
-        if (immediateCheck) {
-            console.log('✅ HTML加载时发现SessionStorage数据');
-            console.log('📏 数据长度:', immediateCheck.length);
-            console.log('📋 数据前100字符:', immediateCheck.substring(0, 100));
-        } else {
-            console.log('❌ HTML加载时没有找到SessionStorage数据');
+        // 获取URL参数中的用户ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const expectedUserId = urlParams.get('userId');
+        console.log('🔗 URL中的用户ID:', expectedUserId);
+        
+        console.log('🔍 开始多用户SessionStorage检查...');
+        
+        // 如果有预期的用户ID，优先检查该用户的数据
+        let autoAnalysisData = null;
+        let dataSource = '';
+        
+        if (expectedUserId) {
+            const expectedKey = `jstack_auto_analysis_data_${expectedUserId}`;
+            console.log('🎯 优先检查预期用户数据:', expectedKey);
+            autoAnalysisData = sessionStorage.getItem(expectedKey);
+            if (autoAnalysisData) {
+                dataSource = expectedKey;
+                console.log('✅ 找到预期用户的数据');
+            } else {
+                console.log('❌ 未找到预期用户的数据');
+            }
         }
         
-        // 显示所有SessionStorage键值对
+        // 如果没有找到预期用户的数据，搜索所有可能的用户数据
+        if (!autoAnalysisData) {
+            console.log('🔍 搜索所有用户的SessionStorage数据...');
+            
+            // 搜索模式：jstack_auto_analysis_data_user_*
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith('jstack_auto_analysis_data_user_')) {
+                    const data = sessionStorage.getItem(key);
+                    if (data) {
+                        autoAnalysisData = data;
+                        dataSource = key;
+                        console.log('✅ 找到用户数据:', key);
+                        break;
+                    }
+                }
+            }
+            
+            // 兼容v1.0：检查旧版本的数据
+            if (!autoAnalysisData) {
+                console.log('🔄 检查v1.0兼容数据...');
+                autoAnalysisData = sessionStorage.getItem('jstack_auto_analysis_data');
+                if (autoAnalysisData) {
+                    dataSource = 'jstack_auto_analysis_data (v1.0兼容)';
+                    console.log('✅ 找到v1.0兼容数据');
+                }
+            }
+        }
+        
+        console.log('📋 SessionStorage多用户检查结果:', autoAnalysisData ? '存在' : '不存在');
+        console.log('📋 数据来源:', dataSource);
+        
+        if (autoAnalysisData) {
+            console.log('✅ HTML加载时发现SessionStorage数据');
+            console.log('📏 数据长度:', autoAnalysisData.length);
+            console.log('📋 数据前100字符:', autoAnalysisData.substring(0, 100));
+        } else {
+            console.log('❌ HTML加载时没有找到任何SessionStorage数据');
+        }
+        
+        // 显示所有SessionStorage键值对（调试用）
         console.log('🔑 当前所有SessionStorage键:');
         for (var i = 0; i < sessionStorage.length; i++) {
             var key = sessionStorage.key(i);
@@ -64,30 +116,61 @@
         
         // 监听DOMContentLoaded事件
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOMContentLoaded事件触发');
-            var domReadyCheck = sessionStorage.getItem('jstack_auto_analysis_data');
-            if (domReadyCheck) {
-                console.log('✅ DOM准备完成时发现SessionStorage数据');
+            console.log('📄 DOMContentLoaded事件触发 - 多用户模式');
+            
+            // 重新检查数据（防止时序问题）
+            if (!autoAnalysisData) {
+                if (expectedUserId) {
+                    const expectedKey = `jstack_auto_analysis_data_${expectedUserId}`;
+                    autoAnalysisData = sessionStorage.getItem(expectedKey);
+                    if (autoAnalysisData) {
+                        dataSource = expectedKey;
+                        console.log('✅ DOMReady时找到预期用户数据');
+                    }
+                }
+                
+                if (!autoAnalysisData) {
+                    // 再次搜索所有用户数据
+                    for (let i = 0; i < sessionStorage.length; i++) {
+                        const key = sessionStorage.key(i);
+                        if (key && key.startsWith('jstack_auto_analysis_data_user_')) {
+                            const data = sessionStorage.getItem(key);
+                            if (data) {
+                                autoAnalysisData = data;
+                                dataSource = key;
+                                console.log('✅ DOMReady时找到用户数据:', key);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (autoAnalysisData) {
+                console.log('✅ DOM准备完成时确认存在SessionStorage数据');
+                console.log('📋 最终数据来源:', dataSource);
                 
                 // 在这里直接执行自动分析，不等frontend.js
-                console.log('🚀 直接在DOMContentLoaded中执行自动分析...');
+                console.log('🚀 直接在DOMContentLoaded中执行多用户自动分析...');
                 
                 try {
-                    var fileData = JSON.parse(domReadyCheck);
+                    var fileData = JSON.parse(autoAnalysisData);
                     console.log('📊 解析数据成功:', {
                         filename: fileData.filename,
-                        contentLength: fileData.content ? fileData.content.length : 0
+                        contentLength: fileData.content ? fileData.content.length : 0,
+                        userId: fileData.userId || '未知',
+                        source: fileData.source || 'unknown'
                     });
                     
                     // 等待一下让其他脚本加载完成，然后尝试自动分析
                     setTimeout(function() {
-                        console.log('🔄 延时后尝试自动分析...');
+                        console.log('🔄 延时后尝试多用户自动分析...');
                         
                         // 检查是否有addDump函数
                         if (typeof addDump === 'function') {
                             console.log('✅ addDump函数存在');
                             // 直接执行自动分析
-                            performAutoAnalysis(fileData);
+                            performMultiUserAutoAnalysis(fileData, dataSource);
                         } else {
                             console.log('❌ addDump函数不存在，等待更长时间...');
                             
@@ -96,7 +179,7 @@
                                 if (typeof addDump === 'function') {
                                     console.log('✅ 延时后addDump函数存在');
                                     // 执行自动分析
-                                    performAutoAnalysis(fileData);
+                                    performMultiUserAutoAnalysis(fileData, dataSource);
                                 } else {
                                     console.log('❌ 长时间等待后addDump函数仍不存在');
                                 }
@@ -105,17 +188,19 @@
                     }, 1000);
                     
                 } catch (e) {
-                    console.error('❌ 直接分析失败:', e);
+                    console.error('❌ 多用户直接分析失败:', e);
                 }
                 
             } else {
-                console.log('❌ DOM准备完成时没有找到SessionStorage数据');
+                console.log('❌ DOM准备完成时没有找到任何SessionStorage数据');
             }
         });
         
-        // 自动分析执行函数
-        function performAutoAnalysis(fileData) {
-            console.log('🎯 开始执行自动分析...');
+        // 多用户自动分析执行函数
+        function performMultiUserAutoAnalysis(fileData, dataSource) {
+            console.log('🎯 开始执行多用户自动分析...');
+            console.log('👤 数据所属用户:', fileData.userId || '未知');
+            console.log('📋 数据来源:', dataSource);
             
             // 查找第一个dump的ID
             var dumpTabs = document.querySelectorAll('#dumptabs li[data-dumpid]');
@@ -147,19 +232,34 @@
                         analyzeButton.click();
                         console.log('✅ 分析按钮已点击');
                         
-                        // 清理SessionStorage
-                        sessionStorage.removeItem('jstack_auto_analysis_data');
-                        console.log('🧹 SessionStorage已清理');
+                        // 清理SessionStorage（清理对应的用户数据）
+                        const keyToRemove = dataSource.includes('(') ? dataSource.split(' ')[0] : dataSource;
+                        sessionStorage.removeItem(keyToRemove);
+                        console.log('🧹 SessionStorage已清理:', keyToRemove);
                         
                         // 显示成功消息
                         var successDiv = document.createElement('div');
-                        successDiv.className = 'alert alert-success';
-                        successDiv.innerHTML = '<strong>自动加载成功！</strong> 文件 "' + fileData.filename + '" 已自动传递并开始分析。';
+                        successDiv.className = 'alert alert-success alert-dismissible';
+                        var userId = fileData.userId || '未知用户';
+                        var userIdShort = userId.includes('user_') ? userId.substr(-8) : userId;
+                        var sessionInfo = expectedUserId ? `会话ID: ${expectedUserId.substr(-8)}` : `用户: ${userIdShort}`;
+                        successDiv.innerHTML = '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                            '<strong><i class="glyphicon glyphicon-ok-circle"></i> 多用户自动加载成功！</strong> ' +
+                            '文件 "' + fileData.filename + '" 已自动传递并开始分析。' + sessionInfo;
                         document.body.insertBefore(successDiv, document.body.firstChild);
                         
+                        // 自动淡出提示消息
                         setTimeout(function() {
-                            successDiv.style.display = 'none';
-                        }, 5000);
+                            if (successDiv && successDiv.parentNode) {
+                                successDiv.style.transition = 'opacity 1s ease-out';
+                                successDiv.style.opacity = '0';
+                                setTimeout(function() {
+                                    if (successDiv.parentNode) {
+                                        successDiv.parentNode.removeChild(successDiv);
+                                    }
+                                }, 1000);
+                            }
+                        }, 6000);
                         
                     } else {
                         console.log('❌ 未找到分析按钮');
