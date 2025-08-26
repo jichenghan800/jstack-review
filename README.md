@@ -27,377 +27,271 @@
 - **风险评估**: 全面的系统风险分析
 - **可视化报告**: 直观的图表和数据展示
 
-## 🐳 Docker 一键部署（推荐）
+## 🚀 快速部署
 
-### 方式一：快速部署脚本
-
-```bash
-# 克隆项目
-git clone https://github.com/jichenghan800/jstack-review.git
-cd jstack-review
-
-# 一键启动（包含所有服务）
-chmod +x docker-one-click-deploy.sh
-./docker-one-click-deploy.sh
-
-# 或者快速部署（仅Web服务）
-chmod +x docker-quick-deploy.sh
-./docker-quick-deploy.sh
-```
-
-### 方式二：Docker Compose
-
-```bash
-# 标准部署 - 推荐生产环境
-docker-compose up -d
-
-# 带Nginx反向代理部署 - 推荐公网访问
-docker-compose --profile with-nginx up -d
-
-# 开发模式部署 - 支持热重载
-docker-compose --profile development up -d
-```
-
-### 方式三：自定义配置
-
-```bash
-# 1. 复制配置文件
-cp config.example.json config.json
-
-# 2. 编辑配置（可选）
-nano config.json
-
-# 3. 启动容器
-docker-compose up -d
-```
-
-### 🔍 部署验证
-
-```bash
-# 检查容器状态
-docker-compose ps
-
-# 查看日志
-docker-compose logs -f
-
-# 健康检查
-curl http://localhost:8080/health
-curl http://localhost:8082/health
-
-# 访问应用
-open http://localhost:8080
-```
-
-### 📋 Docker服务说明
-
-| 服务 | 端口 | 说明 | 健康检查 |
-|-----|------|------|----------|
-| **Web服务器** | 8080 | 主要的Web应用和静态文件服务 | ✅ HTTP检查 |
-| **AutoGen API** | 8082 | AWS Bedrock集成API服务 | ✅ 健康端点 |
-| **API代理** | 8081 | 外部访问代理（可选） | ✅ 反向代理检查 |
-| **测试服务** | 3002 | Bedrock连接测试和验证 | ✅ 连通性检查 |
-
-### 🛠️ Docker管理命令
-
-```bash
-# 查看运行状态
-docker-compose ps
-docker-compose top
-
-# 实时日志监控
-docker-compose logs -f
-docker-compose logs -f web-server
-
-# 重启特定服务
-docker-compose restart web-server
-docker-compose restart autogen-api
-
-# 更新服务
-git pull
-docker-compose pull
-docker-compose up -d
-
-# 完全清理
-docker-compose down -v
-docker system prune -a
-```
-
-### 🔧 Docker配置选项
-
-#### 环境变量配置
-```bash
-# 创建环境文件
-cat > .env << EOF
-# AWS配置（可选）
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_REGION=us-west-2
-
-# 服务端口（可选，使用默认值）
-WEB_PORT=8080
-API_PORT=8082
-PROXY_PORT=8081
-TEST_PORT=3002
-
-# 日志级别
-LOG_LEVEL=info
-DEBUG=false
-EOF
-```
-
-#### 持久化存储配置
-```yaml
-# docker-compose.override.yml
-version: '3.8'
-services:
-  web-server:
-    volumes:
-      - ./custom-config:/app/config
-      - ./logs:/app/logs
-      - ./uploads:/app/uploads
-```
-
-## 🚀 其他部署方式
-
-### 本地开发部署
+### 完整代理服务部署（推荐生产环境）
 
 ```bash
 # 1. 克隆项目
 git clone https://github.com/jichenghan800/jstack-review.git
 cd jstack-review
 
-# 2. 安装依赖
-npm install
-
-# 3. 配置环境变量（可选）
-cp .env.example .env
-nano .env
-
-# 4. 启动所有服务
-./start-all-services.sh
+# 2. 一键部署完整代理服务
+chmod +x docker-proxy-deploy.sh
+./docker-proxy-deploy.sh
 ```
 
-### 云平台部署
+**服务访问地址：**
+- 🌐 主应用: `http://localhost:8080`
+- 📱 AI增强分析器: `http://localhost:8080/ai-simple.html`
+- 🔧 传统分析器: `http://localhost:8080/test.html`
 
-#### AWS ECS部署
+### Docker Compose 部署
+
 ```bash
-# 1. 构建并推送镜像
-docker build -t your-registry/jstack-review .
-docker push your-registry/jstack-review
-
-# 2. 使用ECS服务定义部署
-# （详见DOCKER-DEPLOY.md文档）
-```
-
-#### 阿里云容器服务
-```bash
-# 1. 登录阿里云镜像仓库
-docker login --username=your_username registry.cn-hangzhou.aliyuncs.com
-
-# 2. 推送镜像
-docker tag jstack-review registry.cn-hangzhou.aliyuncs.com/your-namespace/jstack-review
-docker push registry.cn-hangzhou.aliyuncs.com/your-namespace/jstack-review
-```
-
-## 🔐 安全配置
-
-### AWS凭证配置（重要！）
-
-**⚠️ 安全提醒：永远不要在代码中硬编码AWS凭证！**
-
-#### 方法1：Docker环境变量（推荐）
-```bash
-# 在.env文件中配置
-AWS_ACCESS_KEY_ID=AKIA...
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_REGION=us-west-2
-```
-
-#### 方法2：Docker Secrets（生产环境）
-```yaml
-# docker-compose.yml
-secrets:
-  aws_access_key:
-    file: ./secrets/aws_access_key.txt
-  aws_secret_key:
-    file: ./secrets/aws_secret_key.txt
-
-services:
-  autogen-api:
-    secrets:
-      - aws_access_key
-      - aws_secret_key
-```
-
-#### 方法3：浏览器配置
-在应用的"AI配置"页面中输入您的AWS凭证（仅本地存储）
-
-### 🛡️ 安全最佳实践
-- ✅ 使用Docker Secrets管理敏感信息
-- ✅ 定期轮换访问密钥
-- ✅ 使用最小权限原则
-- ✅ 启用容器安全扫描
-- ❌ 永远不要提交凭证到版本控制
-
-## 🎯 使用方法
-
-### 访问应用
-- **AI增强版本**: http://localhost:8080/ai-simple.html
-- **传统版本**: http://localhost:8080/test.html
-- **主页**: http://localhost:8080
-
-### 基础使用流程
-1. **访问应用**: Docker部署后直接访问 http://localhost:8080
-2. **配置AI服务**: 点击"AI配置"按钮设置API密钥
-3. **选择AI提供商**: OpenAI 或 AWS Bedrock
-4. **测试连接**: 验证API配置是否正确
-5. **上传线程转储**: 支持文件上传或拖拽操作
-6. **开始AI分析**: 系统自动调用AI进行智能分段分析
-7. **查看完整结果**: 获得健康评分、完整统计、问题诊断、优化建议
-
-### AI模型选择指南
-- **Claude 4.0 Sonnet**: AWS Bedrock，专业代码分析，推荐
-- **OpenAI GPT-4o**: 最新模型，平衡性能和成本
-- **GPT-4**: 深度分析，适合复杂问题
-- **GPT-3.5 Turbo**: 快速分析，适合简单诊断
-
-## 🔧 故障排除
-
-### Docker相关问题
-
-#### 问题1: "端口被占用"
-```bash
-# 检查端口占用
-sudo netstat -tlnp | grep :8080
-sudo lsof -i :8080
-
-# 停止冲突服务
-docker-compose down
-sudo systemctl stop nginx  # 如果占用80端口
-```
-
-#### 问题2: "容器无法启动"
-```bash
-# 查看详细日志
-docker-compose logs -f
-docker-compose logs web-server
-
-# 重新构建镜像
-docker-compose build --no-cache
+# 标准部署
 docker-compose up -d
 
-# 检查资源使用
-docker stats
-docker system df
+# 带 nginx 反向代理
+docker-compose --profile with-nginx up -d
+
+# 查看服务状态
+docker-compose ps
 ```
 
-#### 问题3: "健康检查失败"
+### 超简单部署（仅静态文件）
+
 ```bash
-# 手动测试健康检查
-curl -f http://localhost:8080/health
-curl -f http://localhost:8082/health
-
-# 进入容器调试
-docker-compose exec web-server bash
-docker-compose exec autogen-api sh
-
-# 查看容器内部日志
-docker-compose exec web-server tail -f /var/log/app.log
+# 最简单的部署方式
+chmod +x docker-super-simple.sh
+./docker-super-simple.sh
 ```
 
-### 配置相关问题
+## 🔧 本地开发
 
-#### 问题1: "AWS凭证配置错误"
+### 方式一：脚本启动（推荐）
+
 ```bash
-# 验证环境变量
-docker-compose exec autogen-api env | grep AWS
+# 安装依赖
+npm install
 
-# 测试AWS连接
-docker-compose exec autogen-api curl localhost:3002/health
+# 启动所有服务
+chmod +x start-services-simple.sh
+./start-services-simple.sh
+
+# 停止所有服务
+./stop-all-services.sh
 ```
 
-#### 问题2: "AI模型访问被拒绝"
+### 方式二：手动启动
+
 ```bash
-# 检查Bedrock模型访问权限
-# 1. 登录AWS控制台
-# 2. 进入Bedrock服务
-# 3. 点击"Model access"
-# 4. 启用Claude 4.0 Sonnet模型
+# 1. 启动 Web 服务器 (端口 8080)
+python3 -m http.server 8080
+
+# 2. 启动 AutoGen Bedrock 服务 (端口 8082)
+node autogen-bedrock-server.js
+
+# 3. 启动 Bedrock 测试服务 (端口 3002)
+node bedrock-test-server.js
 ```
 
-### 性能优化
+## 🏗️ 系统架构
 
-#### 大文件处理优化
-- Docker部署自动支持大文件智能分段处理
-- 容器内存建议：2GB+
-- 对于超大文件（>10MB），建议增加容器资源限制
+### 服务端口分布
+- **8080**: Web服务器 + API代理
+- **8082**: AutoGen Bedrock API服务
+- **3002**: Bedrock测试服务
+- **8081**: API代理服务（已整合到8080）
 
-#### 容器资源配置
-```yaml
-# docker-compose.yml
-services:
-  web-server:
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-        reservations:
-          memory: 256M
-          cpus: '0.25'
-  
-  autogen-api:
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
+### 代理服务架构
+```
+用户请求 → nginx:8080 → 静态文件/API代理
+                    ├─ /api/* → AutoGen服务:8082
+                    ├─ /health → 健康检查:8082
+                    └─ /bedrock-test/* → 测试API:3002
 ```
 
-## 📈 版本历史
+### 关键组件
 
-### v2.2.0 (2025-01-26)
-- 🐳 **Docker一键部署**: 新增完整的Docker部署方案和脚本
-- 🎯 **AI分析完整性修复**: 移除40KB截断限制，支持大文件完整处理
-- 📊 **线程统计完善**: 添加休眠线程和非Java线程统计显示
-- 🎨 **UI界面优化**: 修复统计卡片图标显示问题
-- 🔧 **容量感知升级**: 智能利用Claude Sonnet 4的1M token窗口
+1. **前端应用**
+   - `ai-simple.html`: AI增强分析器
+   - `test.html`: 传统分析器
+   - 客户端处理，数据不上传服务器
 
-### v2.1.0 (2025-01-24)
-- 🔐 **安全增强**: 完善的安全配置和凭证管理
-- 🚀 **统一启动**: 新增 `start-all-services.sh` 和 `stop-all-services.sh`
-- 🐳 **Docker优化**: 改进Docker配置，支持健康检查
-- 📚 **文档完善**: 全面的故障排除指南和使用说明
+2. **后端服务**
+   - `autogen-bedrock-server.js`: AWS Bedrock集成
+   - `bedrock-test-server.js`: 凭证测试服务
+   - `nginx-proxy.conf`: API代理配置
 
-## 🔒 隐私安全
+3. **核心分析**
+   - `jtdajs.js`: 原始分析逻辑
+   - `jtdajs.ai.js`: AI增强分析
+   - 支持智能分段和容量感知处理
 
-- **容器化隔离**: Docker容器提供安全的运行环境
-- **本地处理**: 线程转储文件在容器内本地处理，不上传到外部服务器
-- **API安全**: 仅调用AI API进行分析，不存储敏感数据
-- **配置保护**: API密钥可选择环境变量或浏览器本地存储
+## ⚙️ 配置说明
 
-## 🛠️ 技术栈
+### AWS 凭证配置
 
-- **容器化**: Docker & Docker Compose
-- **前端**: HTML5, Bootstrap 5, JavaScript
-- **AI集成**: OpenAI API, AWS Bedrock
-- **后端**: Node.js, Express.js
-- **部署**: 支持云平台和本地部署
+在浏览器中访问应用，点击右上角"AI配置"按钮：
 
-## 🤝 贡献
+```javascript
+{
+  "accessKey": "your_aws_access_key",
+  "secretKey": "your_aws_secret_key", 
+  "region": "us-west-2",
+  "modelId": "anthropic.claude-3-sonnet-20240229-v1:0"
+}
+```
 
-欢迎提交Issue和Pull Request！请参考 [开发指南](DOCKER-DEPLOY.md) 了解详细的开发和部署流程。
+### OpenAI 配置
+
+```javascript
+{
+  "apiKey": "your_openai_api_key",
+  "model": "gpt-4o",
+  "baseURL": "https://api.openai.com/v1" // 可选
+}
+```
+
+### 环境变量（可选）
+
+```bash
+# 复制模板
+cp .env.example .env
+
+# 编辑环境变量
+export AWS_ACCESS_KEY_ID=your_access_key
+export AWS_SECRET_ACCESS_KEY=your_secret_key
+export AWS_REGION=us-west-2
+```
+
+## 📝 使用指南
+
+### 基本使用流程
+
+1. **启动服务**: 使用任一部署方式启动服务
+2. **访问应用**: 打开 `http://localhost:8080/ai-simple.html`
+3. **配置AI**: 点击右上角配置AWS或OpenAI凭证
+4. **上传文件**: 拖拽或选择thread dump文件
+5. **查看分析**: AI自动分析并生成报告
+
+### 支持的文件格式
+
+- `.txt`: 标准thread dump文件
+- `.log`: 日志格式thread dump
+- `.dump`: JVM dump文件
+- 直接粘贴文本内容
+
+### AI分析功能
+
+- **健康评分**: 0-100分系统健康评估
+- **问题检测**: 自动识别死锁、性能问题
+- **优化建议**: 具体的改进方案
+- **线程统计**: 完整的线程状态分布
+
+## 🔍 故障排除
+
+### 常见问题
+
+**1. AI分析失败 - ERR_CONNECTION_REFUSED**
+```bash
+# 确保所有服务正在运行
+curl http://localhost:8080/health
+curl http://localhost:8082/health
+curl http://localhost:3002/health
+```
+
+**2. Docker容器启动失败**
+```bash
+# 查看容器日志
+docker logs jstack-review-proxy
+docker logs jstack-review-app
+
+# 重新部署
+./docker-proxy-deploy.sh
+```
+
+**3. API代理不工作**
+```bash
+# 测试代理端点
+curl http://localhost:8080/api/invoke-autogen-bedrock
+curl http://localhost:8080/bedrock-test/health
+```
+
+### 服务健康检查
+
+```bash
+# 检查所有服务状态
+curl -s http://localhost:8080/health | jq .
+curl -s http://localhost:8082/health | jq .
+curl -s http://localhost:3002/health | jq .
+
+# 检查端口占用
+lsof -i :8080
+lsof -i :8082
+lsof -i :3002
+```
+
+### 日志查看
+
+```bash
+# 查看服务日志
+tail -f logs/web-server.log
+tail -f logs/autogen-bedrock.log
+tail -f logs/bedrock-test.log
+
+# 查看Docker日志
+docker logs -f jstack-review-proxy
+```
+
+## 🤝 贡献指南
+
+### 开发环境设置
+
+```bash
+git clone https://github.com/jichenghan800/jstack-review.git
+cd jstack-review
+
+# 安装依赖
+npm install
+
+# 启动开发环境
+npm run dev
+
+# 运行测试
+npm test
+```
+
+### 代码提交规范
+
+```bash
+# 功能提交
+git commit -m "✨ 添加新功能: 描述"
+
+# 修复提交  
+git commit -m "🐛 修复问题: 描述"
+
+# 文档更新
+git commit -m "📚 更新文档: 描述"
+```
 
 ## 📄 许可证
 
-本项目基于Apache License 2.0许可证。
+本项目基于 [MIT License](LICENSE) 开源协议发布。
 
 ## 🔗 相关链接
 
-- [原始项目](https://github.com/spotify/threaddump-analyzer)
-- [jstack.review](https://jstack.review)
-- [OpenAI Platform](https://platform.openai.com)
-- [AWS Bedrock](https://aws.amazon.com/bedrock/)
-- [Docker Hub](https://hub.docker.com)
+- **原项目**: [jstack.review](https://jstack.review)
+- **GitHub**: [jstack-review](https://github.com/jichenghan800/jstack-review)
+- **在线演示**: [AI增强分析器](https://jichenghan800.github.io/jstack-review/ai-simple.html)
 
-[logo]: https://jstack.review/logo.svg
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=jichenghan800/jstack-review&type=Date)](https://star-history.com/#jichenghan800/jstack-review&Date)
+
+---
+
+**💡 提示**: 配置AWS凭证后即可使用完整的AI分析功能！
+
+[logo]: https://jstack.review/assets/jstack-review-logo.png "jstack.review"
