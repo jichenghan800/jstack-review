@@ -26,13 +26,7 @@ COPY . .
 
 # 创建必要目录和设置权限
 RUN mkdir -p logs config && \
-    chown -R 1001:1001 /app
-
-# 创建非root用户
-RUN addgroup -g 1001 -S appuser && \
-    adduser -S appuser -u 1001 -G appuser
-
-USER appuser
+    chmod 777 logs config
 
 # 设置脚本权限
 RUN chmod +x *.sh
@@ -44,5 +38,5 @@ EXPOSE 8080 8082 8081 3002
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8080 || exit 1
 
-# 使用统一启动脚本
-CMD ["./start-all-services.sh"]
+# 使用简化启动脚本，避免代理服务问题
+CMD ["./start-services-simple.sh"]
