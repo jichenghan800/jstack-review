@@ -7,8 +7,33 @@ const fs = require('fs');
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 const { BedrockClient, ListFoundationModelsCommand } = require('@aws-sdk/client-bedrock');
 
-// 读取服务器端配置
-const config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+// 读取服务器端配置（可选，如果不存在则使用默认配置）
+let config = {};
+try {
+    if (fs.existsSync('./config.json')) {
+        config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+        console.log('📁 加载本地配置文件: config.json');
+    } else {
+        console.log('⚠️  未找到config.json，将使用客户端提供的凭证');
+        // 默认配置，服务器端不存储任何凭证
+        config = {
+            aws: {
+                accessKey: null,
+                secretKey: null,
+                region: 'us-west-2'
+            }
+        };
+    }
+} catch (error) {
+    console.error('❌ 配置文件解析失败，使用默认配置:', error.message);
+    config = {
+        aws: {
+            accessKey: null,
+            secretKey: null,
+            region: 'us-west-2'
+        }
+    };
+}
 
 const app = express();
 const PORT = 8082;

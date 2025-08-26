@@ -52,6 +52,7 @@ REQUIRED_FILES=(
     "ai-simple.html"
     "docker-proxy-deploy.sh"
     "nginx-proxy.conf"
+    "config.example.json"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -61,6 +62,13 @@ for file in "${REQUIRED_FILES[@]}"; do
         echo "❌ $file (缺失)"
     fi
 done
+
+# 检查config.json（可选文件）
+if [ -f "config.json" ]; then
+    echo "✅ config.json (可选配置文件)"
+else
+    echo "⚠️  config.json (不存在，将使用客户端凭证)"
+fi
 
 echo ""
 

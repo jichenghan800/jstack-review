@@ -59,11 +59,19 @@ install_dependencies() {
     fi
 }
 
-# 创建必要目录
+# 创建必要目录和配置文件
 create_directories() {
-    echo "📁 创建必要目录..."
+    echo "📁 创建必要目录和配置..."
     mkdir -p logs config
-    echo "✅ 目录创建完成"
+    
+    # 如果config.json不存在，从example创建
+    if [ ! -f "config.json" ] && [ -f "config.example.json" ]; then
+        echo "📄 创建config.json配置文件..."
+        cp config.example.json config.json
+        echo "⚠️  请编辑config.json设置您的AWS凭证，或在浏览器中配置"
+    fi
+    
+    echo "✅ 目录和配置创建完成"
 }
 
 # 停止旧进程函数

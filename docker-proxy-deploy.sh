@@ -14,6 +14,16 @@ docker rm jstack-review-proxy 2>/dev/null || true
 # 确保后端服务正在运行
 echo "🚀 启动后端服务..."
 
+# 创建必要目录和配置
+mkdir -p logs config
+
+# 如果config.json不存在，从example创建
+if [ ! -f "config.json" ] && [ -f "config.example.json" ]; then
+    echo "📄 创建config.json配置文件..."
+    cp config.example.json config.json
+    echo "⚠️  请编辑config.json设置您的AWS凭证，或在浏览器中配置"
+fi
+
 # 启动AutoGen Bedrock服务
 if ! pgrep -f "autogen-bedrock-server.js" > /dev/null; then
     echo "🤖 启动AutoGen Bedrock服务..."
