@@ -587,6 +587,7 @@ app.post('/api/invoke-autogen-bedrock', async (req, res) => {
         inferenceProfileArn: inferenceProfileArn || 'not_provided',
         effectiveModelId,
         messagesCount: messages?.length || 0,
+        messagesSize: JSON.stringify(messages).length,
         userId: req.body.userId || 'anonymous',
         timestamp: new Date().toISOString()
     });

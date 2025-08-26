@@ -2517,7 +2517,7 @@
             // 初始化增强进度管理系统
             progressManager.init();
             progressManager.addConsoleLog(`📁 Input: ${filename} (${Math.round(content.length/1000)}KB)`, 'info', '📁');
-            progressManager.addConsoleLog(`🔧 Parsing strategy: ${content.length > 30000 ? 'Multi-stage' : 'Single-stage'} analysis`, 'info', '🔧');
+            progressManager.addConsoleLog(`🔧 Parsing strategy: ${content.length > 120000 ? 'Multi-stage' : 'Single-stage'} analysis`, 'info', '🔧');
             progressManager.updateStage(0, `正在解析文件 "${filename}"...`);
             
             // 重置分析结果变量
@@ -2612,8 +2612,8 @@
             
             // 🎯 检查是否需要多阶段分析 - 使用容量感知阈值
             const totalSize = processedContent.length + (structuredData ? JSON.stringify(structuredData).length : 0);
-            const maxSegmentSize = 3200000; // 3.2MB - 接近Claude Sonnet 4容量
-            const shouldUseMultiStage = totalSize > maxSegmentSize * 0.8; // 80%阈值启用分段
+            const maxSegmentSize = capacityCalculator.getMaxSegmentSize(); // ~200KB实际容量
+            const shouldUseMultiStage = totalSize > maxSegmentSize * 0.6; // 60%阈值启用分段（约120KB）
             
             console.log(`📏 内容总大小: ${Math.round(totalSize/1000)}KB`);
             console.log(`🔄 分析策略: ${shouldUseMultiStage ? '多阶段智能分析' : '单阶段分析'}`);
@@ -2838,12 +2838,12 @@
 
         // 🧮 容量计算工具
         const capacityCalculator = {
-            // Claude Sonnet 4 容量配置（充分利用1M token窗口）
-            MODEL_CONTEXT_TOKENS: 1000000,        // 1M tokens context window
-            TOKEN_TO_CHAR_RATIO: 4,               // 1 token ≈ 4 characters
-            SYSTEM_PROMPT_RESERVE: 15000,         // 系统提示词保留空间
-            SAFETY_MARGIN: 0.85,                  // 85%安全边界，充分利用模型容量
-            MAX_PROMPT_SIZE: 3200000,             // 3.2MB HTTP限制，接近Claude Sonnet 4真实容量
+            // Claude Sonnet 4 AWS Bedrock实际限制（On-demand模式）
+            MODEL_CONTEXT_TOKENS: 65536,           // 65K tokens实际限制（AWS Bedrock on-demand）
+            TOKEN_TO_CHAR_RATIO: 4,               // 1 token ≈ 4 characters  
+            SYSTEM_PROMPT_RESERVE: 8000,          // 系统提示词保留空间（减少）
+            SAFETY_MARGIN: 0.80,                  // 80%安全边界
+            MAX_PROMPT_SIZE: 200000,              // 200KB HTTP限制，匹配实际模型容量
             
             // 计算可用的单段最大容量
             getMaxSegmentSize() {
