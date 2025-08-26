@@ -31,6 +31,22 @@
 - **风险评估**: 全面的系统风险分析
 - **可视化报告**: 直观的图表和数据展示
 
+## 🚀 一键部署
+
+### 完全自动化部署（推荐新服务器）
+
+```bash
+# 完整自动化安装（包含所有依赖）
+wget -O deploy-one-click.sh https://raw.githubusercontent.com/jichenghan800/jstack-review/gh-pages/deploy-one-click.sh && chmod +x deploy-one-click.sh && ./deploy-one-click.sh
+```
+
+### 快速部署（已有Docker/Node.js环境）
+
+```bash
+# 快速部署（适用于已配置环境的服务器）
+wget -O deploy-quick.sh https://raw.githubusercontent.com/jichenghan800/jstack-review/gh-pages/deploy-quick.sh && chmod +x deploy-quick.sh && ./deploy-quick.sh
+```
+
 ## 🚀 快速部署
 
 ### 完整代理服务部署（推荐生产环境）

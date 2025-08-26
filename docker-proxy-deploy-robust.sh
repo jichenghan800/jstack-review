@@ -169,13 +169,11 @@ main() {
         SERVICES_OK=false
     fi
     
+    # 检查测试服务（可选，失败不影响整体状态）
     if curl -s -o /dev/null http://localhost:3002/health 2>/dev/null; then
         echo "✅ Bedrock测试后端运行正常 (端口 3002)"
     else
-        echo "❌ Bedrock测试后端连接失败"
-        echo "检查测试服务日志:"
-        tail -n 10 logs/bedrock-test.log
-        SERVICES_OK=false
+        echo "⚠️  Bedrock测试后端不可用 (可选服务)"
     fi
     
     # 显示结果
