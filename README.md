@@ -59,6 +59,24 @@ chmod +x docker-proxy-deploy.sh
 ./docker-proxy-deploy.sh
 ```
 
+#### 方案三：网络修复版（解决502错误）
+
+如果遇到502 Bad Gateway错误，使用宿主机网络模式：
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/jichenghan800/jstack-review.git
+cd jstack-review
+
+# 2. 网络诊断
+chmod +x diagnose-network.sh
+./diagnose-network.sh
+
+# 3. 使用网络修复版部署
+chmod +x fix-network-deployment.sh
+./fix-network-deployment.sh
+```
+
 #### 故障排除
 
 **如果遇到部署失败，请按顺序执行：**
@@ -92,6 +110,8 @@ mkdir -p logs config
 | `端口被占用` | 查看占用: `lsof -i :8080` 然后 `kill -9 PID` |
 | `后端服务启动失败` | 查看日志: `tail -f logs/autogen-bedrock.log` |
 | `容器启动失败` | 查看Docker日志: `docker logs jstack-review-proxy` |
+| `502 Bad Gateway` | 使用网络修复版: `./fix-network-deployment.sh` |
+| `config.json缺失` | 自动创建: 部署脚本会自动从example复制 |
 
 **服务访问地址：**
 - 🌐 主应用: `http://localhost:8080`
