@@ -34,6 +34,15 @@ else
     echo "ℹ️  Bedrock测试服务器未运行"
 fi
 
+# 停止API代理服务器
+if pgrep -f "proxy-server.py" > /dev/null; then
+    echo "🔗 停止API代理服务器..."
+    pkill -f "proxy-server.py"
+    echo "✅ API代理服务器已停止"
+else
+    echo "ℹ️  API代理服务器未运行"
+fi
+
 # 等待进程完全停止
 sleep 1
 

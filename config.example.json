@@ -1,0 +1,9 @@
+{
+  "aws": {
+    "accessKey": "YOUR_AWS_ACCESS_KEY_HERE",
+    "secretKey": "YOUR_AWS_SECRET_KEY_HERE",
+    "region": "us-west-2",
+    "inferenceProfileArn": "arn:aws:bedrock:us-west-2:ACCOUNT_ID:inference-profile/PROFILE_NAME",
+    "profileName": "us.anthropic.claude-sonnet-4-20250514-v1:0"
+  }
+}
