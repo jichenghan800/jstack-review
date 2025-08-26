@@ -62,7 +62,6 @@ npm run health
 
 # 访问应用
 # AI增强分析器: http://localhost:8080/ai-simple.html
-# 传统分析器: http://localhost:8080/test.html
 ```
 
 **架构说明**:
@@ -88,7 +87,6 @@ chmod +x stop-all-services.sh
 
 # 访问应用
 # AI增强分析器: http://localhost:8080/ai-simple.html
-# 传统分析器: http://localhost:8080/test.html
 # API健康检查: http://localhost:8082/health
 ```
 
