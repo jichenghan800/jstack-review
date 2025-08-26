@@ -83,7 +83,7 @@ if [ "$SERVICES_OK" = true ]; then
     echo "=================================="
     echo "🌐 主应用地址: http://localhost:8080"
     echo "📱 AI增强分析器: http://localhost:8080/ai-simple.html"
-    echo "🔧 传统分析器: http://localhost:8080/test.html"
+    echo "🔧 传统分析器: http://localhost:8080/jstack-review-original/index.html"
     echo ""
     echo "🔗 API代理端点:"
     echo "   健康检查: http://localhost:8080/health"

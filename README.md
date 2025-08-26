@@ -44,7 +44,7 @@ chmod +x docker-proxy-deploy.sh
 **服务访问地址：**
 - 🌐 主应用: `http://localhost:8080`
 - 📱 AI增强分析器: `http://localhost:8080/ai-simple.html`
-- 🔧 传统分析器: `http://localhost:8080/test.html`
+- 🔧 传统分析器: `http://localhost:8080/jstack-review-original/index.html`
 
 ### Docker Compose 部署
 
@@ -116,7 +116,7 @@ node bedrock-test-server.js
 
 1. **前端应用**
    - `ai-simple.html`: AI增强分析器
-   - `test.html`: 传统分析器
+   - `jstack-review-original/index.html`: 传统分析器
    - 客户端处理，数据不上传服务器
 
 2. **后端服务**
