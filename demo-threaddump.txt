@@ -1,0 +1,60 @@
+2025-08-21 15:09:33
+Full thread dump OpenJDK 64-Bit Server VM (17.0.2+8-Ubuntu-120.04 mixed mode, sharing):
+
+Threads class SMR info:
+_java_thread_list=0x00007f8b2c001290, length=12, elements={
+0x00007f8b2c008800, 0x00007f8b2c00a000, 0x00007f8b2c00b800, 0x00007f8b2c00d000,
+0x00007f8b2c00e800, 0x00007f8b2c010000, 0x00007f8b2c011800, 0x00007f8b2c013000
+}
+
+"main" #1 prio=5 os_prio=0 tid=0x00007f8b2c008800 nid=0x1234 waiting on condition [0x00007f8b34567000]
+   java.lang.Thread.State: WAITING (parking)
+	at sun.misc.Unsafe.park(Native Method)
+	- parking to wait for  <0x000000076ab62208> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+
+"pool-1-thread-1" #10 prio=5 os_prio=0 tid=0x00007f8b2c00a000 nid=0x1235 runnable [0x00007f8b34568000]
+   java.lang.Thread.State: RUNNABLE
+	at java.io.FileInputStream.readBytes(Native Method)
+	at java.io.FileInputStream.read(FileInputStream.java:255)
+	at java.io.BufferedInputStream.read1(BufferedInputStream.java:284)
+	at java.io.BufferedInputStream.read(BufferedInputStream.java:345)
+	at com.example.DataProcessor.processFile(DataProcessor.java:45)
+	at com.example.WorkerTask.run(WorkerTask.java:23)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+
+"pool-1-thread-2" #11 prio=5 os_prio=0 tid=0x00007f8b2c00b800 nid=0x1236 waiting for monitor entry [0x00007f8b34569000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at com.example.SharedResource.updateCounter(SharedResource.java:15)
+	- waiting to lock <0x000000076ab62300> (a java.lang.Object)
+	at com.example.WorkerTask.run(WorkerTask.java:28)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+
+"pool-1-thread-3" #12 prio=5 os_prio=0 tid=0x00007f8b2c00d000 nid=0x1237 waiting for monitor entry [0x00007f8b3456a000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at com.example.SharedResource.updateCounter(SharedResource.java:15)
+	- waiting to lock <0x000000076ab62300> (a java.lang.Object)
+	at com.example.WorkerTask.run(WorkerTask.java:28)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+
+"GC Thread#0" os_prio=0 tid=0x00007f8b2c00e800 nid=0x1238 runnable
+
+"GC Thread#1" os_prio=0 tid=0x00007f8b2c010000 nid=0x1239 runnable
+
+"VM Thread" os_prio=0 tid=0x00007f8b2c011800 nid=0x123a runnable
+
+"VM Periodic Task Thread" os_prio=0 tid=0x00007f8b2c013000 nid=0x123b waiting on condition
+
+JNI global references: 15
