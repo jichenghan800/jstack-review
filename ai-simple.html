@@ -2109,8 +2109,8 @@
             if (currentHostname === 'localhost' || currentHostname === '127.0.0.1') {
                 return 'http://localhost:8082';
             } else {
-                // 云服务器环境：使用代理服务器端口8081来避免防火墙和NAT问题
-                return `http://${currentHostname}:8081`;
+                // 云服务器环境：使用Web服务器端口8080的API代理
+                return `http://${currentHostname}:8080`;
             }
         }
         
