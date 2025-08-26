@@ -35,6 +35,20 @@
 
 ### 完整代理服务部署（推荐生产环境）
 
+#### 方案一：增强版部署脚本（推荐）
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/jichenghan800/jstack-review.git
+cd jstack-review
+
+# 2. 运行增强版部署脚本（包含依赖检查）
+chmod +x docker-proxy-deploy-robust.sh
+./docker-proxy-deploy-robust.sh
+```
+
+#### 方案二：标准部署脚本
+
 ```bash
 # 1. 克隆项目
 git clone https://github.com/jichenghan800/jstack-review.git
@@ -44,6 +58,40 @@ cd jstack-review
 chmod +x docker-proxy-deploy.sh
 ./docker-proxy-deploy.sh
 ```
+
+#### 故障排除
+
+**如果遇到部署失败，请按顺序执行：**
+
+```bash
+# 1. 运行诊断工具
+chmod +x diagnose-deployment.sh
+./diagnose-deployment.sh
+
+# 2. 安装缺失的依赖
+# Node.js (如果未安装)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# NPM依赖
+npm install
+
+# 3. 创建必要目录
+mkdir -p logs config
+
+# 4. 重新运行部署
+./docker-proxy-deploy-robust.sh
+```
+
+**常见问题解决：**
+
+| 问题 | 解决方案 |
+|------|----------|
+| `Node.js 未安装` | 安装Node.js 18+: `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` |
+| `npm install失败` | 清理缓存: `npm cache clean --force && npm install` |
+| `端口被占用` | 查看占用: `lsof -i :8080` 然后 `kill -9 PID` |
+| `后端服务启动失败` | 查看日志: `tail -f logs/autogen-bedrock.log` |
+| `容器启动失败` | 查看Docker日志: `docker logs jstack-review-proxy` |
 
 **服务访问地址：**
 - 🌐 主应用: `http://localhost:8080`
