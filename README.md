@@ -1,6 +1,10 @@
 # Java Thread Dump Analyzer - AI Enhanced
 
-[![jstack.review][logo]](https://jstack.review)
+<div align="center">
+  <a href="https://jstack.review">
+    <img src="logo.svg" alt="jstack.review" width="200"/>
+  </a>
+</div>
 
 **[🚀 在线体验 AI 分析功能](https://jichenghan800.github.io/jstack-review/ai-simple.html)**
 
@@ -293,5 +297,3 @@ git commit -m "📚 更新文档: 描述"
 ---
 
 **💡 提示**: 配置AWS凭证后即可使用完整的AI分析功能！
-
-[logo]: https://jstack.review/assets/jstack-review-logo.png "jstack.review"
