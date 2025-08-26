@@ -8,20 +8,19 @@
 
 **[🚀 在线体验 AI 分析功能](https://jichenghan800.github.io/jstack-review/ai-simple.html)**
 
-这是一个AI增强的Java线程转储分析器，基于原始的[jstack.review](https://jstack.review)项目，集成了OpenAI GPT和AWS Bedrock等先进的AI模型，提供智能的线程分析和性能诊断。
+这是一个AI增强的Java线程转储分析器，基于原始的[jstack.review](https://jstack.review)项目，集成了AWS Bedrock等先进的AI模型，提供智能的线程分析和性能诊断。
 
 ## ✨ 主要特性
 
 ### 🤖 AI 智能分析
-- **多AI模型支持**: OpenAI GPT-5/4o/4, AWS Bedrock Claude 4.0 Sonnet等
+- **AWS Bedrock集成**: Claude 4.0 Sonnet等先进AI模型
 - **智能健康评分**: AI自动评估系统健康状况(0-100分)
 - **完整线程分析**: 包括运行中、等待中、阻塞、休眠、非Java线程统计
 - **问题自动检测**: 识别死锁、性能瓶颈、资源竞争等问题
 - **优化建议**: 提供具体的性能优化和问题解决方案
 
-### 🔧 双AI提供商支持
-- **OpenAI**: 支持GPT-5, GPT-4o, GPT-4, GPT-3.5系列
-- **AWS Bedrock**: 支持Claude, Titan, Llama, Mistral等模型
+### 🔧 AI模型支持
+- **AWS Bedrock**: Claude, Titan, Llama, Mistral等模型
 - **智能分段处理**: 自动处理大文件，避免数据截断丢失
 - **容量感知分析**: 充分利用Claude Sonnet 4的实际token限制
 
@@ -150,13 +149,6 @@ export AWS_SECRET_ACCESS_KEY=your_secret_key
 export AWS_REGION=us-west-2
 ```
 
-### OpenAI 配置
-
-在AI分析界面选择OpenAI，填入：
-- **API Key**: 您的OpenAI API密钥
-- **模型**: 选择GPT-4, GPT-4o或GPT-3.5-turbo
-- **Base URL**: 默认或自定义API端点
-
 ### 环境变量（可选）
 
 创建 `.env` 文件：
@@ -177,7 +169,7 @@ AUTOGEN_PORT=8082
 
 1. **启动服务**: `npm run single-port`
 2. **访问应用**: http://localhost:8080/ai-simple.html
-3. **配置AI**: 点击"AI配置"设置AWS或OpenAI凭证
+3. **配置AI**: 点击"AI配置"设置AWS Bedrock凭证
 4. **上传文件**: 支持线程转储文件或使用演示数据
 5. **查看分析**: 获得AI增强的分析报告和优化建议
 
