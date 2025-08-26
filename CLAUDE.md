@@ -31,23 +31,36 @@ export AWS_REGION=us-west-2
 
 ### Setup & Installation
 
-#### 方式一：本地直接运行（推荐开发环境）
+#### 方式一：NPM单端口部署（推荐开发和生产）
 
 ```bash
 # Install project dependencies
 npm install
 
-# Start all services (Web:8080 + AutoGen:8082 + Test:3002)
-./start-all-services.sh
+# Start single-port service (unified deployment)
+npm run single-port
+# or
+./start-single-port.sh
 
-# Stop all services
-./stop-all-services.sh
+# Stop services
+npm run stop
+# or
+./stop-single-port.sh
 
-# Check service status
-curl http://localhost:8080  # Web server
-curl http://localhost:8082/health  # AutoGen Bedrock API
-curl http://localhost:3002/health  # Bedrock test API
+# Check service health
+npm run health
+# or
+./health-check.sh
+
+# Access URLs:
+# - AI Analyzer: http://localhost:8080/ai-simple.html
+# - Traditional: http://localhost:8080/test.html
 ```
+
+**Architecture**:
+- External port: 8080 (Unified HTTP server + API proxy)
+- Internal port: 8082 (AutoGen Bedrock API server, not exposed)
+- Security: Only one port exposed, internal services fully isolated
 
 #### 方式二：Docker部署（推荐生产环境）
 
@@ -68,9 +81,25 @@ docker-compose logs -f
 docker-compose down
 ```
 
-**两种方式的对比：**
-- **本地运行**：开发调试方便，直接访问源码和日志
+#### 方式三：本地直接运行（开发调试）
+
+```bash
+# Start all services (Web:8080 + AutoGen:8082 + Test:3002)
+./start-all-services.sh
+
+# Stop all services
+./stop-all-services.sh
+
+# Check service status
+curl http://localhost:8080  # Web server
+curl http://localhost:8082/health  # AutoGen Bedrock API
+curl http://localhost:3002/health  # Bedrock test API
+```
+
+**部署方式对比**:
+- **NPM单端口**：简单安全，单端口对外，避免防火墙配置，推荐大部分场景
 - **Docker部署**：环境一致，避免依赖冲突，生产环境更稳定
+- **本地运行**：开发调试方便，直接访问源码和日志
 
 ### Running Individual Services
 

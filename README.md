@@ -31,23 +31,63 @@
 - **风险评估**: 全面的系统风险分析
 - **可视化报告**: 直观的图表和数据展示
 
-## 🚀 一键部署
+## 🚀 部署方式
 
-### 完全自动化部署（推荐新服务器）
+### 方式一：NPM单端口部署 ⭐（推荐）
 
+**优势**: 简单安全，单端口对外，避免防火墙配置
+```bash
+# 克隆项目
+git clone https://github.com/jichenghan800/jstack-review.git
+cd jstack-review
+
+# 安装依赖
+npm install
+
+# 方法1: 使用NPM脚本启动（推荐）
+npm run single-port
+
+# 方法2: 直接运行脚本
+./start-single-port.sh
+
+# 停止服务
+npm run stop
+# 或
+./stop-single-port.sh
+
+# 检查服务状态
+npm run health
+# 或
+./health-check.sh
+
+# 访问应用
+# AI增强分析器: http://localhost:8080/ai-simple.html
+# 传统分析器: http://localhost:8080/test.html
+```
+
+**架构说明**:
+- 对外端口：8080（统一HTTP服务器 + API代理）
+- 内部端口：8082（AutoGen API服务器，不对外暴露）
+- 安全性：只需开放一个端口，内部服务完全隔离
+
+### 方式二：完全自动化部署
+
+**优势**: 零配置，自动安装所有依赖
 ```bash
 # 完整自动化安装（包含所有依赖）
 wget -O deploy-one-click.sh https://raw.githubusercontent.com/jichenghan800/jstack-review/gh-pages/deploy-one-click.sh && chmod +x deploy-one-click.sh && ./deploy-one-click.sh
 ```
 
-### 快速部署（已有Docker/Node.js环境）
+### 方式三：Docker部署
 
+**优势**: 环境隔离，适合生产环境
 ```bash
-# 快速部署（适用于已配置环境的服务器）
-wget -O deploy-quick.sh https://raw.githubusercontent.com/jichenghan800/jstack-review/gh-pages/deploy-quick.sh && chmod +x deploy-quick.sh && ./deploy-quick.sh
-```
+# 标准部署
+docker-compose up -d
 
-## 🚀 快速部署
+# 带nginx反向代理
+docker-compose --profile with-nginx up -d
+```
 
 ### 完整代理服务部署（推荐生产环境）
 
