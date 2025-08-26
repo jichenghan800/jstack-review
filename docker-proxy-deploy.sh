@@ -24,18 +24,11 @@ if [ ! -f "config.json" ] && [ -f "config.example.json" ]; then
     echo "⚠️  请编辑config.json设置您的AWS凭证，或在浏览器中配置"
 fi
 
-# 启动AutoGen Bedrock服务
-if ! pgrep -f "autogen-bedrock-server.js" > /dev/null; then
-    echo "🤖 启动AutoGen Bedrock服务..."
-    nohup node autogen-bedrock-server.js > logs/autogen-bedrock.log 2>&1 &
-    sleep 2
-fi
-
-# 启动Bedrock测试服务
-if ! pgrep -f "bedrock-test-server.js" > /dev/null; then
-    echo "🧪 启动Bedrock测试服务..."
-    nohup node bedrock-test-server.js > logs/bedrock-test.log 2>&1 &
-    sleep 2
+# 使用新的服务管理器启动后端服务
+source ./service-manager.sh
+if ! start_all_backend_services; then
+    echo "❌ 后端服务启动失败，无法继续部署"
+    exit 1
 fi
 
 # 启动带有完整代理配置的nginx容器

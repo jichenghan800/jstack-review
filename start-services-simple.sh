@@ -34,13 +34,18 @@ WEB_PID=$!
 
 # 启动AutoGen服务器 (端口 8082)
 echo "🤖 启动AutoGen Bedrock服务器 (端口 8082)..."
-nohup node autogen-bedrock-server.js > logs/autogen-bedrock.log 2>&1 &
-AUTOGEN_PID=$!
+source ./service-manager.sh
+if ! start_autogen_service; then
+    echo "❌ AutoGen Bedrock服务器启动失败"
+    exit 1
+fi
 
 # 启动Bedrock测试服务器 (端口 3002)
 echo "🧪 启动Bedrock测试服务器 (端口 3002)..."
-nohup node bedrock-test-server.js > logs/bedrock-test.log 2>&1 &
-BEDROCK_PID=$!
+if ! start_bedrock_test_service; then
+    echo "❌ Bedrock测试服务器启动失败"
+    exit 1
+fi
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."

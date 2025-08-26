@@ -91,32 +91,10 @@ stop_old_processes() {
 start_backend_services() {
     echo "🚀 启动后端服务..."
     
-    # 启动AutoGen Bedrock服务
-    echo "🤖 启动AutoGen Bedrock服务..."
-    nohup node autogen-bedrock-server.js > logs/autogen-bedrock.log 2>&1 &
-    AUTOGEN_PID=$!
-    
-    # 启动Bedrock测试服务
-    echo "🧪 启动Bedrock测试服务..."
-    nohup node bedrock-test-server.js > logs/bedrock-test.log 2>&1 &
-    TEST_PID=$!
-    
-    # 等待服务启动
-    echo "⏳ 等待后端服务启动..."
-    sleep 5
-    
-    # 检查进程是否还在运行
-    if ! kill -0 $AUTOGEN_PID 2>/dev/null; then
-        echo "❌ AutoGen服务启动失败"
-        echo "日志内容:"
-        cat logs/autogen-bedrock.log
-        exit 1
-    fi
-    
-    if ! kill -0 $TEST_PID 2>/dev/null; then
-        echo "❌ 测试服务启动失败"
-        echo "日志内容:"
-        cat logs/bedrock-test.log
+    # 使用新的服务管理器
+    source ./service-manager.sh
+    if ! start_all_backend_services; then
+        echo "❌ 后端服务启动失败"
         exit 1
     fi
     
