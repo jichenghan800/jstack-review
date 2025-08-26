@@ -52,15 +52,110 @@ chmod +x docker-proxy-deploy.sh
 
 ### Docker Compose 部署
 
+#### 基础部署（推荐）
+
 ```bash
-# 标准部署
+# 1. 克隆项目
+git clone https://github.com/jichenghan800/jstack-review.git
+cd jstack-review
+
+# 2. 配置环境变量（可选）
+cp .env.example .env
+# 编辑 .env 文件，设置端口和AWS凭证
+
+# 3. 构建并启动服务
 docker-compose up -d
 
-# 带 nginx 反向代理
+# 4. 检查服务状态
+docker-compose ps
+docker-compose logs -f jstack-review
+```
+
+**访问地址：**
+- 🌐 主应用: `http://localhost:8080`
+- 📱 AI增强分析器: `http://localhost:8080/ai-simple.html`
+- 🔧 传统分析器: `http://localhost:8080/jstack-review-original/index.html`
+
+#### 带Nginx反向代理部署
+
+```bash
+# 启动应用 + Nginx反向代理（80端口）
 docker-compose --profile with-nginx up -d
 
-# 查看服务状态
+# 检查所有服务状态
+docker-compose --profile with-nginx ps
+```
+
+**访问地址（Nginx模式）：**
+- 🌐 主应用: `http://localhost` (80端口)
+- 📱 AI增强分析器: `http://localhost/ai-simple.html`
+- 🔧 传统分析器: `http://localhost/jstack-review-original/index.html`
+
+#### 环境变量配置
+
+创建 `.env` 文件自定义端口：
+
+```bash
+# 端口配置
+WEB_PORT=8080      # Web服务端口
+API_PORT=8082      # AutoGen Bedrock API端口  
+PROXY_PORT=8081    # API代理端口（暂未使用）
+TEST_PORT=3002     # Bedrock测试API端口
+
+# AWS凭证（可选，也可在浏览器中配置）
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=us-west-2
+```
+
+#### 常用Docker Compose命令
+
+```bash
+# 查看运行状态
 docker-compose ps
+
+# 查看实时日志
+docker-compose logs -f
+
+# 查看特定服务日志
+docker-compose logs -f jstack-review
+
+# 重新构建并启动
+docker-compose up -d --build
+
+# 停止服务
+docker-compose down
+
+# 停止服务并删除卷
+docker-compose down -v
+
+# 重启特定服务
+docker-compose restart jstack-review
+```
+
+#### 故障排除
+
+**1. 服务启动失败**
+```bash
+# 查看详细日志
+docker-compose logs jstack-review
+
+# 重新构建镜像
+docker-compose build --no-cache jstack-review
+```
+
+**2. 端口冲突**
+```bash
+# 修改 .env 文件中的端口配置
+echo "WEB_PORT=8888" >> .env
+docker-compose up -d
+```
+
+**3. 健康检查失败**
+```bash
+# 检查健康状态
+docker-compose ps
+docker exec -it jstack-review-app curl localhost:8080
 ```
 
 ### 超简单部署（仅静态文件）
